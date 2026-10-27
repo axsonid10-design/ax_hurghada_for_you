@@ -40,11 +40,11 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
     const matchesTrip = filterTripType === 'ALL' || b.trip_type === filterTripType
     const matchesExec = filterExecutor === 'ALL' || b.executor_id === filterExecutor
     const matchesSearch =
-      b.guest_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.hotel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.sr.includes(searchQuery) ||
-      b.room.includes(searchQuery) ||
-      b.seller.toLowerCase().includes(searchQuery.toLowerCase())
+      (b.guest_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.hotel || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(b.sr || '').includes(searchQuery) ||
+      String(b.room || '').includes(searchQuery) ||
+      (b.seller || '').toLowerCase().includes(searchQuery.toLowerCase())
     return matchesTrip && matchesExec && matchesSearch
   })
 

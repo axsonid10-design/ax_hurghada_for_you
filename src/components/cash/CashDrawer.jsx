@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { Banknote, Euro, DollarSign, Coins, ArrowDownLeft } from 'lucide-react'
+import { Banknote, Euro, DollarSign, Coins, ArrowDownLeft, CheckCircle2 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
+import { soundManager } from '../../utils/soundEffects'
 
 export function CashDrawer() {
-  const { bookings } = useAXStore()
+  const { bookings, updateBooking, openConfirmModal } = useAXStore()
   const [currentPage, setCurrentPage] = useState(1)
+  const [activeTabFilter, setActiveTabFilter] = useState('ALL') // 'ALL' | 'PICKUP' | 'PENDING'
   const pageSize = 15
 
   const totalEur = bookings.reduce((sum, b) => sum + (Number(b.rest_eur) || 0), 0)
@@ -13,12 +15,47 @@ export function CashDrawer() {
   const totalUsd = bookings.reduce((sum, b) => sum + (Number(b.rest_usd) || 0), 0)
   const totalGbp = bookings.reduce((sum, b) => sum + (Number(b.rest_gbp) || 0), 0)
 
-  const cashPickups = bookings.filter((b) => b.group.includes('Cash Pickup'))
-  const totalPages = Math.ceil(cashPickups.length / pageSize) || 1
-  const paginatedPickups = cashPickups.slice(
+  // Filter cash entries safely with zero crashes
+  const cashList = bookings.filter((b) => {
+    const isPickup =
+      (b.trip_type && typeof b.trip_type === 'string' && b.trip_type.toLowerCase().includes('cash pickup')) ||
+      (b.group && typeof b.group === 'string' && b.group.toLowerCase().includes('cash pickup'))
+
+    const hasRemaining =
+      (Number(b.rest_eur) || 0) > 0 ||
+      (Number(b.rest_egp) || 0) > 0 ||
+      (Number(b.rest_usd) || 0) > 0 ||
+      (Number(b.rest_gbp) || 0) > 0
+
+    if (activeTabFilter === 'PICKUP') return isPickup
+    if (activeTabFilter === 'PENDING') return hasRemaining
+    return isPickup || hasRemaining
+  })
+
+  const totalPages = Math.ceil(cashList.length / pageSize) || 1
+  const paginatedList = cashList.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   )
+
+  const handleCollect = (b) => {
+    openConfirmModal({
+      title: 'تأكيد التحصيل النقدي',
+      message: `هل تم استلام كامل المبالغ المستحقة للنزيل ${b.guest_name || ''} (SR: ${b.sr})؟`,
+      confirmText: 'تأكيد التحصيل',
+      type: 'info',
+      onConfirm: () => {
+        soundManager.playSuccess()
+        updateBooking(b.sr, {
+          rest_eur: 0,
+          rest_egp: 0,
+          rest_usd: 0,
+          rest_gbp: 0,
+          status: 'paid'
+        })
+      }
+    })
+  }
 
   return (
     <div className="w-full space-y-4">
@@ -69,35 +106,90 @@ export function CashDrawer() {
         </div>
       </div>
 
-      {/* Cash Pickup Register Table */}
+      {/* Cash Register Box */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-black text-[#0a2540] flex items-center gap-2">
-            <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
-            <span>حركات التحصيل النقدي من الفنادق (Cash Pickup)</span>
-          </h3>
-          <span className="text-xs font-bold text-slate-400">
-            {cashPickups.length} حركة مسجلة
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                setActiveTabFilter('ALL')
+                setCurrentPage(1)
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                activeTabFilter === 'ALL'
+                  ? 'bg-[#0a2540] text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              جميع الحركات ({cashList.length})
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                setActiveTabFilter('PICKUP')
+                setCurrentPage(1)
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                activeTabFilter === 'PICKUP'
+                  ? 'bg-[#0284c7] text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              حركات Cash Pickup
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                setActiveTabFilter('PENDING')
+                setCurrentPage(1)
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                activeTabFilter === 'PENDING'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              متبقي بالعملات
+            </button>
+          </div>
+
+          <span className="text-xs font-bold text-slate-500 font-mono">
+            {cashList.length} سجل
           </span>
         </div>
 
         {/* Mobile Bento List */}
         <div className="space-y-2 lg:hidden">
-          {paginatedPickups.map((cp) => (
+          {paginatedList.map((cp) => (
             <div key={cp.sr} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
               <div>
-                <div className="font-black text-[#0a2540]">{cp.guest_name}</div>
+                <div className="font-black text-[#0a2540]">{cp.guest_name || 'غير محدد'}</div>
                 <div className="text-[11px] text-slate-500">
-                  {cp.hotel} • {cp.seller}
+                  {cp.hotel || '-'} • {cp.seller || 'مباشر'}
                 </div>
               </div>
-              <div className="text-left">
-                <div className="font-black font-mono text-emerald-600 text-sm">
-                  €{cp.rest_eur}
+              <div className="text-left flex items-center gap-2">
+                <div>
+                  <div className="font-black font-mono text-emerald-600 text-sm">
+                    {cp.rest_eur > 0 && `€${cp.rest_eur}`}
+                    {cp.rest_egp > 0 && ` ${cp.rest_egp} ج.م`}
+                    {cp.rest_usd > 0 && ` $${cp.rest_usd}`}
+                    {cp.rest_gbp > 0 && ` £${cp.rest_gbp}`}
+                    {cp.rest_eur === 0 && cp.rest_egp === 0 && cp.rest_usd === 0 && cp.rest_gbp === 0 && '€0'}
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-slate-200 font-bold text-slate-600">
+                    #{cp.sr}
+                  </span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-slate-200 font-bold text-slate-600">
-                  #{cp.sr}
-                </span>
+                {(cp.rest_eur > 0 || cp.rest_egp > 0 || cp.rest_usd > 0 || cp.rest_gbp > 0) && (
+                  <button
+                    onClick={() => handleCollect(cp)}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                  >
+                    تحصيل
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -112,25 +204,68 @@ export function CashDrawer() {
                 <th className="px-3">النزيل</th>
                 <th className="px-3">الفندق</th>
                 <th className="px-3">المندوب</th>
-                <th className="px-3 text-center font-mono">المبلغ (€)</th>
+                <th className="px-3">الرحلة</th>
+                <th className="px-3 text-center font-mono">المتبقي (€)</th>
+                <th className="px-3 text-center font-mono">المتبقي (ج.م)</th>
                 <th className="px-3 text-center">حالة السداد</th>
+                <th className="px-3 text-center">الإجراء</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium">
-              {paginatedPickups.map((cp) => (
-                <tr key={cp.sr} className="h-11 hover:bg-slate-50 transition-colors whitespace-nowrap">
-                  <td className="px-3 font-mono font-bold text-[#0284c7]">#{cp.sr}</td>
-                  <td className="px-3 font-black text-[#0a2540] max-w-[160px] truncate">{cp.guest_name}</td>
-                  <td className="px-3 text-slate-700 max-w-[180px] truncate">{cp.hotel}</td>
-                  <td className="px-3 text-slate-600 font-bold">{cp.seller}</td>
-                  <td className="px-3 text-center font-mono font-bold text-emerald-600">€{cp.rest_eur}</td>
-                  <td className="px-3 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                      مستحق التحصيل
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {paginatedList.map((cp) => {
+                const isPaid =
+                  (Number(cp.rest_eur) || 0) === 0 &&
+                  (Number(cp.rest_egp) || 0) === 0 &&
+                  (Number(cp.rest_usd) || 0) === 0 &&
+                  (Number(cp.rest_gbp) || 0) === 0
+
+                return (
+                  <tr key={cp.sr} className="h-11 hover:bg-slate-50 transition-colors whitespace-nowrap">
+                    <td className="px-3 font-mono font-bold text-[#0284c7]">#{cp.sr}</td>
+                    <td className="px-3 font-black text-[#0a2540] max-w-[160px] truncate" title={cp.guest_name}>
+                      {cp.guest_name || 'غير محدد'}
+                    </td>
+                    <td className="px-3 text-slate-700 max-w-[180px] truncate" title={cp.hotel}>
+                      {cp.hotel || '-'}
+                    </td>
+                    <td className="px-3 text-slate-600 font-bold">{cp.seller || 'مباشر'}</td>
+                    <td className="px-3">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                        {cp.trip_type || 'رحلة'}
+                      </span>
+                    </td>
+                    <td className="px-3 text-center font-mono font-bold text-emerald-600">
+                      €{cp.rest_eur || 0}
+                    </td>
+                    <td className="px-3 text-center font-mono font-bold text-[#0284c7]">
+                      {cp.rest_egp || 0} ج.م
+                    </td>
+                    <td className="px-3 text-center">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          isPaid
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {isPaid ? 'مدفوع كلي' : 'غير مدفوع'}
+                      </span>
+                    </td>
+                    <td className="px-3 text-center">
+                      {!isPaid ? (
+                        <button
+                          onClick={() => handleCollect(cp)}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
+                        >
+                          تحصيل
+                        </button>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -139,7 +274,7 @@ export function CashDrawer() {
         <AX_PaginationBar
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={cashPickups.length}
+          totalItems={cashList.length}
           pageSize={pageSize}
           onPageChange={(p) => setCurrentPage(p)}
         />

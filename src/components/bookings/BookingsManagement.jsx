@@ -28,9 +28,9 @@ export function BookingsManagement({ onOpenNewBooking }) {
       (statusFilter === 'paid' && isPaid) ||
       (statusFilter === 'unpaid' && !isPaid)
     const matchSearch =
-      b.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.hotel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.sr.includes(searchTerm)
+      (b.guest_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.hotel || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(b.sr || '').includes(searchTerm)
     return matchStatus && matchSearch
   })
 
