@@ -57,7 +57,9 @@ export function AX_InstallPwaBanner() {
     <div className="w-full bg-gradient-to-r from-[#0a2540] via-[#0e3b66] to-[#0a2540] text-white border-b border-[#0284c7]/40 shadow-sm animate-fadeIn">
       <div className="w-full px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <img src="/favicon-32x32.png" alt="" className="w-6 h-6 rounded" />
+          <div className="w-7 h-7 rounded-full overflow-hidden border border-[#38bdf8] bg-white flex-shrink-0 shadow-sm">
+            <img src="/logo-circle.png" alt="غردقة فور يو" className="w-full h-full object-cover rounded-full" />
+          </div>
           <span className="text-xs sm:text-sm font-bold text-slate-100">
             تثبيت التطبيق على جهازك
           </span>

@@ -9,12 +9,24 @@ export function AX_Header() {
     <header className="sticky top-0 z-40 w-full bg-[#0a2540] text-white border-b border-[#1e3a5f]/60 shadow-md">
       <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src="/logo-header.png"
-            alt="غردقة فور يو"
-            className="h-10 sm:h-11 w-auto object-contain cursor-pointer"
+          <div
             onClick={() => window.location.reload()}
-          />
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[#38bdf8] shadow-md bg-[#0a2540] flex items-center justify-center flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
+          >
+            <img
+              src="/logo-circle.png"
+              alt="غردقة فور يو"
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-sm font-black text-white tracking-wide leading-none">
+              غردقة فور يو
+            </div>
+            <div className="text-[10px] text-[#38bdf8] font-bold mt-1 font-mono">
+              HURGHADA FOR YOU
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

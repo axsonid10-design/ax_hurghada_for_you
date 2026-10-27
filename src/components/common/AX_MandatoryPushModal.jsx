@@ -27,7 +27,6 @@ export function AX_MandatoryPushModal() {
         setIsOpen(false)
         if ('serviceWorker' in navigator) {
           const reg = await navigator.serviceWorker.ready
-          // Ready to subscribe
         }
       } else {
         setIsOpen(false)
@@ -49,8 +48,12 @@ export function AX_MandatoryPushModal() {
           <X className="w-4 h-4" />
         </button>
 
-        <div className="w-16 h-16 rounded-full bg-[#e0f2fe] text-[#0284c7] mx-auto flex items-center justify-center mb-4 shadow-sm">
-          <Bell className="w-8 h-8 animate-bounce" />
+        <div className="w-20 h-20 rounded-full border-4 border-[#0284c7]/30 p-1 mx-auto mb-4 shadow-xl bg-white overflow-hidden flex items-center justify-center">
+          <img
+            src="/logo-circle.png"
+            alt="غردقة فور يو"
+            className="w-full h-full object-cover rounded-full"
+          />
         </div>
 
         <h3 className="text-lg font-black text-[#0a2540] mb-2">

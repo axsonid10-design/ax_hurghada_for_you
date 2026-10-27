@@ -70,8 +70,8 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
       {/* Top Banner & Control */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-soft">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0a2540] text-[#38bdf8] flex items-center justify-center font-black shadow-md">
-            <Compass className="w-6 h-6 animate-spin-slow" />
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#38bdf8] shadow-md flex-shrink-0 bg-[#0a2540] flex items-center justify-center">
+            <img src="/logo-circle.png" alt="غردقة فور يو" className="w-full h-full object-cover rounded-full" />
           </div>
           <div>
             <h2 className="text-base font-black text-[#0a2540]">

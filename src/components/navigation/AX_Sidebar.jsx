@@ -196,8 +196,8 @@ export function AX_Sidebar({ onOpenUploadModal }) {
             !isExpanded ? 'justify-center p-1' : ''
           }`}
         >
-          <div className="w-8 h-8 rounded-full bg-[#0a2540] text-[#38bdf8] flex items-center justify-center font-black text-xs flex-shrink-0 shadow-sm">
-            HF
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-[#38bdf8] flex items-center justify-center flex-shrink-0 shadow-sm">
+            <img src="/logo-circle.png" alt="غردقة فور يو" className="w-full h-full object-cover rounded-full" />
           </div>
           {isExpanded && (
             <div className="flex-1 min-w-0 text-right">
