@@ -1,0 +1,21 @@
+project:
+  name: HURGHADA FOR YOU
+  arabic_name: غردقة فور يو
+  title: غردقة فور يو - منظومة الرحلات والتشغيل السياحي
+  type: Hybrid Standalone PWA
+  stack:
+    frontend: React 18 + Vite 6 + Tailwind CSS
+    state_management: Zustand
+    database: Supabase
+    offline_engine: IndexedDB (offline_queue)
+    pwa: VitePWA (Quad-Lock Cache Buster + NetworkOnly version.json)
+    push: 24/7 Web Push Notification
+    node_modules_mode: Linked Local Junction
+  features:
+    - daily_situation_management
+    - sea_trips_boat_pax_capacity
+    - safari_trips_tracking
+    - multi_currency_cash_drawer (EUR, EGP, USD, GBP)
+    - hotel_pickup_logistics
+    - sellers_and_channels_analytics
+    - offline_first_booking_sync

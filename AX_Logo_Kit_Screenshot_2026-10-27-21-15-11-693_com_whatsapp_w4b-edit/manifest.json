@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "AX_Logo_Kit_Screenshot_2026-10-27-21-15-11-693_com_whatsapp_w4b-edit",
+  "short_name": "AX_Logo_Kit_Screenshot_2026-10-27-21-15-11-693_com_whatsapp_w4b-edit",
+  "theme_color": "#0a2540",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "dir": "rtl",
+  "lang": "ar-EG",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

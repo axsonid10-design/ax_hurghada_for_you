@@ -1,0 +1,67 @@
+======================================================================
+دليل طريقة ربط اللوجو والأيقونات والـ PWA والخلفية في موقعك (AXONID KIT)
+======================================================================
+
+1. مكان وضع الصور:
+-----------------
+انقل جميع ملفات الـ PNG الموجودة في هذا الفولدر + ملف manifest.json
+وضعها مباشرة داخل مجلد (public/) في مشروعك.
+
+قائمة الملفات الموجودة في هذا الفولدر ووظيفة كل ملف:
+- logo-clean-original.png (364x364px) -> الصورة الأصلية الكاملة (شفافة PNG): النسخة الأساسية عالية الدقة بعد إزالة الخلفية للاستخدام العام
+- favicon-16x16.png (16x16px) -> أيقونة تاب المتصفح المصغرة (Tab Icon): تظهر في شريط علامات التبويب بجانب اسم الموقع في المتصفحات
+- favicon-32x32.png (32x32px) -> أيقونة تاب المتصفح القياسية (Favicon 32×32): المقاس الأساسي لأيقونة التاب والـ Bookmarks في كروم وإيدج
+- favicon-48x48.png (48x48px) -> أيقونة نتائج بحث جوجل وسطح المكتب (48×48): تظهر بجانب رابط الموقع في محركات البحث واختصارات سطح المكتب
+- apple-touch-icon.png (180x180px) -> أيقونة الآيفون والآيباد (Apple Touch Icon): تظهر عند إضافة الموقع للشاشة الرئيسية على أجهزة iOS و Safari
+- pwa-192x192.png (192x192px) -> أيقونة تطبيق الـ PWA للموبايل والكمبيوتر (192×192): شرط إجباري في manifest.json لتثبيت النظام كتطبيق مستقل بضغطة واحدة
+- pwa-512x512.png (512x512px) -> أيقونة تطبيق الـ PWA وشاشة الفتح (512×512): شرط إجباري في manifest.json لشاشة بدء التطبيق (Splash Screen) والمتجر
+- icon-512.png (512x512px) -> أيقونة PWA القابلة للقص الآمن (Maskable 512×512): مزودة بهامش أمان داخلي لمنع قص أطراف اللوجو داخل دوائر أندرويد
+- logo-header.png (400x140px) -> شعار الهيدر والسايدبار للموقع (Header / Navbar): مقاس مثالي خفيف وسريع التحميل لوضعه في أعلى الموقع والـ Sidebar
+- og-image.png (1200x630px) -> صورة معاينة الرابط (OpenGraph / WhatsApp & Social): تظهر تلقائياً عند إرسال رابط الموقع في واتساب أو فيسبوك أو لينكدإن
+- site-bg-watermark.png (1920x1080px) -> خلفية الموقع / العلامة المائية (Background 1920×1080): خلفية كاملة للموقع أو شاشة تسجيل الدخول بشفافية مائية هادئة
+
+----------------------------------------------------------------------
+2. كود الربط داخل وسم <head> في ملف (index.html):
+----------------------------------------------------------------------
+<!-- أيقونات تاب المتصفح Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+
+<!-- أيقونة شاشة الآيفون والآيباد -->
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+<!-- ملف تعريف تطبيق الـ PWA -->
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0a2540" />
+
+<!-- صورة معاينة الرابط في واتساب وفيسبوك ولينكدإن -->
+<meta property="og:image" content="/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- سكربت التقاط حدث تثبيت تطبيق الـ PWA بضغطة واحدة -->
+<script>
+  window.__deferredPwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    window.__deferredPwaPrompt = e;
+    window.dispatchEvent(new Event('ax-pwa-ready'));
+  });
+</script>
+
+----------------------------------------------------------------------
+3. طريقة تركيب خلفية الموقع المائية (site-bg-watermark.png) في الـ CSS:
+----------------------------------------------------------------------
+body {
+  background-image: url('/site-bg-watermark.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+----------------------------------------------------------------------
+4. طريقة وضع اللوجو في الهيدر والـ Sidebar:
+----------------------------------------------------------------------
+<img src="/logo-header.png" alt="Logo" className="h-10 w-auto object-contain" />
