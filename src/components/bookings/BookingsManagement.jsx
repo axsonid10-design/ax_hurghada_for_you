@@ -1,21 +1,15 @@
 import React, { useState } from 'react'
 import {
-  CalendarCheck,
   Search,
-  Filter,
   CheckCircle2,
-  Trash2,
-  Euro,
-  Hotel,
-  User,
-  ArrowUpDown
+  Trash2
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
 export function BookingsManagement({ onOpenNewBooking }) {
-  const { bookings, deleteBooking, openConfirmModal } = useAXStore()
+  const { bookings, deleteBooking, openConfirmModal, t } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
@@ -52,6 +46,7 @@ export function BookingsManagement({ onOpenNewBooking }) {
 
   return (
     <div className="w-full space-y-4">
+      {/* Top Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-soft">
         <div className="flex items-center gap-2">
           <button
@@ -62,11 +57,11 @@ export function BookingsManagement({ onOpenNewBooking }) {
             }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
               statusFilter === 'ALL'
-                ? 'bg-[#0a2540] text-white'
+                ? 'bg-[#0f172a] text-white shadow-sm'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            جميع الحجوزات ({bookings.length})
+            {t('tab_bookings')} ({bookings.length})
           </button>
           <button
             onClick={() => {
@@ -76,11 +71,11 @@ export function BookingsManagement({ onOpenNewBooking }) {
             }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
               statusFilter === 'unpaid'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            غير مدفوع
+            {t('status_unpaid')}
           </button>
           <button
             onClick={() => {
@@ -90,11 +85,11 @@ export function BookingsManagement({ onOpenNewBooking }) {
             }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
               statusFilter === 'paid'
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-emerald-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            مدفوع كلي
+            {t('status_paid')}
           </button>
         </div>
 
@@ -106,10 +101,10 @@ export function BookingsManagement({ onOpenNewBooking }) {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
-            placeholder="بحث بالاسم أو الفندق أو الـ SR..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-full pr-9 pl-4 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+            placeholder={t('search_placeholder')}
+            className="w-full bg-slate-50 border border-slate-200 rounded-full pr-10 pl-4 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5" />
         </div>
       </div>
 
@@ -145,19 +140,19 @@ export function BookingsManagement({ onOpenNewBooking }) {
         ))}
       </div>
 
-      {/* Bookings Single-Line Table for Desktop (Rule 16: h-11 Rows) */}
-      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
-        <table className="w-full text-right border-collapse">
+      {/* Bookings Table with Smooth Horizontal Scroll (Rule 16 + Scroll Fix) */}
+      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-x-auto overflow-y-hidden w-full max-w-full">
+        <table className="w-full text-start border-collapse min-w-[900px]">
           <thead>
-            <tr className="bg-[#0a2540] text-white text-xs font-bold h-11">
-              <th className="px-3 font-mono">SR</th>
-              <th className="px-3">التاريخ</th>
-              <th className="px-3">النزيل</th>
-              <th className="px-3">الفندق (الغرفة)</th>
-              <th className="px-3">الرحلة</th>
-              <th className="px-3 text-center">الأفراد</th>
-              <th className="px-3 text-center font-mono">المتبقي (€)</th>
-              <th className="px-3 text-center">حذف</th>
+            <tr className="bg-[#0f172a] text-white text-xs font-bold h-11">
+              <th className="px-3 font-mono text-start">{t('th_sr')}</th>
+              <th className="px-3 text-start">{t('th_date')}</th>
+              <th className="px-3 text-start">{t('th_guest')}</th>
+              <th className="px-3 text-start">{t('th_hotel_room')}</th>
+              <th className="px-3 text-start">{t('th_trip')}</th>
+              <th className="px-3 text-center">{t('th_pax')}</th>
+              <th className="px-3 text-center font-mono">{t('th_profit')}</th>
+              <th className="px-3 text-center">{t('th_actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs font-medium">

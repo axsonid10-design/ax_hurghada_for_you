@@ -5,9 +5,7 @@ import {
   DollarSign,
   Plus,
   Search,
-  Filter,
   CheckCircle2,
-  Clock,
   Hotel,
   Truck,
   TrendingUp,
@@ -25,7 +23,8 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
     setSelectedDate,
     updateBooking,
     openConfirmModal,
-    executors
+    executors,
+    t
   } = useAXStore()
 
   const [filterTripType, setFilterTripType] = useState('ALL')
@@ -73,18 +72,18 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
     const hasRest = (b.rest_eur > 0 || b.rest_egp > 0 || b.rest_usd > 0 || b.rest_gbp > 0)
     if (!hasRest) {
       return {
-        text: 'مدفوع كلي',
+        text: t('status_paid'),
         className: 'bg-emerald-100 text-emerald-800'
       }
     }
     if (b.rest_eur < b.sell_eur) {
       return {
-        text: 'مدفوع جزئي',
+        text: t('status_partial'),
         className: 'bg-amber-100 text-amber-800'
       }
     }
     return {
-      text: 'غير مدفوع',
+      text: t('status_unpaid'),
       className: 'bg-rose-100 text-rose-800'
     }
   }
@@ -109,30 +108,33 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
 
   return (
     <div className="w-full space-y-4">
-      {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-soft">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="w-48">
-            <AX_CompanyDatePicker
-              value={selectedDate}
-              onChange={(d) => {
-                setSelectedDate(d)
-                setCurrentPage(1)
-              }}
-              placeholder="تاريخ اليومية"
-            />
-          </div>
+      {/* Top Filter & Action Bar (Clean 2-tier responsive layout) */}
+      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-3">
+        {/* Tier 1: Filters & Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+            {/* Date Picker */}
+            <div className="w-44 sm:w-48 flex-shrink-0">
+              <AX_CompanyDatePicker
+                value={selectedDate}
+                onChange={(d) => {
+                  setSelectedDate(d)
+                  setCurrentPage(1)
+                }}
+                placeholder={t('daily_date')}
+              />
+            </div>
 
-          <div className="flex items-center gap-2">
+            {/* Trip Type Select */}
             <select
               value={filterTripType}
               onChange={(e) => {
                 setFilterTripType(e.target.value)
                 setCurrentPage(1)
               }}
-              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7] max-w-[200px] truncate"
             >
-              <option value="ALL">جميع أنواع الرحلات ({uniqueTrips.length})</option>
+              <option value="ALL">{t('all_trips')} ({uniqueTrips.length})</option>
               {uniqueTrips.map((tt) => (
                 <option key={tt} value={tt}>
                   {tt}
@@ -140,15 +142,16 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
               ))}
             </select>
 
+            {/* Executor Select */}
             <select
               value={filterExecutor}
               onChange={(e) => {
                 setFilterExecutor(e.target.value)
                 setCurrentPage(1)
               }}
-              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7] max-w-[160px] truncate"
             >
-              <option value="ALL">جميع المنفذين</option>
+              <option value="ALL">{t('all_executors')}</option>
               {executors.map((ex) => (
                 <option key={ex.id} value={ex.id}>
                   {ex.name}
@@ -156,44 +159,46 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
               ))}
             </select>
           </div>
+
+          {/* Action Buttons: Strictly within viewport bounds */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                onOpenUploadModal?.()
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{t('upload_sheet')}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                onOpenNewBooking?.()
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#0f172a] hover:bg-slate-800 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#38bdf8]" />
+              <span>{t('new_booking')}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 sm:w-60">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder="بحث بالاسم، الفندق، الغرفة..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-full pr-9 pl-4 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-            />
-            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
-          </div>
-
-          <button
-            onClick={() => {
-              soundManager.playClick()
-              onOpenUploadModal?.()
+        {/* Tier 2: Full-Width Search Input */}
+        <div className="relative w-full">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
             }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>رفع شيت</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundManager.playClick()
-              onOpenNewBooking?.()
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5 text-[#38bdf8]" />
-            <span>حجز جديد</span>
-          </button>
+            placeholder={t('search_placeholder')}
+            className="w-full bg-slate-50 border border-slate-200 rounded-full pr-10 pl-4 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+          />
+          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5" />
         </div>
       </div>
 
@@ -204,7 +209,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-400">إجمالي الأفراد (PAX)</div>
+            <div className="text-[11px] font-bold text-slate-400">{t('total_pax')}</div>
             <div className="text-lg font-black text-[#0a2540] font-mono">
               {totalPax} <span className="text-xs font-normal text-slate-500">({totalAdults} ك / {totalChildren} ص)</span>
             </div>
@@ -216,7 +221,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             <Euro className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-400">إجمالي المبيعات (€)</div>
+            <div className="text-[11px] font-bold text-slate-400">{t('total_sales')}</div>
             <div className="text-lg font-black text-emerald-600 font-mono">
               €{totalSalesEur.toLocaleString()}
             </div>
@@ -228,7 +233,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             <Truck className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-400">تكاليف المنفذين</div>
+            <div className="text-[11px] font-bold text-slate-400">{t('executors_cost')}</div>
             <div className="text-lg font-black text-amber-700 font-mono">
               €{totalCostEur.toLocaleString()}
             </div>
@@ -240,7 +245,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-400">صافي الأرباح اليوم</div>
+            <div className="text-[11px] font-bold text-slate-400">{t('net_profit')}</div>
             <div className="text-lg font-black text-[#0a2540] font-mono">
               €{totalProfitEur.toLocaleString()}
             </div>
@@ -321,12 +326,12 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
                   )}
                 </div>
 
-                {badge.text !== 'مدفوع كلي' && (
+                {badge.text !== t('status_paid') && (
                   <button
                     onClick={() => handleMarkPaid(b.sr)}
                     className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
                   >
-                    تحصيل المبلغ
+                    {t('collect')}
                   </button>
                 )}
               </div>
@@ -335,22 +340,22 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
         })}
       </div>
 
-      {/* Desktop Single-Line Compact Table (Rule 16: h-11 Rows & Full Canvas) */}
-      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
-        <table className="w-full text-right border-collapse">
+      {/* Desktop Single-Line Table with SMOOTH HORIZONTAL SCROLL (Rule 16 + Scroll fix) */}
+      <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-x-auto overflow-y-hidden w-full max-w-full">
+        <table className="w-full text-start border-collapse min-w-[980px]">
           <thead>
-            <tr className="bg-[#0a2540] text-white text-xs font-bold h-11">
-              <th className="px-3 font-mono">SR</th>
-              <th className="px-3">النزيل</th>
-              <th className="px-3">الفندق (الغرفة)</th>
-              <th className="px-3">الرحلة</th>
-              <th className="px-3">المنفذ</th>
-              <th className="px-3 text-center">الأفراد</th>
-              <th className="px-3 text-center font-mono">البيع (€)</th>
-              <th className="px-3 text-center font-mono">التكلفة (€)</th>
-              <th className="px-3 text-center font-mono">الربح (€)</th>
-              <th className="px-3 text-center">حالة الدفع</th>
-              <th className="px-3 text-center">الإجراء</th>
+            <tr className="bg-[#0f172a] text-white text-xs font-bold h-11">
+              <th className="px-3 font-mono text-start">{t('th_sr')}</th>
+              <th className="px-3 text-start">{t('th_guest')}</th>
+              <th className="px-3 text-start">{t('th_hotel_room')}</th>
+              <th className="px-3 text-start">{t('th_trip')}</th>
+              <th className="px-3 text-start">{t('th_executor')}</th>
+              <th className="px-3 text-center">{t('th_pax')}</th>
+              <th className="px-3 text-center font-mono">{t('th_sell')}</th>
+              <th className="px-3 text-center font-mono">{t('th_cost')}</th>
+              <th className="px-3 text-center font-mono">{t('th_profit')}</th>
+              <th className="px-3 text-center">{t('th_payment_status')}</th>
+              <th className="px-3 text-center">{t('th_actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs font-medium">
@@ -391,17 +396,17 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
                   </td>
                   <td className="px-3 text-center">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}>
-                      {badge.text === 'مدفوع كلي' && <CheckCircle2 className="w-3 h-3" />}
+                      {badge.text === t('status_paid') && <CheckCircle2 className="w-3 h-3" />}
                       {badge.text}
                     </span>
                   </td>
                   <td className="px-3 text-center">
-                    {badge.text !== 'مدفوع كلي' ? (
+                    {badge.text !== t('status_paid') ? (
                       <button
                         onClick={() => handleMarkPaid(b.sr)}
                         className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
                       >
-                        تحصيل
+                        {t('collect')}
                       </button>
                     ) : (
                       <span className="text-slate-300 text-xs">—</span>

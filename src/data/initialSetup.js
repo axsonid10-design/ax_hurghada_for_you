@@ -35,11 +35,21 @@ export const INITIAL_EXECUTORS = [
   }
 ]
 
+export function inferTripCategory(name = '') {
+  const lower = (name || '').toLowerCase()
+  if (lower.includes('safari') || lower.includes('سفاري') || lower.includes('باجي') || lower.includes('buggy') || lower.includes('quad') || lower.includes('صحراء')) return 'safari'
+  if (lower.includes('island') || lower.includes('جزيرة') || lower.includes('orange') || lower.includes('paradise') || lower.includes('eden') || lower.includes('hula') || lower.includes('bianca') || lower.includes('white') || lower.includes('mahmya')) return 'islands'
+  if (lower.includes('diving') || lower.includes('غوص') || lower.includes('dolphin') || lower.includes('دلافين') || lower.includes('submarine') || lower.includes('غواصة') || lower.includes('parasail') || lower.includes('باراشوت') || lower.includes('aqua') || lower.includes('أكوا') || lower.includes('snk') || lower.includes('سنوركل')) return 'aqua'
+  if (lower.includes('pickup') || lower.includes('تحصيل') || lower.includes('transfer') || lower.includes('انتقال') || lower.includes('مطار') || lower.includes('airport') || lower.includes('horse') || lower.includes('خيل') || lower.includes('spa') || lower.includes('سبا') || lower.includes('city tour') || lower.includes('جولة')) return 'transfers'
+  return 'sea'
+}
+
 export const INITIAL_TRIP_DEFINITIONS = [
   {
     id: 'hula_hula',
     sheet_name: 'Hula Hula',
     display_name: 'جزيرة هولا هولا (Hula Hula Island)',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 35,
@@ -55,6 +65,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'hula_hula_white',
     sheet_name: 'Hula Hula island + White island',
     display_name: 'هولا هولا + الجزيرة البيضاء',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 40,
@@ -70,6 +81,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'orange_bay_white',
     sheet_name: 'Orange bay + White island',
     display_name: 'أورانج باي + الجزيرة البيضاء',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 35,
@@ -85,6 +97,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'orange_bay',
     sheet_name: 'Orange Bay',
     display_name: 'جزيرة أورانج باي (Orange Bay)',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 30,
@@ -100,6 +113,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'super_safari',
     sheet_name: 'Super Safari',
     display_name: 'سوبر سفاري بالبيتش باجي وعشاء بدوي',
+    category: 'safari',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 25,
@@ -115,6 +129,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'safari_combined',
     sheet_name: 'Safari Combined',
     display_name: 'سفاري كومبايند (دراجات + باجي)',
+    category: 'safari',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 30,
@@ -130,6 +145,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'dolphin_house',
     sheet_name: 'Dolphin House',
     display_name: 'بيت الدلافين سنوركلينج (Dolphin House)',
+    category: 'aqua',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 25,
@@ -145,6 +161,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'scuba_diving',
     sheet_name: 'Scuba diving day',
     display_name: 'يوم غوص كامل للمحترفين والمبتدئين',
+    category: 'aqua',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 40,
@@ -160,6 +177,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'semi_submarine',
     sheet_name: 'Semi-submarine',
     display_name: 'الغواصة الزجاجية شبه الغاطسة',
+    category: 'aqua',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 20,
@@ -175,6 +193,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'parasailing',
     sheet_name: 'Parasailing',
     display_name: 'باراشوت مائي مفرد ومزدوج',
+    category: 'aqua',
     pricing_type: 'trip',
     currency: 'EUR',
     adult_cost: 20,
@@ -190,6 +209,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'paradise_day',
     sheet_name: 'Paradise Day',
     display_name: 'يوم جزيرة باراديس الفاخر',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 35,
@@ -205,6 +225,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'eden_day',
     sheet_name: 'Eden Day',
     display_name: 'يوم جزيرة إيدن أيلاند',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 35,
@@ -220,6 +241,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'bianca_island',
     sheet_name: 'Bianca Island',
     display_name: 'جزيرة بيانكا بيتش VIP',
+    category: 'islands',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 45,
@@ -235,6 +257,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'private_catamaran',
     sheet_name: 'Private Catamaran',
     display_name: 'كاتاماران خاص VIP بالرحلة',
+    category: 'sea',
     pricing_type: 'trip',
     currency: 'EUR',
     adult_cost: 250,
@@ -250,6 +273,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'horse_riding',
     sheet_name: 'horse riding 2-hour afternoon',
     display_name: 'ركوب الخيل على الشاطئ والصحراء (ساعتين)',
+    category: 'transfers',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 25,
@@ -265,6 +289,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'spa',
     sheet_name: 'Spa',
     display_name: 'جلسة سبا ومساج وحمام تركي',
+    category: 'transfers',
     pricing_type: 'pax',
     currency: 'EUR',
     adult_cost: 30,
@@ -280,6 +305,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'transfer_from_airport',
     sheet_name: 'Transfer from airport',
     display_name: 'استقبال من مطار الغردقة للفندق',
+    category: 'transfers',
     pricing_type: 'trip',
     currency: 'EUR',
     adult_cost: 15,
@@ -295,6 +321,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'transfer_to_airport',
     sheet_name: 'Transfer to airport',
     display_name: 'توصيل من الفندق لمطار الغردقة',
+    category: 'transfers',
     pricing_type: 'trip',
     currency: 'EUR',
     adult_cost: 15,
@@ -310,6 +337,7 @@ export const INITIAL_TRIP_DEFINITIONS = [
     id: 'cash_pickup',
     sheet_name: 'Cash Pickup',
     display_name: 'تحصيل نقدي من الفنادق (Cash Pickup)',
+    category: 'transfers',
     pricing_type: 'trip',
     currency: 'EUR',
     adult_cost: 0,

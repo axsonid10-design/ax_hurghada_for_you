@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
+import { inferTripCategory } from '../../data/initialSetup'
 import { QuickAddExecutorModal } from '../executors/QuickAddExecutorModal'
 
 export function ConfigureUnknownTripsModal({
@@ -23,21 +24,22 @@ export function ConfigureUnknownTripsModal({
   const [isAddExecutorOpen, setIsAddExecutorOpen] = useState(false)
   const [activeTripIdx, setActiveTripIdx] = useState(null)
 
-  // Local state for each unknown trip
+  // Local state for each unknown trip - defaults to 0 so the user decides the price
   const [tripsState, setTripsState] = useState(() => {
     return unknownTripNames.map((name, idx) => ({
       id: 'trip_' + Date.now() + '_' + idx,
       sheet_name: name,
       display_name: name,
+      category: inferTripCategory(name),
       pricing_type: 'pax',
       currency: 'EUR',
-      adult_cost: 30,
-      adult_sell: 60,
+      adult_cost: 0,
+      adult_sell: 0,
       child_pricing_mode: 'percent',
       child_cost_percent: 50,
       child_sell_percent: 50,
-      child_cost_fixed: 15,
-      child_sell_fixed: 30,
+      child_cost_fixed: 0,
+      child_sell_fixed: 0,
       executor_id: executors[0]?.id || 'exec_marina'
     }))
   })

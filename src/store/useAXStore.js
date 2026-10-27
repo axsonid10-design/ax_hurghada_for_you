@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { translations } from '../i18n/translations'
 import {
   INITIAL_EXECUTORS,
   INITIAL_TRIP_DEFINITIONS,
@@ -16,7 +17,36 @@ const getStoredProfile = () => {
   }
 }
 
+const getStoredLang = () => {
+  if (typeof window === 'undefined') return 'ar'
+  const l = localStorage.getItem('ax_h4u_lang') || 'ar'
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr')
+    document.documentElement.setAttribute('lang', l)
+  }
+  return l
+}
+
 export const useAXStore = create((set, get) => ({
+  lang: getStoredLang(),
+  setLang: (lang) => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr')
+      document.documentElement.setAttribute('lang', lang)
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_lang', lang)
+    }
+    set({ lang })
+  },
+  toggleLang: () => {
+    const next = get().lang === 'ar' ? 'en' : 'ar'
+    get().setLang(next)
+  },
+  t: (key) => {
+    const l = get().lang || 'ar'
+    return translations[l]?.[key] || key
+  },
   profile: getStoredProfile(),
   isAuthLoading: false,
   setProfile: (profile) => set({ profile }),

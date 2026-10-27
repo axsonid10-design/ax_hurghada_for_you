@@ -20,7 +20,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
 export function AX_Sidebar({ onOpenUploadModal }) {
-  const { activeTab, setActiveTab, profile, logout, openConfirmModal } = useAXStore()
+  const { activeTab, setActiveTab, profile, logout, openConfirmModal, t } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -29,25 +29,25 @@ export function AX_Sidebar({ onOpenUploadModal }) {
 
   const menuSections = [
     {
-      title: 'العمليات والتشغيل',
+      title: t('nav_operations'),
       items: [
-        { id: 'dashboard', label: 'الداشبورد (الرئيسية)', icon: LayoutDashboard },
-        { id: 'daily', label: 'الوضع اليومي (Daily)', icon: Ship, badge: '57' },
-        { id: 'bookings', label: 'كشف الحجوزات والنزلاء', icon: CalendarCheck }
+        { id: 'dashboard', label: t('tab_dashboard'), icon: LayoutDashboard },
+        { id: 'daily', label: t('tab_daily'), icon: Ship, badge: '57' },
+        { id: 'bookings', label: t('tab_bookings'), icon: CalendarCheck }
       ]
     },
     {
-      title: 'الرحلات والمنفذين',
+      title: t('nav_trips'),
       items: [
-        { id: 'trips', label: 'دليل الرحلات والأسعار', icon: Tag, badge: '19' },
-        { id: 'executors', label: 'المنفذين والتوريد', icon: Truck, badge: '4' }
+        { id: 'trips', label: t('tab_trips'), icon: Tag, badge: '19' },
+        { id: 'executors', label: t('tab_executors'), icon: Truck, badge: '4' }
       ]
     },
     {
-      title: 'الماليات والتقارير',
+      title: t('nav_finances'),
       items: [
-        { id: 'cash', label: 'الخزينة والعملات (Cash)', icon: Banknote },
-        { id: 'reports', label: 'تقارير الأداء والتحصيل', icon: BarChart3 }
+        { id: 'cash', label: t('tab_cash'), icon: Banknote },
+        { id: 'reports', label: t('tab_reports'), icon: BarChart3 }
       ]
     }
   ]
