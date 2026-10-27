@@ -12,6 +12,7 @@ import {
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { inferTripCategory } from '../../data/initialSetup'
+import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { QuickAddExecutorModal } from '../executors/QuickAddExecutorModal'
 
 export function ConfigureUnknownTripsModal({
@@ -199,17 +200,14 @@ export function ConfigureUnknownTripsModal({
                           <span>منفذ جديد</span>
                         </button>
                       </div>
-                      <select
+                      <AX_SearchableSelect
                         value={trip.executor_id}
-                        onChange={(e) => handleFieldChange(idx, 'executor_id', e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-full px-3.5 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                      >
-                        {executors.map((ex) => (
-                          <option key={ex.id} value={ex.id}>
-                            {ex.name} ({ex.category})
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleFieldChange(idx, 'executor_id', val)}
+                        options={executors.map((ex) => ({
+                          value: ex.id,
+                          label: `${ex.name} (${ex.category})`
+                        }))}
+                      />
                     </div>
                   </div>
 
@@ -217,17 +215,18 @@ export function ConfigureUnknownTripsModal({
                   <div className="bg-white p-3 rounded-2xl border border-slate-200/80 space-y-3">
                     <div className="grid grid-cols-3 gap-3 text-xs font-bold">
                       <div>
-                        <label className="block text-slate-700 mb-1">العملة</label>
-                        <select
+                        <AX_SearchableSelect
+                          label="العملة"
                           value={trip.currency}
-                          onChange={(e) => handleFieldChange(idx, 'currency', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                        >
-                          <option value="EUR">يورو (€)</option>
-                          <option value="EGP">جنيه مصري (L.E)</option>
-                          <option value="USD">دولار ($)</option>
-                          <option value="GBP">إسترليني (£)</option>
-                        </select>
+                          onChange={(val) => handleFieldChange(idx, 'currency', val)}
+                          options={[
+                            { value: 'EUR', label: 'يورو (€)' },
+                            { value: 'EGP', label: 'جنيه مصري (L.E)' },
+                            { value: 'USD', label: 'دولار ($)' },
+                            { value: 'GBP', label: 'إسترليني (£)' }
+                          ]}
+                          searchable={false}
+                        />
                       </div>
 
                       <div>

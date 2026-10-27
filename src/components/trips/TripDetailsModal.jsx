@@ -2,15 +2,16 @@ import React, { useState } from 'react'
 import { X, Check, Ship, Hotel, User, DollarSign } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
+import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 
 export function TripDetailsModal({ isOpen, onClose }) {
-  const { addBooking } = useAXStore()
+  const { addBooking, tripDefinitions } = useAXStore()
 
   const [formData, setFormData] = useState({
     guest_name: '',
     hotel: '',
     room: '',
-    trip_type: 'Hula Hula',
+    trip_type: tripDefinitions[0]?.display_name || 'Hula Hula',
     group: 'GROUP A - Sea Trips 🛥️',
     seller: 'Meghane',
     channel: '📱 Mobile App',
@@ -22,6 +23,24 @@ export function TripDetailsModal({ isOpen, onClose }) {
   })
 
   if (!isOpen) return null
+
+  const tripOptions = tripDefinitions.map((td) => ({
+    value: td.sheet_name,
+    label: td.display_name
+  }))
+
+  const groupOptions = [
+    { value: 'GROUP A - Sea Trips 🛥️', label: 'GROUP A - Sea Trips 🛥️' },
+    { value: 'Safari & Desert 🏎️', label: 'Safari & Desert 🏎️' },
+    { value: 'Cash Pickup 💰', label: 'Cash Pickup 💰' }
+  ]
+
+  const sellerOptions = [
+    { value: 'Meghane', label: 'Meghane' },
+    { value: 'Laure', label: 'Laure' },
+    { value: 'Laly', label: 'Laly' },
+    { value: 'Sales Team', label: 'Sales Team' }
+  ]
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -92,32 +111,18 @@ export function TripDetailsModal({ isOpen, onClose }) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 mb-1">نوع الرحلة</label>
-              <select
-                value={formData.trip_type}
-                onChange={(e) => setFormData({ ...formData, trip_type: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-              >
-                <option value="Hula Hula">Hula Hula Island 🏝️</option>
-                <option value="Orange Bay">Orange Bay 🏖️</option>
-                <option value="Hula Hula + White Island">Hula Hula + White Island</option>
-                <option value="Orange Bay + White Island">Orange Bay + White Island</option>
-                <option value="Desert Safari">سفاري صحراوي 🏎️</option>
-                <option value="Cash Collection">تحصيل نقدي 💰</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-slate-700 mb-1">المجموعة</label>
-              <select
-                value={formData.group}
-                onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-              >
-                <option value="GROUP A - Sea Trips 🛥️">GROUP A - Sea Trips 🛥️</option>
-                <option value="Cash Pickup 💰">Cash Pickup 💰</option>
-              </select>
-            </div>
+            <AX_SearchableSelect
+              label="نوع الرحلة"
+              value={formData.trip_type}
+              options={tripOptions}
+              onChange={(val) => setFormData({ ...formData, trip_type: val })}
+            />
+            <AX_SearchableSelect
+              label="المجموعة"
+              value={formData.group}
+              options={groupOptions}
+              onChange={(val) => setFormData({ ...formData, group: val })}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -164,19 +169,12 @@ export function TripDetailsModal({ isOpen, onClose }) {
                 className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-center font-mono focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
               />
             </div>
-            <div>
-              <label className="block text-slate-700 mb-1">المندوب</label>
-              <select
-                value={formData.seller}
-                onChange={(e) => setFormData({ ...formData, seller: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-              >
-                <option value="Meghane">Meghane</option>
-                <option value="Laure">Laure</option>
-                <option value="Laly">Laly</option>
-                <option value="Sales Team">Sales Team</option>
-              </select>
-            </div>
+            <AX_SearchableSelect
+              label="المندوب"
+              value={formData.seller}
+              options={sellerOptions}
+              onChange={(val) => setFormData({ ...formData, seller: val })}
+            />
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center gap-2">

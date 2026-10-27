@@ -194,32 +194,38 @@ export function ExcelUploadModal({ isOpen, onClose }) {
               {/* Duplicate Date Warning Box */}
               {duplicateWarning ? (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2.5">
                     <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="text-xs">
                       <div className="font-black text-amber-900">
-                        تنبيه: تم رفع يومية سابقة بنفس هذا التاريخ!
+                        تنبيه تكرار: تم استيراد يومية سابقة بنفس هذا التاريخ!
                       </div>
-                      <div className="text-amber-700 mt-1">
-                        تاريخ [{duplicateWarning.date}] مسجل بالفعل بالمنظومة ويحتوي على {duplicateWarning.prevCount} حجز.
+                      <div className="text-amber-800 mt-1 leading-relaxed">
+                        يومية تاريخ <strong className="font-mono text-slate-800">[{duplicateWarning.date}]</strong> مسجلة بالفعل بالمنظومة وبها <strong>{duplicateWarning.prevCount}</strong> حجز.
+                        <div className="mt-1 text-[11px] text-amber-700">
+                          هل ترغب في استبدال وتحديث الحجوزات بملف الإكسيل الجديد أم الإبقاء على القديم؟
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => handleFinalImport(true)}
-                      className="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
+                      className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
                     >
-                      تحديث واستبدال البيانات
+                      تحديث واستبدال البيانات (مسح القديم)
                     </button>
                     <button
                       type="button"
-                      onClick={onClose}
-                      className="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full text-xs font-bold transition-all"
+                      onClick={() => {
+                        soundManager.playClick()
+                        onClose()
+                      }}
+                      className="flex-1 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full text-xs font-bold transition-all"
                     >
-                      ترك القديم كما هو
+                      ترك القديم كما هو (إلغاء الملف)
                     </button>
                   </div>
                 </div>

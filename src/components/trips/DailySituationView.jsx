@@ -14,6 +14,7 @@ import {
 import { useAXStore } from '../../store/useAXStore'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
+import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { soundManager } from '../../utils/soundEffects'
 
 export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
@@ -126,38 +127,34 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             </div>
 
             {/* Trip Type Select */}
-            <select
-              value={filterTripType}
-              onChange={(e) => {
-                setFilterTripType(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7] max-w-[200px] truncate"
-            >
-              <option value="ALL">{t('all_trips')} ({uniqueTrips.length})</option>
-              {uniqueTrips.map((tt) => (
-                <option key={tt} value={tt}>
-                  {tt}
-                </option>
-              ))}
-            </select>
+            <div className="w-48 sm:w-56 flex-shrink-0">
+              <AX_SearchableSelect
+                value={filterTripType}
+                onChange={(val) => {
+                  setFilterTripType(val)
+                  setCurrentPage(1)
+                }}
+                options={[
+                  { value: 'ALL', label: `${t('all_trips')} (${uniqueTrips.length})` },
+                  ...uniqueTrips.map((tt) => ({ value: tt, label: tt }))
+                ]}
+              />
+            </div>
 
             {/* Executor Select */}
-            <select
-              value={filterExecutor}
-              onChange={(e) => {
-                setFilterExecutor(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7] max-w-[160px] truncate"
-            >
-              <option value="ALL">{t('all_executors')}</option>
-              {executors.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
+            <div className="w-44 sm:w-48 flex-shrink-0">
+              <AX_SearchableSelect
+                value={filterExecutor}
+                onChange={(val) => {
+                  setFilterExecutor(val)
+                  setCurrentPage(1)
+                }}
+                options={[
+                  { value: 'ALL', label: t('all_executors') },
+                  ...executors.map((ex) => ({ value: ex.id, label: ex.name }))
+                ]}
+              />
+            </div>
           </div>
 
           {/* Action Buttons: Strictly within viewport bounds */}

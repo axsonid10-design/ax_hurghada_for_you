@@ -21,6 +21,7 @@ import {
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { inferTripCategory } from '../../data/initialSetup'
+import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { QuickAddExecutorModal } from '../executors/QuickAddExecutorModal'
 
 export function TripsCatalogView() {
@@ -82,6 +83,24 @@ export function TripsCatalogView() {
     })
     return counts
   }, [enrichedTrips])
+
+  const categoryOptions = [
+    { value: 'sea', label: t('cat_sea') },
+    { value: 'islands', label: t('cat_islands') },
+    { value: 'safari', label: t('cat_safari') },
+    { value: 'aqua', label: t('cat_aqua') },
+    { value: 'transfers', label: t('cat_transfers') }
+  ]
+
+  const pricingTypeOptions = [
+    { value: 'pax', label: t('pricing_per_pax') },
+    { value: 'trip', label: t('pricing_per_trip') }
+  ]
+
+  const executorOptions = executors.map((ex) => ({
+    value: ex.id,
+    label: `${ex.name} (${ex.category})`
+  }))
 
   const filteredTrips = useMemo(() => {
     return enrichedTrips.filter((t) => {
@@ -392,53 +411,34 @@ export function TripsCatalogView() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 mb-1">القسم / التصنيف</label>
-                  <select
-                    value={editingTrip.category || 'sea'}
-                    onChange={(e) =>
-                      setEditingTrip({ ...editingTrip, category: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                  >
-                    <option value="sea">{t('cat_sea')}</option>
-                    <option value="islands">{t('cat_islands')}</option>
-                    <option value="safari">{t('cat_safari')}</option>
-                    <option value="aqua">{t('cat_aqua')}</option>
-                    <option value="transfers">{t('cat_transfers')}</option>
-                  </select>
-                </div>
+                <AX_SearchableSelect
+                  label="القسم / التصنيف"
+                  value={editingTrip.category || 'sea'}
+                  options={categoryOptions}
+                  onChange={(val) =>
+                    setEditingTrip({ ...editingTrip, category: val })
+                  }
+                />
 
-                <div>
-                  <label className="block text-slate-700 mb-1">طريقة الحساب</label>
-                  <select
-                    value={editingTrip.pricing_type}
-                    onChange={(e) =>
-                      setEditingTrip({ ...editingTrip, pricing_type: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                  >
-                    <option value="pax">{t('pricing_per_pax')}</option>
-                    <option value="trip">{t('pricing_per_trip')}</option>
-                  </select>
-                </div>
+                <AX_SearchableSelect
+                  label="طريقة الحساب"
+                  value={editingTrip.pricing_type}
+                  options={pricingTypeOptions}
+                  onChange={(val) =>
+                    setEditingTrip({ ...editingTrip, pricing_type: val })
+                  }
+                />
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1">{t('assigned_executor')}</label>
-                <select
+                <AX_SearchableSelect
+                  label={t('assigned_executor')}
                   value={editingTrip.executor_id}
-                  onChange={(e) =>
-                    setEditingTrip({ ...editingTrip, executor_id: e.target.value })
+                  options={executorOptions}
+                  onChange={(val) =>
+                    setEditingTrip({ ...editingTrip, executor_id: val })
                   }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                >
-                  {executors.map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name} ({ex.category})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -631,53 +631,34 @@ export function TripsCatalogView() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 mb-1">القسم / التصنيف</label>
-                  <select
-                    value={newTripData.category}
-                    onChange={(e) =>
-                      setNewTripData({ ...newTripData, category: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                  >
-                    <option value="sea">{t('cat_sea')}</option>
-                    <option value="islands">{t('cat_islands')}</option>
-                    <option value="safari">{t('cat_safari')}</option>
-                    <option value="aqua">{t('cat_aqua')}</option>
-                    <option value="transfers">{t('cat_transfers')}</option>
-                  </select>
-                </div>
+                <AX_SearchableSelect
+                  label="القسم / التصنيف"
+                  value={newTripData.category}
+                  options={categoryOptions}
+                  onChange={(val) =>
+                    setNewTripData({ ...newTripData, category: val })
+                  }
+                />
 
-                <div>
-                  <label className="block text-slate-700 mb-1">طريقة الحساب</label>
-                  <select
-                    value={newTripData.pricing_type}
-                    onChange={(e) =>
-                      setNewTripData({ ...newTripData, pricing_type: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                  >
-                    <option value="pax">{t('pricing_per_pax')}</option>
-                    <option value="trip">{t('pricing_per_trip')}</option>
-                  </select>
-                </div>
+                <AX_SearchableSelect
+                  label="طريقة الحساب"
+                  value={newTripData.pricing_type}
+                  options={pricingTypeOptions}
+                  onChange={(val) =>
+                    setNewTripData({ ...newTripData, pricing_type: val })
+                  }
+                />
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1">{t('assigned_executor')}</label>
-                <select
+                <AX_SearchableSelect
+                  label={t('assigned_executor')}
                   value={newTripData.executor_id}
-                  onChange={(e) =>
-                    setNewTripData({ ...newTripData, executor_id: e.target.value })
+                  options={executorOptions}
+                  onChange={(val) =>
+                    setNewTripData({ ...newTripData, executor_id: val })
                   }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-slate-800"
-                >
-                  {executors.map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name} ({ex.category})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

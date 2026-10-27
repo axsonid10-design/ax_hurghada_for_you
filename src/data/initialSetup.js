@@ -351,20 +351,47 @@ export const INITIAL_TRIP_DEFINITIONS = [
   }
 ]
 
-export function computeBookingFinancials(booking, tripDefs) {
-  const tripDef = tripDefs.find(
-    (td) => td.sheet_name.toLowerCase().trim() === (booking.trip_type || '').toLowerCase().trim()
-  )
+export function computeBookingFinancials(booking, tripDefs = []) {
+  const cleanTripType = (booking.trip_type || '').toLowerCase().trim().replace(/\s+/g, ' ')
+  
+  // Exact or normalized match
+  let tripDef = tripDefs.find((td) => {
+    const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+    const dName = (td.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+    return sName === cleanTripType || dName === cleanTripType
+  })
 
-  if (!tripDef || tripDef.sheet_name === 'Cash Pickup') {
+  // Substring fallback match if not exact
+  if (!tripDef) {
+    tripDef = tripDefs.find((td) => {
+      const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      return cleanTripType.includes(sName) || sName.includes(cleanTripType)
+    })
+  }
+
+  // Cash Pickup handling
+  if (cleanTripType.includes('cash pickup') || cleanTripType.includes('تحصيل')) {
+    const cashAmount = booking.rest_eur || 0
+    return {
+      cost_eur: 0,
+      sell_eur: cashAmount,
+      profit_eur: 0,
+      collected_eur: cashAmount,
+      executor_id: tripDef?.executor_id || 'exec_transfers',
+      pricing_type: 'trip',
+      currency: 'EUR'
+    }
+  }
+
+  if (!tripDef) {
     const sellPrice = booking.rest_eur || 0
     return {
       cost_eur: 0,
       sell_eur: sellPrice,
-      profit_eur: sellPrice,
+      profit_eur: 0,
       collected_eur: 0,
-      executor_id: tripDef?.executor_id || 'exec_transfers',
-      pricing_type: tripDef?.pricing_type || 'trip',
+      executor_id: 'exec_marina',
+      pricing_type: 'pax',
       currency: 'EUR'
     }
   }
