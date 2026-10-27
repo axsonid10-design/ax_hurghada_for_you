@@ -7,6 +7,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html, body {
+    overflow-x: clip;
+  }
+
   body {
     background-image: url('/site-bg-watermark.png');
     background-repeat: no-repeat;

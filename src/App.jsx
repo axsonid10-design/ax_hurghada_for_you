@@ -15,6 +15,7 @@ import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
+import { AX_FloatingActions } from './components/common/AX_FloatingActions'
 import { useAXStore } from './store/useAXStore'
 
 export function App() {
@@ -101,7 +102,13 @@ export function App() {
         </main>
       </div>
 
-      {/* 9. Floating Capsule Mobile Navigation (lg:hidden) */}
+      {/* 9. Floating Action Buttons (FAB - Rule 6) */}
+      <AX_FloatingActions
+        onOpenNewBooking={() => setIsBookingModalOpen(true)}
+        onOpenUploadModal={() => setIsUploadModalOpen(true)}
+      />
+
+      {/* 10. Floating Capsule Mobile Navigation (lg:hidden) */}
       <AX_MobileNavbar />
     </div>
   )

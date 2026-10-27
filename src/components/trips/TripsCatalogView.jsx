@@ -42,11 +42,8 @@ export function TripsCatalogView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-soft">
         <div>
           <h2 className="text-base font-black text-[#0a2540]">
-            دليل الرحلات وجدول الأسعار والتكاليف
+            دليل الرحلات والأسعار
           </h2>
-          <div className="text-xs font-bold text-slate-500">
-            {tripDefinitions.length} نوع رحلة مهيأة للربط التلقائي مع شيتات الإكسيل
-          </div>
         </div>
 
         <div className="flex items-center gap-2">

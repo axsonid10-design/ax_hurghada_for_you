@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import {
-  Ship,
   Users,
   Euro,
   DollarSign,
@@ -9,17 +8,14 @@ import {
   Filter,
   CheckCircle2,
   Clock,
-  Download,
   Hotel,
-  MapPin,
-  Sailboat,
-  AlertCircle,
   Truck,
   TrendingUp,
   FileSpreadsheet
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
+import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
 export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
@@ -29,13 +25,14 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
     setSelectedDate,
     updateBooking,
     openConfirmModal,
-    executors,
-    tripDefinitions
+    executors
   } = useAXStore()
 
   const [filterTripType, setFilterTripType] = useState('ALL')
   const [filterExecutor, setFilterExecutor] = useState('ALL')
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 20
 
   const dailyBookings = bookings.filter((b) => b.date === selectedDate)
 
@@ -62,11 +59,35 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
   const totalCostEur = filteredBookings.reduce((sum, b) => sum + (Number(b.cost_eur) || 0), 0)
   const totalProfitEur = totalSalesEur - totalCostEur
 
-  const totalRestEur = filteredBookings.reduce((sum, b) => sum + (Number(b.rest_eur) || 0), 0)
-  const totalRestEgp = filteredBookings.reduce((sum, b) => sum + (Number(b.rest_egp) || 0), 0)
+  // Pagination calculation
+  const totalPages = Math.ceil(totalBookings / pageSize) || 1
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   // Unique trip types for filter
   const uniqueTrips = Array.from(new Set(dailyBookings.map((b) => b.trip_type)))
+
+  const getPaymentBadge = (b) => {
+    const hasRest = (b.rest_eur > 0 || b.rest_egp > 0 || b.rest_usd > 0 || b.rest_gbp > 0)
+    if (!hasRest) {
+      return {
+        text: 'مدفوع كلي',
+        className: 'bg-emerald-100 text-emerald-800'
+      }
+    }
+    if (b.rest_eur < b.sell_eur) {
+      return {
+        text: 'مدفوع جزئي',
+        className: 'bg-amber-100 text-amber-800'
+      }
+    }
+    return {
+      text: 'غير مدفوع',
+      className: 'bg-rose-100 text-rose-800'
+    }
+  }
 
   const handleMarkPaid = (sr) => {
     openConfirmModal({
@@ -94,7 +115,10 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           <div className="w-48">
             <AX_CompanyDatePicker
               value={selectedDate}
-              onChange={(d) => setSelectedDate(d)}
+              onChange={(d) => {
+                setSelectedDate(d)
+                setCurrentPage(1)
+              }}
               placeholder="تاريخ اليومية"
             />
           </div>
@@ -102,7 +126,10 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           <div className="flex items-center gap-2">
             <select
               value={filterTripType}
-              onChange={(e) => setFilterTripType(e.target.value)}
+              onChange={(e) => {
+                setFilterTripType(e.target.value)
+                setCurrentPage(1)
+              }}
               className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
             >
               <option value="ALL">جميع أنواع الرحلات ({uniqueTrips.length})</option>
@@ -115,7 +142,10 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
 
             <select
               value={filterExecutor}
-              onChange={(e) => setFilterExecutor(e.target.value)}
+              onChange={(e) => {
+                setFilterExecutor(e.target.value)
+                setCurrentPage(1)
+              }}
               className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
             >
               <option value="ALL">جميع المنفذين</option>
@@ -133,7 +163,10 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               placeholder="بحث بالاسم، الفندق، الغرفة..."
               className="w-full bg-slate-50 border border-slate-200 rounded-full pr-9 pl-4 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
             />
@@ -173,7 +206,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           <div>
             <div className="text-[11px] font-bold text-slate-400">إجمالي الأفراد (PAX)</div>
             <div className="text-lg font-black text-[#0a2540] font-mono">
-              {totalPax} <span className="text-xs font-normal text-slate-500">({totalAdults} كبار / {totalChildren} طفل)</span>
+              {totalPax} <span className="text-xs font-normal text-slate-500">({totalAdults} ك / {totalChildren} ص)</span>
             </div>
           </div>
         </div>
@@ -217,8 +250,9 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
 
       {/* Mobile Bento Cards View (lg:hidden) */}
       <div className="space-y-3 lg:hidden">
-        {filteredBookings.map((b) => {
+        {paginatedBookings.map((b) => {
           const executor = executors.find((ex) => ex.id === b.executor_id)
+          const badge = getPaymentBadge(b)
 
           return (
             <div
@@ -232,14 +266,8 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
                   </span>
                   <span className="text-xs font-bold text-slate-800">{b.trip_type}</span>
                 </div>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    b.status === 'paid'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}
-                >
-                  {b.status === 'paid' ? 'مسدد' : 'متبقي تحصيل'}
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}>
+                  {badge.text}
                 </span>
               </div>
 
@@ -293,7 +321,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
                   )}
                 </div>
 
-                {b.status !== 'paid' && (b.rest_eur > 0 || b.rest_egp > 0) && (
+                {badge.text !== 'مدفوع كلي' && (
                   <button
                     onClick={() => handleMarkPaid(b.sr)}
                     className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
@@ -307,85 +335,76 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
         })}
       </div>
 
-      {/* Desktop Wide Table (hidden lg:block) - Full Canvas */}
+      {/* Desktop Single-Line Compact Table (Rule 16: h-11 Rows & Full Canvas) */}
       <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
         <table className="w-full text-right border-collapse">
           <thead>
-            <tr className="bg-[#0a2540] text-white text-xs font-bold">
-              <th className="py-3.5 px-4 font-mono">SR</th>
-              <th className="py-3.5 px-4">اسم النزيل</th>
-              <th className="py-3.5 px-4">الفندق والغرفة</th>
-              <th className="py-3.5 px-4">نوع الرحلة</th>
-              <th className="py-3.5 px-4">المنفذ المسند</th>
-              <th className="py-3.5 px-4 text-center">الأفراد (PAX)</th>
-              <th className="py-3.5 px-4 text-center font-mono">البيع (€)</th>
-              <th className="py-3.5 px-4 text-center font-mono">التكلفة (€)</th>
-              <th className="py-3.5 px-4 text-center font-mono">الربح (€)</th>
-              <th className="py-3.5 px-4 text-left font-mono">المتبقي (€)</th>
-              <th className="py-3.5 px-4 text-center">الإجراء</th>
+            <tr className="bg-[#0a2540] text-white text-xs font-bold h-11">
+              <th className="px-3 font-mono">SR</th>
+              <th className="px-3">النزيل</th>
+              <th className="px-3">الفندق (الغرفة)</th>
+              <th className="px-3">الرحلة</th>
+              <th className="px-3">المنفذ</th>
+              <th className="px-3 text-center">الأفراد</th>
+              <th className="px-3 text-center font-mono">البيع (€)</th>
+              <th className="px-3 text-center font-mono">التكلفة (€)</th>
+              <th className="px-3 text-center font-mono">الربح (€)</th>
+              <th className="px-3 text-center">حالة الدفع</th>
+              <th className="px-3 text-center">الإجراء</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredBookings.map((b) => {
+          <tbody className="divide-y divide-slate-100 text-xs font-medium">
+            {paginatedBookings.map((b) => {
               const executor = executors.find((ex) => ex.id === b.executor_id)
+              const badge = getPaymentBadge(b)
 
               return (
-                <tr key={b.sr} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3.5 px-4 font-mono font-bold text-[#0284c7]">
+                <tr key={b.sr} className="h-11 hover:bg-slate-50/80 transition-colors whitespace-nowrap">
+                  <td className="px-3 font-mono font-bold text-[#0284c7]">
                     #{b.sr}
                   </td>
-                  <td className="py-3.5 px-4 font-black text-[#0a2540]">
+                  <td className="px-3 font-black text-[#0a2540] max-w-[150px] truncate" title={b.guest_name}>
                     {b.guest_name}
                   </td>
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-slate-800">{b.hotel}</div>
-                    <div className="text-[11px] text-slate-400">غرفة: {b.room}</div>
+                  <td className="px-3 text-slate-700 max-w-[180px] truncate" title={`${b.hotel} (${b.room})`}>
+                    <span className="font-bold">{b.hotel}</span> <span className="text-slate-400 font-mono">({b.room})</span>
                   </td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                  <td className="px-3">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
                       {b.trip_type}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-slate-600 font-bold">
+                  <td className="px-3 text-slate-600 font-bold">
                     {executor?.name || 'مارينا'}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono font-bold">
-                    {b.adult} <span className="text-[10px] text-slate-400 font-normal">بالغ</span>
-                    {b.child > 0 && (
-                      <span className="text-amber-600 mr-1">
-                        + {b.child} <span className="text-[10px] text-slate-400 font-normal">طفل</span>
-                      </span>
-                    )}
+                  <td className="px-3 text-center font-mono font-bold">
+                    {b.adult} ك {b.child > 0 ? `+ ${b.child} ص` : ''}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-800">
+                  <td className="px-3 text-center font-mono font-bold text-slate-800">
                     €{b.sell_eur}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono font-bold text-amber-700">
+                  <td className="px-3 text-center font-mono font-bold text-amber-700">
                     €{b.cost_eur}
                   </td>
-                  <td className="py-3.5 px-4 text-center font-mono font-black text-emerald-600">
+                  <td className="px-3 text-center font-mono font-black text-emerald-600">
                     €{b.profit_eur}
                   </td>
-                  <td className="py-3.5 px-4 text-left font-mono font-bold text-sm">
-                    {b.rest_eur > 0 ? (
-                      <span className="text-rose-600">€{b.rest_eur}</span>
-                    ) : (
-                      <span className="text-slate-400 font-normal text-xs">مسدد بالكامل</span>
-                    )}
+                  <td className="px-3 text-center">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}>
+                      {badge.text === 'مدفوع كلي' && <CheckCircle2 className="w-3 h-3" />}
+                      {badge.text}
+                    </span>
                   </td>
-                  <td className="py-3.5 px-4 text-center">
-                    {b.status === 'paid' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[11px] font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        مسدد
-                      </span>
-                    ) : (
+                  <td className="px-3 text-center">
+                    {badge.text !== 'مدفوع كلي' ? (
                       <button
                         onClick={() => handleMarkPaid(b.sr)}
                         className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
                       >
                         تحصيل
                       </button>
+                    ) : (
+                      <span className="text-slate-300 text-xs">—</span>
                     )}
                   </td>
                 </tr>
@@ -394,6 +413,15 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Bar (Rule 17) */}
+      <AX_PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalBookings}
+        pageSize={pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
     </div>
   )
 }

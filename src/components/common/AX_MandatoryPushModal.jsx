@@ -10,11 +10,14 @@ export function AX_MandatoryPushModal() {
   const [autoOpen, setAutoOpen] = useState(false)
 
   useEffect(() => {
-    if (pushManager.isSupported() && pushManager.getPermission() === 'default') {
-      const timer = setTimeout(() => {
-        setAutoOpen(true)
-      }, 1500)
-      return () => clearTimeout(timer)
+    if (typeof window !== 'undefined' && pushManager.isSupported()) {
+      const dismissCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
+      if (dismissCount < 2 && pushManager.getPermission() === 'default') {
+        const timer = setTimeout(() => {
+          setAutoOpen(true)
+        }, 1500)
+        return () => clearTimeout(timer)
+      }
     }
   }, [])
 
@@ -22,6 +25,8 @@ export function AX_MandatoryPushModal() {
 
   const handleClose = () => {
     soundManager.playClick()
+    const currentCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
+    localStorage.setItem('ax_push_dismiss_count', String(currentCount + 1))
     setAutoOpen(false)
     closePushModal()
   }
@@ -32,7 +37,8 @@ export function AX_MandatoryPushModal() {
     if (permission === 'granted') {
       await pushManager.sendTestNotification()
     }
-    handleClose()
+    setAutoOpen(false)
+    closePushModal()
   }
 
   if (!isOpen) return null
@@ -55,17 +61,12 @@ export function AX_MandatoryPushModal() {
           />
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#0284c7]/10 text-[#0284c7] rounded-full text-[11px] font-black mb-2">
-          <Bell className="w-3.5 h-3.5" />
-          <span>إشعارات الويب 24/7 الإلزامية</span>
-        </div>
-
         <h3 className="text-lg font-black text-[#0a2540] mb-2">
-          تفعيل إشعارات رحلات الغردقة
+          إشعارات التشغيل
         </h3>
 
         <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-          لتلقي تحديثات الحجوزات، مواعيد تحركات المراكب وسعة البواخر، وإشعارات التحصيل الفوري على مدار الساعة حتى أثناء إغلاق التطبيق.
+          تفعيل إشعارات رحلات الغردقة والتحصيلات لمتابعة التحديثات التشغيلية على مدار الساعة.
         </p>
 
         <div className="space-y-2">
@@ -74,7 +75,7 @@ export function AX_MandatoryPushModal() {
             className="w-full py-3 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full font-black text-xs shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <ShieldCheck className="w-4 h-4 text-[#38bdf8]" />
-            <span>تفعيل الإشعارات وتجربتها الآن</span>
+            <span>تفعيل الإشعارات</span>
           </button>
           <button
             onClick={handleClose}

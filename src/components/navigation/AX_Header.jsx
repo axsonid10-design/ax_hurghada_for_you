@@ -67,43 +67,42 @@ export function AX_Header() {
 
         {/* Action Controls & Indicators */}
         <div className="flex items-center gap-2">
-          {/* PWA Install Button */}
+          {/* PWA Install Button (Desktop Only - Rule 5) */}
           {!isStandalone && (
             <button
               onClick={handleInstallClick}
-              title="تثبيت التطبيق على جهازك للعمل بدون إنترنت"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
               <span>تثبيت التطبيق</span>
             </button>
           )}
 
-          {/* Web Push Notification Bell */}
+          {/* Web Push Notification Bell (Desktop Only - Rule 5) */}
           <button
             onClick={handlePushClick}
-            title={pushStatus === 'granted' ? 'إشعارات الويب نشطة — اضغط لإرسال إشعار تجريبي' : 'تفعيل إشعارات الويب 24/7'}
-            className="relative p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center"
+            title={pushStatus === 'granted' ? 'إشعارات الويب نشطة' : 'تفعيل إشعارات الويب'}
+            className="hidden sm:flex relative p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 items-center justify-center"
           >
             <Bell className="w-4 h-4 text-slate-100" />
             <span
               className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
                 pushStatus === 'granted'
                   ? 'bg-emerald-400 animate-pulse'
-                  : 'bg-amber-400 animate-bounce'
+                  : 'bg-amber-400'
               }`}
             ></span>
           </button>
 
-          {/* Online/Offline Status Indicator */}
+          {/* Online/Offline Status Indicator (Lean on mobile) */}
           {isOnline ? (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/80 border border-emerald-500/40 rounded-full text-emerald-300 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-500/40 rounded-full text-emerald-300 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <Wifi className="w-3.5 h-3.5" />
               <span className="hidden md:inline">متصل</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-950/80 border border-rose-500/40 rounded-full text-rose-300 text-xs font-bold">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-950/80 border border-rose-500/40 rounded-full text-rose-300 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-rose-400"></span>
               <WifiOff className="w-3.5 h-3.5" />
               <span className="hidden md:inline">أوفلاين</span>

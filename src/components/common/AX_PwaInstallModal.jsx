@@ -65,18 +65,18 @@ export function AX_PwaInstallModal() {
         </div>
 
         <h3 className="text-lg font-black text-[#0a2540] mb-2">
-          تثبيت منظومة غردقة فور يو
+          تثبيت التطبيق
         </h3>
 
         {isStandalone ? (
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl mb-4 text-emerald-800 text-xs font-bold flex items-center gap-2 justify-center">
             <CheckCircle className="w-4 h-4 text-emerald-600" />
-            <span>المنظومة مثبتة بالفعل وتعمل الآن كبرنامج مستقل!</span>
+            <span>التطبيق مثبت بالفعل</span>
           </div>
         ) : (
           <>
             <p className="text-xs text-slate-600 mb-5 leading-relaxed">
-              ثبت التطبيق على جهازك للتشغيل الفوري من سطح المكتب وشاشة الموبايل، والعمل بكفاءة تامة بدون إنترنت مع حفظ وتخزين البيانات محلياً.
+              تثبيت التطبيق للتشغيل المباشر من الشاشة والعمل بدون إنترنت.
             </p>
 
             {deferredPrompt || window.__deferredPwaPrompt ? (
@@ -85,7 +85,7 @@ export function AX_PwaInstallModal() {
                 className="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full font-black text-xs shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 mb-3"
               >
                 <Download className="w-4 h-4" />
-                <span>تثبيت البرنامج بضغطة واحدة</span>
+                <span>تثبيت التطبيق</span>
               </button>
             ) : (
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-right space-y-2 mb-4 text-[11px] text-slate-700 font-bold">
