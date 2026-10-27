@@ -1,13 +1,49 @@
-import React from 'react'
-import { Wifi, WifiOff } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Wifi, WifiOff, Bell, Download } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
+import { pushManager } from '../../utils/pushManager'
+import { soundManager } from '../../utils/soundEffects'
 
 export function AX_Header() {
   const isOnline = useAXStore((state) => state.isOnline)
+  const openPushModal = useAXStore((state) => state.openPushModal)
+  const openPwaInstallModal = useAXStore((state) => state.openPwaInstallModal)
+  const [pushStatus, setPushStatus] = useState('default')
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (pushManager.isSupported()) {
+        setPushStatus(pushManager.getPermission())
+      }
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        setIsStandalone(true)
+      }
+    }
+  }, [])
+
+  const handlePushClick = async () => {
+    soundManager.playClick()
+    if (pushStatus === 'granted') {
+      await pushManager.sendTestNotification()
+    } else {
+      openPushModal()
+    }
+  }
+
+  const handleInstallClick = () => {
+    soundManager.playClick()
+    if (window.__deferredPwaPrompt) {
+      window.__deferredPwaPrompt.prompt()
+    } else {
+      openPwaInstallModal()
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#0a2540] text-white border-b border-[#1e3a5f]/60 shadow-md">
       <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand Logo & Name */}
         <div className="flex items-center gap-3">
           <div
             onClick={() => window.location.reload()}
@@ -29,18 +65,48 @@ export function AX_Header() {
           </div>
         </div>
 
+        {/* Action Controls & Indicators */}
         <div className="flex items-center gap-2">
+          {/* PWA Install Button */}
+          {!isStandalone && (
+            <button
+              onClick={handleInstallClick}
+              title="تثبيت التطبيق على جهازك للعمل بدون إنترنت"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>تثبيت التطبيق</span>
+            </button>
+          )}
+
+          {/* Web Push Notification Bell */}
+          <button
+            onClick={handlePushClick}
+            title={pushStatus === 'granted' ? 'إشعارات الويب نشطة — اضغط لإرسال إشعار تجريبي' : 'تفعيل إشعارات الويب 24/7'}
+            className="relative p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center"
+          >
+            <Bell className="w-4 h-4 text-slate-100" />
+            <span
+              className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+                pushStatus === 'granted'
+                  ? 'bg-emerald-400 animate-pulse'
+                  : 'bg-amber-400 animate-bounce'
+              }`}
+            ></span>
+          </button>
+
+          {/* Online/Offline Status Indicator */}
           {isOnline ? (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/80 border border-emerald-500/40 rounded-full text-emerald-300 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <Wifi className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">متصل</span>
+              <span className="hidden md:inline">متصل</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-950/80 border border-rose-500/40 rounded-full text-rose-300 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-rose-400"></span>
               <WifiOff className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">أوفلاين</span>
+              <span className="hidden md:inline">أوفلاين</span>
             </div>
           )}
         </div>

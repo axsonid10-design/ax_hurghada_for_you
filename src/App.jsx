@@ -6,6 +6,7 @@ import { AX_InstallPwaBanner } from './components/common/AX_InstallPwaBanner'
 import { AppUpdateNotifier } from './components/common/AppUpdateNotifier'
 import { AX_MandatoryPushModal } from './components/common/AX_MandatoryPushModal'
 import { AX_ConfirmModal } from './components/common/AX_ConfirmModal'
+import { AX_PwaInstallModal } from './components/common/AX_PwaInstallModal'
 import { OperationsDashboard } from './components/dashboard/OperationsDashboard'
 import { DailySituationView } from './components/trips/DailySituationView'
 import { BookingsManagement } from './components/bookings/BookingsManagement'
@@ -31,6 +32,9 @@ export function App() {
 
       {/* 3. Global Capsule Confirmation Modal */}
       <AX_ConfirmModal />
+
+      {/* 3.1 PWA Native Install Guide Modal */}
+      <AX_PwaInstallModal />
 
       {/* 4. Booking Creation Modal */}
       <TripDetailsModal

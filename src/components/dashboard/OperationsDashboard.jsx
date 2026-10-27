@@ -14,14 +14,28 @@ import {
   Clock,
   ArrowUpRight,
   Sparkles,
-  BarChart3
+  BarChart3,
+  Bell,
+  Download,
+  Smartphone,
+  ShieldCheck
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
+import { pushManager } from '../../utils/pushManager'
 
 export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
-  const { bookings, selectedDate, setSelectedDate, tripDefinitions, executors, setActiveTab } = useAXStore()
+  const {
+    bookings,
+    selectedDate,
+    setSelectedDate,
+    tripDefinitions,
+    executors,
+    setActiveTab,
+    openPushModal,
+    openPwaInstallModal
+  } = useAXStore()
   const [timeframe, setTimeframe] = useState('daily') // 'daily' | 'all'
 
   const activeBookings = timeframe === 'daily'
@@ -136,6 +150,55 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
           >
             <Plus className="w-3.5 h-3.5 text-[#38bdf8]" />
             <span>حجز جديد</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 24/7 Web Push & PWA Native Operations Card */}
+      <div className="w-full bg-gradient-to-r from-[#0a2540] via-[#0e3b66] to-[#0a2540] rounded-3xl p-4 text-white shadow-soft border border-[#0284c7]/30 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 border border-[#38bdf8]/40">
+            <Bell className="w-5 h-5 text-[#38bdf8] animate-bounce" />
+          </div>
+          <div>
+            <div className="text-sm font-black text-white flex items-center gap-2">
+              <span>منظومة الـ PWA وإشعارات الويب 24/7 المباشرة</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-mono font-bold">
+                Quad-Lock Ready
+              </span>
+            </div>
+            <div className="text-xs text-slate-300 font-bold mt-0.5">
+              تلقي تنبيهات التحصيلات الفورية وحركات المراكب وتحديثات اليومية حتى والشاشة مغلقة والتطبيق غير مفتوح
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={async () => {
+              soundManager.playClick()
+              const perm = await pushManager.requestPermission()
+              if (perm === 'granted') {
+                await pushManager.sendTestNotification()
+              } else {
+                openPushModal()
+              }
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>تجربة إشعار Web Push الآن</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundManager.playClick()
+              openPwaInstallModal()
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+          >
+            <Download className="w-4 h-4 text-[#38bdf8]" />
+            <span>تثبيت PWA كبرنامج مستقل</span>
           </button>
         </div>
       </div>
