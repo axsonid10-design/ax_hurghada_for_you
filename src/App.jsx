@@ -13,6 +13,7 @@ import { BookingsManagement } from './components/bookings/BookingsManagement'
 import { TripsCatalogView } from './components/trips/TripsCatalogView'
 import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
+import { PerformanceReports } from './components/reports/PerformanceReports'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
@@ -97,19 +98,7 @@ export function App() {
 
           {activeTab === 'cash' && <CashDrawer />}
 
-          {activeTab === 'reports' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-soft space-y-2">
-                <h3 className="text-base font-black text-[#0a2540]">
-                  التقارير المالية والتشغيلية المجمعة
-                </h3>
-                <p className="text-xs text-slate-500 font-bold">
-                  إجمالي إيرادات رحلات الغردقة، نسب التحصيل، وأرصدة الموردين بالعملات الأجنبية والمحلية.
-                </p>
-              </div>
-              <CashDrawer />
-            </div>
-          )}
+          {activeTab === 'reports' && <PerformanceReports />}
         </main>
       </div>
 

@@ -13,25 +13,71 @@ import {
   Waves,
   Sparkles,
   TrendingUp,
-  Receipt
+  Receipt,
+  FileText,
+  Tag,
+  Coins
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { QuickAddExecutorModal } from './QuickAddExecutorModal'
+import { ExecutorInvoiceModal } from './ExecutorInvoiceModal'
+import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 
 export function ExecutorsView() {
-  const { t, executors, bookings, recordExecutorPayment } = useAXStore()
+  const { t, executors, bookings, tripDefinitions, recordExecutorPayment } = useAXStore()
   const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
   const [isAddOpen, setIsAddOpen] = useState(false)
-  const [paymentModal, setPaymentModal] = useState({ isOpen: false, executor: null, amount: '' })
+  const [invoiceModal, setInvoiceModal] = useState({ isOpen: false, executor: null })
+  const [paymentModal, setPaymentModal] = useState({
+    isOpen: false,
+    executor: null,
+    amount: '',
+    currency: 'EUR',
+    notes: ''
+  })
+
+  const categories = [
+    { id: 'all', label: 'جميع الأقسام' },
+    { id: 'sea', label: 'رحلات بحرية ويخوت' },
+    { id: 'islands', label: 'رحلات الجزر' },
+    { id: 'safari', label: 'السفاري والصحراء' },
+    { id: 'aqua', label: 'الغوص والأكوا' },
+    { id: 'transfers', label: 'النقل والتحصيل' }
+  ]
 
   const filtered = useMemo(() => {
-    return executors.filter(
-      (ex) =>
+    return executors.filter((ex) => {
+      const matchSearch =
         ex.name.toLowerCase().includes(search.toLowerCase()) ||
         (ex.category || '').toLowerCase().includes(search.toLowerCase())
-    )
-  }, [executors, search])
+
+      if (!matchSearch) return false
+      if (activeCategory === 'all') return true
+
+      const exCategories = ex.categories || []
+      const catText = (ex.category || '').toLowerCase()
+
+      if (activeCategory === 'sea') {
+        return exCategories.includes('sea') || catText.includes('بحر') || catText.includes('يخوت')
+      }
+      if (activeCategory === 'islands') {
+        return exCategories.includes('islands') || catText.includes('جزر') || catText.includes('جزيرة')
+      }
+      if (activeCategory === 'safari') {
+        return exCategories.includes('safari') || catText.includes('سفاري') || catText.includes('صحراء')
+      }
+      if (activeCategory === 'aqua') {
+        return exCategories.includes('aqua') || catText.includes('غوص') || catText.includes('دولفين')
+      }
+      if (activeCategory === 'transfers') {
+        return exCategories.includes('transfers') || catText.includes('نقل') || catText.includes('ليموزين')
+      }
+
+      return true
+    })
+  }, [executors, search, activeCategory])
 
   const handlePay = (e) => {
     e.preventDefault()
@@ -39,8 +85,12 @@ export function ExecutorsView() {
     if (!amt || amt <= 0 || !paymentModal.executor) return
 
     soundManager.playSuccess()
-    recordExecutorPayment(paymentModal.executor.id, amt)
-    setPaymentModal({ isOpen: false, executor: null, amount: '' })
+    recordExecutorPayment(paymentModal.executor.id, {
+      amount: amt,
+      currency: paymentModal.currency || 'EUR',
+      notes: paymentModal.notes || 'سداد دفعة'
+    })
+    setPaymentModal({ isOpen: false, executor: null, amount: '', currency: 'EUR', notes: '' })
   }
 
   const getPartnerIcon = (category = '') => {
@@ -65,6 +115,9 @@ export function ExecutorsView() {
           <h2 className="text-base font-black text-slate-800">
             {t('executors_title')}
           </h2>
+          <div className="text-[11px] text-slate-400 font-bold mt-0.5">
+            متابعة حسابات المراكب وموردي السفاري والغوص واستخراج فواتير التصفية
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -92,7 +145,30 @@ export function ExecutorsView() {
         </div>
       </div>
 
-      {/* Executors Bento Grid (1 col on mobile, 2 cols on tablet, 2-3 on desktop) */}
+      {/* Category Tabs for Executors */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full">
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat.id
+          return (
+            <button
+              key={cat.id}
+              onClick={() => {
+                soundManager.playClick()
+                setActiveCategory(cat.id)
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex-shrink-0 border ${
+                isActive
+                  ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {cat.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Executors Bento Grid (1 col on mobile, 2 cols on tablet, 3 on desktop) */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         {filtered.map((ex) => {
           const exBookings = bookings.filter((b) => b.executor_id === ex.id)
@@ -194,27 +270,42 @@ export function ExecutorsView() {
                 </div>
               </div>
 
-              {/* Card Footer: Activity Count & Record Payment Action */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              {/* Card Footer: Activity Count & Action Buttons */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
                 <div className="text-[11px] font-bold text-slate-400">
                   <span className="font-black text-slate-700">{exBookings.length}</span> {t('bookings_done')} •{' '}
                   <span className="font-black text-slate-700">{totalPax}</span> {t('pax_served')}
                 </div>
 
-                <button
-                  onClick={() => {
-                    soundManager.playClick()
-                    setPaymentModal({
-                      isOpen: true,
-                      executor: ex,
-                      amount: remainingBalance > 0 ? String(remainingBalance) : ''
-                    })
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0"
-                >
-                  <CreditCard className="w-3.5 h-3.5 text-sky-400" />
-                  <span>{t('record_payment')}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      soundManager.playClick()
+                      setInvoiceModal({ isOpen: true, executor: ex })
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-xs font-black transition-all active:scale-95"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-sky-600" />
+                    <span>كشف حساب وفاتورة</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      soundManager.playClick()
+                      setPaymentModal({
+                        isOpen: true,
+                        executor: ex,
+                        amount: remainingBalance > 0 ? String(remainingBalance) : '',
+                        currency: 'EUR',
+                        notes: ''
+                      })
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0"
+                  >
+                    <CreditCard className="w-3.5 h-3.5 text-sky-400" />
+                    <span>{t('record_payment')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )
@@ -231,38 +322,23 @@ export function ExecutorsView() {
                 <span>{t('record_payment')}</span>
               </h3>
               <button
-                onClick={() => setPaymentModal({ isOpen: false, executor: null, amount: '' })}
+                onClick={() => setPaymentModal({ isOpen: false, executor: null, amount: '', currency: 'EUR', notes: '' })}
                 className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handlePay} className="space-y-4 text-xs font-bold">
+            <form onSubmit={handlePay} className="space-y-3.5 text-xs font-bold">
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1">
                 <div className="text-slate-500 font-bold">المنفذ المستفيد:</div>
                 <div className="text-sm font-black text-slate-800">{paymentModal.executor?.name}</div>
                 <div className="text-[11px] text-slate-400">{paymentModal.executor?.category}</div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-700">{t('payment_amount')}</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const exBookings = bookings.filter((b) => b.executor_id === paymentModal.executor?.id)
-                      const totalCostDue = exBookings.reduce((sum, b) => sum + (Number(b.cost_eur) || 0), 0)
-                      const totalPaid = paymentModal.executor?.total_paid || 0
-                      const rem = Math.max(0, totalCostDue - totalPaid)
-                      setPaymentModal({ ...paymentModal, amount: String(rem) })
-                    }}
-                    className="text-[10px] text-sky-600 hover:underline"
-                  >
-                    سداد كامل المتبقي
-                  </button>
-                </div>
-                <div className="relative">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-700 mb-1">المبلغ</label>
                   <input
                     type="number"
                     step="0.5"
@@ -270,10 +346,33 @@ export function ExecutorsView() {
                     placeholder="0.00"
                     value={paymentModal.amount}
                     onChange={(e) => setPaymentModal({ ...paymentModal, amount: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-full py-2.5 px-4 text-center font-mono text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 px-3 text-center font-mono text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
                   />
-                  <span className="absolute left-4 top-2.5 font-bold text-slate-400">€</span>
                 </div>
+                <div>
+                  <AX_SearchableSelect
+                    label="العملة"
+                    value={paymentModal.currency}
+                    onChange={(val) => setPaymentModal({ ...paymentModal, currency: val })}
+                    options={[
+                      { value: 'EUR', label: 'يورو (€)' },
+                      { value: 'EGP', label: 'جنيه مصري (L.E)' },
+                      { value: 'USD', label: 'دولار ($)' }
+                    ]}
+                    searchable={false}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1">ملاحظات / طريقة السداد</label>
+                <input
+                  type="text"
+                  placeholder="مثال: تحويل بنكي، كاش بالمارينا..."
+                  value={paymentModal.notes}
+                  onChange={(e) => setPaymentModal({ ...paymentModal, notes: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                />
               </div>
 
               <div className="pt-2 flex items-center gap-2">
@@ -285,7 +384,7 @@ export function ExecutorsView() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPaymentModal({ isOpen: false, executor: null, amount: '' })}
+                  onClick={() => setPaymentModal({ isOpen: false, executor: null, amount: '', currency: 'EUR', notes: '' })}
                   className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold text-xs"
                 >
                   {t('cancel')}
@@ -300,6 +399,15 @@ export function ExecutorsView() {
       <QuickAddExecutorModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
+      />
+
+      {/* 360° Printable Supplier Invoice Modal */}
+      <ExecutorInvoiceModal
+        isOpen={invoiceModal.isOpen}
+        onClose={() => setInvoiceModal({ isOpen: false, executor: null })}
+        executor={invoiceModal.executor}
+        bookings={bookings}
+        tripDefinitions={tripDefinitions}
       />
     </div>
   )

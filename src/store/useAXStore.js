@@ -3,6 +3,7 @@ import { translations } from '../i18n/translations'
 import {
   INITIAL_EXECUTORS,
   INITIAL_TRIP_DEFINITIONS,
+  INITIAL_EXPENSES,
   computeBookingFinancials,
   buildInitialBookings
 } from '../data/initialSetup'
@@ -70,6 +71,7 @@ export const useAXStore = create((set, get) => ({
   executors: INITIAL_EXECUTORS,
   tripDefinitions: INITIAL_TRIP_DEFINITIONS,
   bookings: buildInitialBookings(),
+  expenses: INITIAL_EXPENSES,
   importedDates: {
     '2026-10-24': {
       filename: 'Hurghada For You - Daily Situation - 10-24-2026.xlsx',
@@ -189,10 +191,47 @@ export const useAXStore = create((set, get) => ({
     executors: state.executors.filter((ex) => ex.id !== id)
   })),
 
-  recordExecutorPayment: (id, amount) => set((state) => ({
-    executors: state.executors.map((ex) =>
-      ex.id === id ? { ...ex, total_paid: (ex.total_paid || 0) + amount } : ex
-    )
+  recordExecutorPayment: (id, payment) => set((state) => {
+    const isObj = typeof payment === 'object' && payment !== null
+    const amt = isObj ? Number(payment.amount) || 0 : Number(payment) || 0
+    const currency = isObj ? payment.currency || 'EUR' : 'EUR'
+    const notes = isObj ? payment.notes || '' : ''
+    const date = isObj ? payment.date || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+
+    return {
+      executors: state.executors.map((ex) => {
+        if (ex.id !== id) return ex
+        const prevPayments = ex.payments || []
+        const newPaymentRecord = {
+          id: 'pay_' + Date.now(),
+          date,
+          amount: amt,
+          currency,
+          notes
+        }
+        return {
+          ...ex,
+          total_paid: (ex.total_paid || 0) + amt,
+          payments: [newPaymentRecord, ...prevPayments]
+        }
+      })
+    }
+  }),
+
+  // Operational Expenses Actions
+  addExpense: (expense) => set((state) => ({
+    expenses: [
+      {
+        ...expense,
+        id: expense.id || 'exp_' + Date.now(),
+        date: expense.date || new Date().toISOString().split('T')[0]
+      },
+      ...state.expenses
+    ]
+  })),
+
+  deleteExpense: (id) => set((state) => ({
+    expenses: state.expenses.filter((e) => e.id !== id)
   })),
 
   // Bookings Actions

@@ -99,17 +99,6 @@ export function AX_Header() {
             <span className="font-mono tracking-wider">{lang === 'ar' ? 'English' : 'عربي'}</span>
           </button>
 
-          {/* PWA Install Button (Desktop Only) */}
-          {!isStandalone && (
-            <button
-              onClick={handleInstallClick}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{t('install_app')}</span>
-            </button>
-          )}
-
           {/* Web Push Notification Bell (Desktop Only) */}
           <button
             onClick={handlePushClick}
