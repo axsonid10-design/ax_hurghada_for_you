@@ -1,256 +1,40 @@
 import { create } from 'zustand'
+import {
+  INITIAL_EXECUTORS,
+  INITIAL_TRIP_DEFINITIONS,
+  computeBookingFinancials,
+  buildInitialBookings
+} from '../data/initialSetup'
 
-const INITIAL_BOOKINGS = [
-  {
-    sr: '141338',
-    date: '2026-10-24',
-    time: '08:00',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Hula Hula',
-    seller: 'Meghane',
-    channel: '📱 Mobile App',
-    hotel: 'The Grand Resort',
-    guest_name: 'Chloe Lestic',
-    room: '3429',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 110,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  },
-  {
-    sr: '857295',
-    date: '2026-10-24',
-    time: '08:15',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Hula Hula',
-    seller: 'Laure',
-    channel: '📱 Mobile App',
-    hotel: 'Rivoli Suites',
-    guest_name: 'Naim Hadjara',
-    room: '1501',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 0,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'paid'
-  },
-  {
-    sr: '509304',
-    date: '2026-10-24',
-    time: '08:30',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Hula Hula island + White island',
-    seller: 'Laly',
-    channel: '📱 Mobile App',
-    hotel: 'The Grand Makadi Hotel',
-    guest_name: 'Catherine Amiot',
-    room: '1213',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 0,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'paid'
-  },
-  {
-    sr: '334912',
-    date: '2026-10-24',
-    time: '08:45',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Orange Bay + White island',
-    seller: 'Meghane',
-    channel: '📱 Mobile App',
-    hotel: 'Florenza Khamsin',
-    guest_name: 'Clara Laperche',
-    room: '402',
-    adult: 1,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 60,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  },
-  {
-    sr: '632393',
-    date: '2026-10-24',
-    time: '08:20',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Orange Bay',
-    seller: 'Laure',
-    channel: '📱 Mobile App',
-    hotel: 'Titanic Aqua',
-    guest_name: 'Edouard Thisse',
-    room: '6409',
-    adult: 4,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 0,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'paid'
-  },
-  {
-    sr: '471576',
-    date: '2026-10-24',
-    time: '08:10',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Hula Hula',
-    seller: 'Meghane',
-    channel: '📱 Mobile App',
-    hotel: 'Hilton Plaza',
-    guest_name: 'Erdinc Nane',
-    room: '755',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 280,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  },
-  {
-    sr: '185863',
-    date: '2026-10-24',
-    time: '08:00',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Hula Hula',
-    seller: 'Meghane',
-    channel: '📱 Mobile App',
-    hotel: 'Al Dora',
-    guest_name: 'Isabelle Lalanne',
-    room: 'DV2-1',
-    adult: 8,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 0,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'paid'
-  },
-  {
-    sr: '849184',
-    date: '2026-10-24',
-    time: '08:40',
-    group: 'GROUP A - Sea Trips 🛥️',
-    trip_type: 'Orange Bay',
-    seller: 'Laly',
-    channel: '📱 Mobile App',
-    hotel: 'Jaz Neo Saraya Palms',
-    guest_name: 'Magali Charneau',
-    room: '1912',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 0,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'paid'
-  },
-  {
-    sr: '904769',
-    date: '2026-10-24',
-    time: '14:00',
-    group: 'Cash Pickup 💰',
-    trip_type: 'Cash Collection',
-    seller: 'Sales Team',
-    channel: '👭 Sales Team',
-    hotel: 'Blend Club',
-    guest_name: 'Eric Leboucher',
-    room: '390',
-    adult: 5,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 390,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  },
-  {
-    sr: '231751',
-    date: '2026-10-24',
-    time: '15:00',
-    group: 'Cash Pickup 💰',
-    trip_type: 'Cash Collection',
-    seller: 'Sales Team',
-    channel: '👭 Sales Team',
-    hotel: 'Long Beach Resort',
-    guest_name: 'Goksen Uflaz',
-    room: '975',
-    adult: 4,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 975,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  },
-  {
-    sr: '372938',
-    date: '2026-10-24',
-    time: '16:00',
-    group: 'Cash Pickup 💰',
-    trip_type: 'Cash Collection',
-    seller: 'Sales Team',
-    channel: '👭 Sales Team',
-    hotel: 'Stella Beach Resort & Spa',
-    guest_name: 'Hanane Bentaleb',
-    room: '553',
-    adult: 2,
-    child: 0,
-    infant: 0,
-    snk_ps: 0,
-    rest_eur: 553,
-    rest_egp: 0,
-    rest_usd: 0,
-    rest_gbp: 0,
-    status: 'confirmed'
-  }
-]
-
-export const useAXStore = create((set) => ({
+export const useAXStore = create((set, get) => ({
   profile: {
     id: 'user_admin',
-    name: 'مدير التشغيل',
+    name: 'مدير العمليات السياحية',
     role: 'Operations Director'
   },
   isAuthLoading: false,
   realtimeTrigger: 0,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-  activeTab: 'daily',
+  activeTab: 'dashboard',
   sidebarPinned: true,
   sidebarCollapsed: false,
   selectedDate: '2026-10-24',
-  pendingSyncCount: 0,
-  bookings: INITIAL_BOOKINGS,
   searchQuery: '',
+  pendingSyncCount: 0,
 
+  // Data Stores
+  executors: INITIAL_EXECUTORS,
+  tripDefinitions: INITIAL_TRIP_DEFINITIONS,
+  bookings: buildInitialBookings(),
+  importedDates: {
+    '2026-10-24': {
+      filename: 'Hurghada For You - Daily Situation - 10-24-2026.xlsx',
+      importedAt: '2026-10-28T00:00:00.000Z',
+      count: 57
+    }
+  },
+
+  // Confirmation Modal
   confirmModal: {
     isOpen: false,
     title: '',
@@ -261,12 +45,12 @@ export const useAXStore = create((set) => ({
     onConfirm: () => {}
   },
 
+  // Navigation & UI Setters
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebarPin: () => set((state) => ({ sidebarPinned: !state.sidebarPinned })),
   toggleSidebarCollapse: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setSelectedDate: (date) => set({ selectedDate: date }),
   setSearchQuery: (query) => set({ searchQuery: query }),
-  setPendingSyncCount: (count) => set({ pendingSyncCount: count }),
   setIsOnline: (online) => set({ isOnline: online }),
 
   openConfirmModal: ({ title, message, confirmText, cancelText, type, onConfirm }) => set({
@@ -293,15 +77,136 @@ export const useAXStore = create((set) => ({
     }
   }),
 
-  addBooking: (booking) => set((state) => ({
-    bookings: [booking, ...state.bookings]
+  // Trip Definitions Actions
+  addTripDefinition: (def) => {
+    set((state) => {
+      const newDefs = [...state.tripDefinitions, def]
+      return {
+        tripDefinitions: newDefs,
+        bookings: state.bookings.map((b) => ({
+          ...b,
+          ...computeBookingFinancials(b, newDefs)
+        }))
+      }
+    })
+  },
+
+  updateTripDefinition: (id, updatedFields) => {
+    set((state) => {
+      const newDefs = state.tripDefinitions.map((td) =>
+        td.id === id ? { ...td, ...updatedFields } : td
+      )
+      return {
+        tripDefinitions: newDefs,
+        bookings: state.bookings.map((b) => ({
+          ...b,
+          ...computeBookingFinancials(b, newDefs)
+        }))
+      }
+    })
+  },
+
+  batchAddTripDefinitions: (defs) => {
+    set((state) => {
+      const existingNames = new Set(
+        state.tripDefinitions.map((td) => td.sheet_name.toLowerCase().trim())
+      )
+      const toAdd = defs.filter(
+        (d) => !existingNames.has(d.sheet_name.toLowerCase().trim())
+      )
+      const newDefs = [...state.tripDefinitions, ...toAdd]
+      return {
+        tripDefinitions: newDefs,
+        bookings: state.bookings.map((b) => ({
+          ...b,
+          ...computeBookingFinancials(b, newDefs)
+        }))
+      }
+    })
+  },
+
+  // Executors Actions
+  addExecutor: (executor) => set((state) => ({
+    executors: [...state.executors, executor]
   })),
 
-  updateBooking: (sr, updatedFields) => set((state) => ({
-    bookings: state.bookings.map((b) => (b.sr === sr ? { ...b, ...updatedFields } : b))
+  updateExecutor: (id, updatedFields) => set((state) => ({
+    executors: state.executors.map((ex) => (ex.id === id ? { ...ex, ...updatedFields } : ex))
   })),
+
+  deleteExecutor: (id) => set((state) => ({
+    executors: state.executors.filter((ex) => ex.id !== id)
+  })),
+
+  recordExecutorPayment: (id, amount) => set((state) => ({
+    executors: state.executors.map((ex) =>
+      ex.id === id ? { ...ex, total_paid: (ex.total_paid || 0) + amount } : ex
+    )
+  })),
+
+  // Bookings Actions
+  addBooking: (booking) => {
+    const { tripDefinitions } = get()
+    const fin = computeBookingFinancials(booking, tripDefinitions)
+    set((state) => ({
+      bookings: [{ ...booking, ...fin }, ...state.bookings]
+    }))
+  },
+
+  updateBooking: (sr, updatedFields) => {
+    const { tripDefinitions } = get()
+    set((state) => ({
+      bookings: state.bookings.map((b) => {
+        if (b.sr === sr) {
+          const merged = { ...b, ...updatedFields }
+          const fin = computeBookingFinancials(merged, tripDefinitions)
+          return { ...merged, ...fin }
+        }
+        return b
+      })
+    }))
+  },
 
   deleteBooking: (sr) => set((state) => ({
     bookings: state.bookings.filter((b) => b.sr !== sr)
-  }))
+  })),
+
+  // Excel Batch Import Engine
+  importExcelBatch: ({ date, filename, rawBookings, overwrite = false }) => {
+    const { tripDefinitions, bookings, importedDates } = get()
+
+    const calculated = rawBookings.map((b) => {
+      const fin = computeBookingFinancials(b, tripDefinitions)
+      return {
+        ...b,
+        date,
+        ...fin,
+        status: (b.rest_eur === 0 && b.rest_egp === 0 && b.rest_usd === 0 && b.rest_gbp === 0) ? 'paid' : 'pending'
+      }
+    })
+
+    let nextBookings = []
+    if (overwrite) {
+      // Remove previous bookings for this date and append new
+      nextBookings = [...bookings.filter((b) => b.date !== date), ...calculated]
+    } else {
+      // Append only non-existing SRs
+      const existingSrs = new Set(bookings.map((b) => b.sr))
+      const toAppend = calculated.filter((b) => !existingSrs.has(b.sr))
+      nextBookings = [...bookings, ...toAppend]
+    }
+
+    set({
+      bookings: nextBookings,
+      selectedDate: date,
+      importedDates: {
+        ...importedDates,
+        [date]: {
+          filename,
+          importedAt: new Date().toISOString(),
+          count: calculated.length
+        }
+      }
+    })
+  }
 }))

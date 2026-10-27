@@ -1,5 +1,5 @@
 import React from 'react'
-import { Ship, CalendarCheck, Palmtree, Banknote, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Ship, Tag, Truck, Banknote } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
@@ -7,11 +7,11 @@ export function AX_MobileNavbar() {
   const { activeTab, setActiveTab } = useAXStore()
 
   const tabs = [
-    { id: 'daily', label: 'الوضع اليومي', icon: Ship },
-    { id: 'bookings', label: 'الحجوزات', icon: CalendarCheck },
-    { id: 'sea_trips', label: 'الجزر', icon: Palmtree },
-    { id: 'cash', label: 'الخزينة', icon: Banknote },
-    { id: 'reports', label: 'التقارير', icon: BarChart3 }
+    { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
+    { id: 'daily', label: 'اليومية', icon: Ship },
+    { id: 'trips', label: 'الرحلات', icon: Tag },
+    { id: 'executors', label: 'المنفذين', icon: Truck },
+    { id: 'cash', label: 'الخزينة', icon: Banknote }
   ]
 
   const handleSelect = (id) => {

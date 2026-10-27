@@ -10,14 +10,16 @@ import {
   CalendarCheck,
   Palmtree,
   Settings,
-  ChevronLeft,
-  ChevronRight
+  Truck,
+  Tag,
+  LayoutDashboard,
+  FileSpreadsheet
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
-export function AX_Sidebar() {
-  const { activeTab, setActiveTab, pendingSyncCount, profile } = useAXStore()
+export function AX_Sidebar({ onOpenUploadModal }) {
+  const { activeTab, setActiveTab, profile } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,19 +28,25 @@ export function AX_Sidebar() {
 
   const menuSections = [
     {
-      title: 'التشغيل والرحلات',
+      title: 'العمليات والتشغيل',
       items: [
-        { id: 'daily', label: 'الوضع اليومي', icon: Ship, badge: 'Daily' },
-        { id: 'bookings', label: 'كشف الحجوزات', icon: CalendarCheck },
-        { id: 'sea_trips', label: 'رحلات الجزر والبحر', icon: Palmtree },
-        { id: 'safari', label: 'سفاري وصحراء', icon: Compass }
+        { id: 'dashboard', label: 'الداشبورد (الرئيسية)', icon: LayoutDashboard },
+        { id: 'daily', label: 'الوضع اليومي (Daily)', icon: Ship, badge: '57' },
+        { id: 'bookings', label: 'كشف الحجوزات والنزلاء', icon: CalendarCheck }
       ]
     },
     {
-      title: 'الماليات والتحصيل',
+      title: 'الرحلات والمنفذين',
       items: [
-        { id: 'cash', label: 'الخزينة والعملات', icon: Banknote },
-        { id: 'reports', label: 'تقارير الأداء', icon: BarChart3 }
+        { id: 'trips', label: 'دليل الرحلات والأسعار', icon: Tag, badge: '19' },
+        { id: 'executors', label: 'المنفذين والتوريد', icon: Truck, badge: '4' }
+      ]
+    },
+    {
+      title: 'الماليات والتقارير',
+      items: [
+        { id: 'cash', label: 'الخزينة والعملات (Cash)', icon: Banknote },
+        { id: 'reports', label: 'تقارير الأداء والتحصيل', icon: BarChart3 }
       ]
     }
   ]
@@ -69,7 +77,7 @@ export function AX_Sidebar() {
         {isExpanded ? (
           <div className="flex items-center justify-between w-full">
             <span className="text-xs font-black text-[#0a2540] tracking-wider uppercase">
-              قائمة التشغيل
+              منظومة التشغيل
             </span>
             <button
               onClick={() => setIsPinned(!isPinned)}
@@ -106,6 +114,31 @@ export function AX_Sidebar() {
           />
           <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-2.5" />
         </div>
+      )}
+
+      {/* Quick Action Button to upload Excel */}
+      {isExpanded ? (
+        <button
+          onClick={() => {
+            soundManager.playClick()
+            onOpenUploadModal?.()
+          }}
+          className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          <span>رفع يومية إكسيل</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => {
+            soundManager.playClick()
+            onOpenUploadModal?.()
+          }}
+          title="رفع يومية إكسيل"
+          className="w-10 h-10 mx-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md transition-all active:scale-95"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+        </button>
       )}
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-1">
