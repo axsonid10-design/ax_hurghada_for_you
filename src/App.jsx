@@ -16,12 +16,23 @@ import { CashDrawer } from './components/cash/CashDrawer'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
+import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 
 export function App() {
-  const { activeTab } = useAXStore()
+  const { activeTab, profile } = useAXStore()
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+
+  // Fortress Auth Guard
+  if (!profile?.id) {
+    return (
+      <div className="min-h-screen font-tajawal antialiased">
+        <AX_ConfirmModal />
+        <AX_LoginScreen />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col font-tajawal antialiased">

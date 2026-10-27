@@ -6,13 +6,27 @@ import {
   buildInitialBookings
 } from '../data/initialSetup'
 
+const getStoredProfile = () => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('ax_h4u_auth_user') || sessionStorage.getItem('ax_h4u_auth_user')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 export const useAXStore = create((set, get) => ({
-  profile: {
-    id: 'user_admin',
-    name: 'مدير العمليات السياحية',
-    role: 'Operations Director'
-  },
+  profile: getStoredProfile(),
   isAuthLoading: false,
+  setProfile: (profile) => set({ profile }),
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ax_h4u_auth_user')
+      sessionStorage.removeItem('ax_h4u_auth_user')
+    }
+    set({ profile: null, activeTab: 'dashboard' })
+  },
   realtimeTrigger: 0,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   activeTab: 'dashboard',

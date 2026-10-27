@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Wifi, WifiOff, Bell, Download } from 'lucide-react'
+import { Wifi, WifiOff, Bell, Download, LogOut, User } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { pushManager } from '../../utils/pushManager'
 import { soundManager } from '../../utils/soundEffects'
 
 export function AX_Header() {
   const isOnline = useAXStore((state) => state.isOnline)
+  const profile = useAXStore((state) => state.profile)
+  const logout = useAXStore((state) => state.logout)
+  const openConfirmModal = useAXStore((state) => state.openConfirmModal)
   const openPushModal = useAXStore((state) => state.openPushModal)
   const openPwaInstallModal = useAXStore((state) => state.openPwaInstallModal)
   const [pushStatus, setPushStatus] = useState('default')
@@ -38,6 +41,19 @@ export function AX_Header() {
     } else {
       openPwaInstallModal()
     }
+  }
+
+  const handleLogout = () => {
+    openConfirmModal({
+      title: 'تسجيل الخروج',
+      message: 'هل تريد تسجيل الخروج من منظومة غردقة فور يو والعودة لبوابة الدخول؟',
+      confirmText: 'تسجيل الخروج',
+      type: 'danger',
+      onConfirm: () => {
+        soundManager.playClick()
+        logout()
+      }
+    })
   }
 
   return (
@@ -106,6 +122,27 @@ export function AX_Header() {
               <span className="w-2 h-2 rounded-full bg-rose-400"></span>
               <WifiOff className="w-3.5 h-3.5" />
               <span className="hidden md:inline">أوفلاين</span>
+            </div>
+          )}
+
+          {/* User Capsule & Logout */}
+          {profile && (
+            <div className="flex items-center gap-1.5 mr-1 border-r border-white/15 pr-2">
+              <div className="hidden lg:flex flex-col text-left text-xs">
+                <span className="font-bold text-white text-[11px] leading-tight truncate max-w-[110px]">
+                  {profile.name}
+                </span>
+                <span className="text-[9px] text-[#38bdf8] font-mono leading-tight">
+                  {profile.role}
+                </span>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="تسجيل الخروج"
+                className="p-1.5 rounded-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-white transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>

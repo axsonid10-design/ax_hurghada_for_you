@@ -13,13 +13,14 @@ import {
   Truck,
   Tag,
   LayoutDashboard,
-  FileSpreadsheet
+  FileSpreadsheet,
+  LogOut
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
 export function AX_Sidebar({ onOpenUploadModal }) {
-  const { activeTab, setActiveTab, profile } = useAXStore()
+  const { activeTab, setActiveTab, profile, logout, openConfirmModal } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -200,14 +201,34 @@ export function AX_Sidebar({ onOpenUploadModal }) {
             <img src="/logo-circle.png" alt="غردقة فور يو" className="w-full h-full object-cover rounded-full" />
           </div>
           {isExpanded && (
-            <div className="flex-1 min-w-0 text-right">
-              <div className="text-xs font-black text-[#0a2540] truncate">
-                {profile?.name || 'مدير التشغيل'}
+            <>
+              <div className="flex-1 min-w-0 text-right">
+                <div className="text-xs font-black text-[#0a2540] truncate">
+                  {profile?.name || 'مدير التشغيل'}
+                </div>
+                <div className="text-[10px] text-slate-400 truncate">
+                  {profile?.role || 'Operations'}
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                {profile?.role || 'Operations'}
-              </div>
-            </div>
+              <button
+                onClick={() => {
+                  openConfirmModal({
+                    title: 'تسجيل الخروج',
+                    message: 'هل تريد تسجيل الخروج من المنظومة؟',
+                    confirmText: 'تسجيل الخروج',
+                    type: 'danger',
+                    onConfirm: () => {
+                      soundManager.playClick()
+                      logout()
+                    }
+                  })
+                }}
+                title="تسجيل الخروج"
+                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-full hover:bg-white transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
         </div>
       </div>
