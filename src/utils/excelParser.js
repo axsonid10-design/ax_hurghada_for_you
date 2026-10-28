@@ -58,7 +58,7 @@ export async function parseExcelDailySituation(fileBuffer) {
 
       bookings.push({
         sr,
-        date: normalizedDate || '2026-10-24',
+        date: normalizedDate || batchDate || new Date().toISOString().split('T')[0],
         seller,
         channel,
         trip_type: tripType,

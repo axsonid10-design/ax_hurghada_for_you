@@ -8,10 +8,8 @@ export const INITIAL_EXECUTORS = [
     category: 'رحلات بحرية وجزر',
     categories: ['sea', 'islands'],
     notes: 'تنفيذ رحلات هولا هولا، أورانج باي، والجزيرة البيضاء',
-    total_paid: 1200,
-    payments: [
-      { id: 'p_1', date: '2026-10-24', amount: 1200, currency: 'EUR', notes: 'دفعة نقدية تحت الحساب' }
-    ]
+    total_paid: 0,
+    payments: []
   },
   {
     id: 'exec_safari',
@@ -20,10 +18,8 @@ export const INITIAL_EXECUTORS = [
     category: 'سفاري ومغامرات',
     categories: ['safari'],
     notes: 'سوبر سفاري، بيتش باجي، عشاء بدوي',
-    total_paid: 600,
-    payments: [
-      { id: 'p_2', date: '2026-10-24', amount: 600, currency: 'EUR', notes: 'سداد جزئي ليومية 24 أكتوبر' }
-    ]
+    total_paid: 0,
+    payments: []
   },
   {
     id: 'exec_diving',
@@ -32,10 +28,8 @@ export const INITIAL_EXECUTORS = [
     category: 'غوص ودولفين هاوس',
     categories: ['aqua', 'sea'],
     notes: 'غوص سكوبا، غواصة بحرية، باراشوت',
-    total_paid: 450,
-    payments: [
-      { id: 'p_3', date: '2026-10-24', amount: 450, currency: 'EUR', notes: 'دفعة نشاط الغوص والباراشوت' }
-    ]
+    total_paid: 0,
+    payments: []
   },
   {
     id: 'exec_transfers',
@@ -44,42 +38,12 @@ export const INITIAL_EXECUTORS = [
     category: 'نقل وخدمات خاصة',
     categories: ['transfers'],
     notes: 'انتقالات المطار، ركوب الخيل، سبا',
-    total_paid: 300,
-    payments: [
-      { id: 'p_4', date: '2026-10-24', amount: 300, currency: 'EUR', notes: 'تسوية انتقالات المطار' }
-    ]
+    total_paid: 0,
+    payments: []
   }
 ]
 
-export const INITIAL_EXPENSES = [
-  {
-    id: 'exp_1',
-    date: '2026-10-24',
-    title: 'وقود مارينا ومراكب البحر',
-    category: 'وقود وبترول',
-    amount: 180,
-    currency: 'EUR',
-    notes: 'يخوت هولا هولا وأورانج باي'
-  },
-  {
-    id: 'exp_2',
-    date: '2026-10-24',
-    title: 'إكراميات طاقم المارينا والبحارة',
-    category: 'عمالة وإكراميات',
-    amount: 3500,
-    currency: 'EGP',
-    notes: 'تجهيز مراكب اليومية'
-  },
-  {
-    id: 'exp_3',
-    date: '2026-10-24',
-    title: 'شاي وضيافة بدوية رحلة السفاري',
-    category: 'ضيافة وتشغيل',
-    amount: 80,
-    currency: 'EUR',
-    notes: 'سوبر سفاري وكومبايند'
-  }
-]
+export const INITIAL_EXPENSES = []
 
 export function inferTripCategory(name = '') {
   const lower = (name || '').toLowerCase()
@@ -487,12 +451,5 @@ export function computeBookingFinancials(booking, tripDefs = []) {
 }
 
 export function buildInitialBookings() {
-  return SEED_BOOKINGS.map((b) => {
-    const fin = computeBookingFinancials(b, INITIAL_TRIP_DEFINITIONS)
-    return {
-      ...b,
-      ...fin,
-      status: (b.rest_eur === 0 && b.rest_egp === 0 && b.rest_usd === 0 && b.rest_gbp === 0) ? 'paid' : 'pending'
-    }
-  })
+  return []
 }

@@ -28,6 +28,14 @@ const getStoredLang = () => {
   return l
 }
 
+const getTodayIsoDate = () => {
+  try {
+    return new Date().toISOString().split('T')[0]
+  } catch {
+    return '2026-10-28'
+  }
+}
+
 export const useAXStore = create((set, get) => ({
   lang: getStoredLang(),
   setLang: (lang) => {
@@ -63,7 +71,7 @@ export const useAXStore = create((set, get) => ({
   activeTab: 'dashboard',
   sidebarPinned: true,
   sidebarCollapsed: false,
-  selectedDate: '2026-10-24',
+  selectedDate: getTodayIsoDate(),
   searchQuery: '',
   pendingSyncCount: 0,
 
@@ -73,12 +81,19 @@ export const useAXStore = create((set, get) => ({
   bookings: [],
   expenses: [],
   importedDates: {},
-  wipeAllData: () => set((state) => ({
-    bookings: [],
-    expenses: [],
-    importedDates: {},
-    executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
-  })),
+  wipeAllData: () => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('ax_h4u_staff_invites')
+    }
+    set((state) => ({
+      bookings: [],
+      expenses: [],
+      importedDates: {},
+      selectedDate: getTodayIsoDate(),
+      systemUsers: state.systemUsers.filter((u) => u.is_master || u.email === 'axsonid@gmail.com'),
+      executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
+    }))
+  },
 
   maxUsers: 15,
   setMaxUsers: (val) => set({ maxUsers: Number(val) || 15 }),
@@ -102,69 +117,6 @@ export const useAXStore = create((set, get) => ({
         reports: true,
         can_edit_prices: true,
         can_delete_bookings: true
-      }
-    },
-    {
-      id: 'usr_director',
-      name: 'أحمد محمود',
-      email: 'ahmed@hurghada.com',
-      phone: '01012345678',
-      code: 'GM-01',
-      role: 'مدير عام',
-      status: 'active',
-      is_master: false,
-      permissions: {
-        dashboard: true,
-        daily: true,
-        bookings: true,
-        trips: true,
-        executors: true,
-        cash: true,
-        reports: true,
-        can_edit_prices: true,
-        can_delete_bookings: true
-      }
-    },
-    {
-      id: 'usr_seller_1',
-      name: 'Meghane',
-      email: 'meghane@hurghada.com',
-      phone: '01234567890',
-      code: 'REP-02',
-      role: 'مندوب مبيعات',
-      status: 'active',
-      is_master: false,
-      permissions: {
-        dashboard: true,
-        daily: true,
-        bookings: true,
-        trips: false,
-        executors: false,
-        cash: false,
-        reports: false,
-        can_edit_prices: false,
-        can_delete_bookings: false
-      }
-    },
-    {
-      id: 'usr_seller_2',
-      name: 'Laure',
-      email: 'laure@hurghada.com',
-      phone: '01567890123',
-      code: 'REP-03',
-      role: 'مندوب مبيعات',
-      status: 'active',
-      is_master: false,
-      permissions: {
-        dashboard: true,
-        daily: true,
-        bookings: true,
-        trips: false,
-        executors: false,
-        cash: false,
-        reports: false,
-        can_edit_prices: false,
-        can_delete_bookings: false
       }
     }
   ],

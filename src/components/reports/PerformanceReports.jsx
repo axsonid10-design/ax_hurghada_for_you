@@ -33,8 +33,9 @@ export function PerformanceReports() {
     openConfirmModal
   } = useAXStore()
 
-  const [dateFrom, setDateFrom] = useState('2026-10-24')
-  const [dateTo, setDateTo] = useState('2026-10-24')
+  const todayIso = new Date().toISOString().split('T')[0]
+  const [dateFrom, setDateFrom] = useState(todayIso)
+  const [dateTo, setDateTo] = useState(todayIso)
   const [selectedExecutor, setSelectedExecutor] = useState('ALL')
   const [selectedSeller, setSelectedSeller] = useState('ALL')
   const [activeReportTab, setActiveReportTab] = useState('TRIPS') // 'TRIPS' | 'PARTNERS' | 'EXPENSES'
@@ -48,7 +49,7 @@ export function PerformanceReports() {
     category: 'وقود وبترول',
     amount: '',
     currency: 'EUR',
-    date: '2026-10-24',
+    date: todayIso,
     notes: ''
   })
 
@@ -136,7 +137,7 @@ export function PerformanceReports() {
       category: 'وقود وبترول',
       amount: '',
       currency: 'EUR',
-      date: dateFrom || '2026-10-24',
+      date: dateFrom || todayIso,
       notes: ''
     })
   }
