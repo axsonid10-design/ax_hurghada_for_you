@@ -18,6 +18,7 @@ import { AX_SuperAdminPanel } from './components/admin/AX_SuperAdminPanel'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
+import { AX_WelcomeOverlay } from './components/common/AX_WelcomeOverlay'
 import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 
@@ -25,6 +26,12 @@ export function App() {
   const { activeTab, profile } = useAXStore()
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('ax_welcome_seen')
+    }
+    return false
+  })
 
   // Fortress Auth Guard
   if (!profile?.id) {
@@ -38,6 +45,17 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-tajawal antialiased">
+      {showWelcome && (
+        <AX_WelcomeOverlay
+          appName="غردقة فور يو - منظومة الرحلات والتشغيل السياحي"
+          userName={profile?.name}
+          onComplete={() => {
+            sessionStorage.setItem('ax_welcome_seen', 'true')
+            setShowWelcome(false)
+          }}
+        />
+      )}
+
       {/* 1. Quad-Lock PWA Auto Update Notifier */}
       <AppUpdateNotifier />
 
@@ -102,6 +120,21 @@ export function App() {
           {activeTab === 'reports' && <PerformanceReports />}
 
           {activeTab === 'admin' && <AX_SuperAdminPanel />}
+
+          {/* AXONID Brand Signature Footer */}
+          <footer className="w-full border border-slate-200/80 bg-white/95 backdrop-blur-md py-3 px-4 sm:px-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-black text-slate-700 shadow-sm mt-8 mb-28 lg:mb-4 transition-all text-center sm:text-right select-none">
+            <span>غردقة فور يو © 2026 — كافة الحقوق محفوظة</span>
+            <a
+              href="https://axsonid.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-50 hover:bg-white text-slate-600 hover:text-sky-600 border border-slate-200 hover:border-sky-400 transition-all font-mono font-black text-[11px] group cursor-pointer shadow-xs"
+              title="Created by AXONID"
+            >
+              <span className="font-sans font-bold text-slate-400 group-hover:text-slate-600">Created by</span>
+              <span className="text-[#0a2540] font-black tracking-wide group-hover:text-sky-600">AXONID</span>
+            </a>
+          </footer>
         </main>
       </div>
 

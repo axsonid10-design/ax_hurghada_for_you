@@ -224,6 +224,19 @@ export function AX_LoginScreen() {
                 AXONID Master
               </button>
             </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center">
+              <a
+                href="https://axsonid.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-50 hover:bg-white text-slate-500 hover:text-sky-600 border border-slate-200/80 hover:border-sky-400 transition-all font-mono font-black text-[11px] group cursor-pointer shadow-xs"
+                title="Created by AXONID"
+              >
+                <span className="font-sans font-bold text-slate-400 group-hover:text-slate-600">Created by</span>
+                <span className="text-[#0a2540] font-black tracking-wide group-hover:text-sky-600">AXONID</span>
+              </a>
+            </div>
           </div>
         </div>
 

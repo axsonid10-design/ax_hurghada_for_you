@@ -204,7 +204,7 @@ export function AX_Sidebar({ onOpenUploadModal }) {
         ))}
       </div>
 
-      <div className="pt-2 border-t border-slate-100">
+      <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
         <div
           className={`flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-100 ${
             !isExpanded ? 'justify-center p-1' : ''
@@ -244,6 +244,37 @@ export function AX_Sidebar({ onOpenUploadModal }) {
             </>
           )}
         </div>
+
+        {isExpanded ? (
+          <a
+            href="https://axsonid.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 py-1 px-3 rounded-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-sky-400 transition-all group"
+            title="Created by AXONID"
+          >
+            <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
+              Created by
+            </span>
+            <span className="text-[11px] font-black font-mono text-[#0a2540] group-hover:text-sky-600 transition-colors">
+              AXONID
+            </span>
+          </a>
+        ) : (
+          <div className="flex justify-center">
+            <a
+              href="https://axsonid.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 rounded-full hover:bg-slate-100 transition-transform hover:scale-110 block"
+              title="Created by AXONID"
+            >
+              <span className="w-5 h-5 rounded-full bg-[#0a2540] text-white flex items-center justify-center text-[9px] font-black">
+                AX
+              </span>
+            </a>
+          </div>
+        )}
       </div>
     </aside>
   )
