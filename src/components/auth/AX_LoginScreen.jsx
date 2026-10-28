@@ -4,11 +4,9 @@ import {
   Mail,
   Eye,
   EyeOff,
-  ShieldCheck,
   LogIn,
   AlertCircle,
   Compass,
-  Sparkles,
   Anchor
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
@@ -139,13 +137,8 @@ export function AX_LoginScreen() {
                 غردقة فور يو
               </h1>
               <p className="text-[11px] font-mono font-bold text-sky-700 tracking-wider uppercase mt-0.5">
-                HURGHADA FOR YOU • OPERATIONS PORTAL
+                HURGHADA FOR YOU
               </p>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200 text-[11px] font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-sky-600" />
-              <span>بوابة العمليات والتشغيل السياحي</span>
             </div>
           </div>
 
@@ -210,10 +203,6 @@ export function AX_LoginScreen() {
                 />
                 <span>تذكر تسجيل الدخول</span>
               </label>
-
-              <span className="text-[11px] font-bold text-slate-400">
-                نظام مشفر 256-bit
-              </span>
             </div>
 
             <button
@@ -226,7 +215,7 @@ export function AX_LoginScreen() {
               ) : (
                 <>
                   <LogIn className="w-4 h-4 text-sky-300" />
-                  <span>دخول المنظومة</span>
+                  <span>تسجيل الدخول</span>
                 </>
               )}
             </button>
@@ -248,7 +237,7 @@ export function AX_LoginScreen() {
 
         <div className="text-center">
           <span className="text-[11px] font-bold text-slate-400">
-            HURGHADA FOR YOU © 2026 • كافة الحقوق محفوظة
+            HURGHADA FOR YOU © 2026
           </span>
         </div>
       </div>
