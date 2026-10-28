@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
+import { hasModuleAccess } from '../../utils/permissionsConfig'
 
 export function AX_Sidebar({ onOpenUploadModal }) {
   const { activeTab, setActiveTab, profile, logout, openConfirmModal, t } = useAXStore()
@@ -65,6 +66,7 @@ export function AX_Sidebar({ onOpenUploadModal }) {
     .map((sec) => ({
       ...sec,
       items: sec.items.filter((item) =>
+        hasModuleAccess(profile, item.id) &&
         item.label.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }))

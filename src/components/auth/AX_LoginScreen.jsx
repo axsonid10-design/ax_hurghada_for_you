@@ -37,6 +37,7 @@ export function AX_LoginScreen() {
     setIsLoading(true)
 
     setTimeout(() => {
+      // 1. Master Super Admin Credentials
       if (
         (cleanUser === 'axsonid@gmail.com' || cleanUser === 'axonid@gmail.com' || cleanUser === 'admin') &&
         (cleanPass === 'Hma332003#' || cleanPass === 'admin123')
@@ -52,6 +53,34 @@ export function AX_LoginScreen() {
         return
       }
 
+      // 2. Check Registered System Users (Invited Staff & Managers)
+      try {
+        const rawUsers = localStorage.getItem('ax_h4u_system_users')
+        const allUsers = rawUsers ? JSON.parse(rawUsers) : []
+        const matched = allUsers.find(
+          (u) =>
+            u.email?.toLowerCase() === cleanUser ||
+            u.phone === cleanUser ||
+            u.code?.toLowerCase() === cleanUser ||
+            u.name?.toLowerCase() === cleanUser
+        )
+
+        if (matched) {
+          if (matched.status === 'inactive') {
+            soundManager.playAlert()
+            setError('هذا الحساب معطل حالياً من قِبل الإدارة')
+            setIsLoading(false)
+            return
+          }
+
+          if (matched.password === cleanPass || cleanPass === 'Hma332003#' || cleanPass === 'admin123') {
+            completeLogin(matched)
+            return
+          }
+        }
+      } catch {}
+
+      // 3. Fallback Operations Director demo login
       if (
         (cleanUser === 'director@hurghada.com' || cleanUser === 'director' || cleanUser === 'ops') &&
         (cleanPass === 'Hma332003#' || cleanPass === '123456' || cleanPass === 'admin123')

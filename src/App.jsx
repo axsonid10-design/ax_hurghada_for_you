@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AX_Header } from './components/navigation/AX_Header'
 import { AX_Sidebar } from './components/navigation/AX_Sidebar'
 import { AX_MobileNavbar } from './components/navigation/AX_MobileNavbar'
@@ -22,9 +22,11 @@ import { AX_FloatingActions } from './components/common/AX_FloatingActions'
 import { AX_WelcomeOverlay } from './components/common/AX_WelcomeOverlay'
 import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
+import { hasModuleAccess, getFirstAllowedModule } from './utils/permissionsConfig'
+import { soundManager } from './utils/soundEffects'
 
 export function App() {
-  const { activeTab, profile, lang, addExpense } = useAXStore()
+  const { activeTab, setActiveTab, profile, setProfile, logout, lang, addExpense } = useAXStore()
   const [activeInviteToken, setActiveInviteToken] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('invite')
@@ -39,6 +41,66 @@ export function App() {
     }
     return false
   })
+
+  // Rule 16: Functional Permissions & Hard Route Guard
+  useEffect(() => {
+    if (!profile?.id) return
+    if (!hasModuleAccess(profile, activeTab)) {
+      const allowed = getFirstAllowedModule(profile)
+      setActiveTab(allowed)
+    }
+  }, [activeTab, profile, setActiveTab])
+
+  // Rule 16: Real-time Session Heartbeat & Instant Eviction / Permissions Revocation
+  useEffect(() => {
+    if (!profile?.id) return
+    const isMaster =
+      profile.is_master ||
+      profile.role === 'Super Admin' ||
+      profile.email === 'axsonid@gmail.com' ||
+      profile.email === 'axonid@gmail.com'
+
+    if (isMaster) return
+
+    const verifySession = () => {
+      try {
+        const raw = localStorage.getItem('ax_h4u_system_users')
+        if (!raw) return
+        const users = JSON.parse(raw)
+        const currentUser = users.find(
+          (u) => u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase()
+        )
+
+        // Instant Eviction: User deleted or deactivated by admin
+        if (!currentUser || currentUser.status === 'inactive') {
+          soundManager.playAlert()
+          logout()
+          return
+        }
+
+        // Instant Permissions Revocation: Role or permissions changed in real-time
+        const permsChanged = JSON.stringify(currentUser.permissions) !== JSON.stringify(profile.permissions)
+        const roleChanged = currentUser.role !== profile.role
+        if (permsChanged || roleChanged) {
+          setProfile(currentUser)
+          if (!hasModuleAccess(currentUser, activeTab)) {
+            const fallback = getFirstAllowedModule(currentUser)
+            setActiveTab(fallback)
+          }
+        }
+      } catch {}
+    }
+
+    const intervalId = setInterval(verifySession, 3000)
+    window.addEventListener('focus', verifySession)
+    window.addEventListener('storage', verifySession)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener('focus', verifySession)
+      window.removeEventListener('storage', verifySession)
+    }
+  }, [profile, activeTab, logout, setProfile, setActiveTab])
 
   // Staff Invite Onboarding Guard
   if (activeInviteToken) {

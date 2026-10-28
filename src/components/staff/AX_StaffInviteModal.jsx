@@ -14,7 +14,7 @@ import { useAXStore } from '../../store/useAXStore'
 export function AX_StaffInviteModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
-  const { lang } = useAXStore()
+  const { lang, addStaffInvite } = useAXStore()
   const isRtl = lang === 'ar'
 
   const [role, setRole] = useState('مندوب مبيعات')
@@ -47,22 +47,20 @@ export function AX_StaffInviteModal({ isOpen, onClose }) {
 
     const token = `inv_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`
     const url = `${window.location.origin}/?invite=${token}&role=${encodeURIComponent(role)}`
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     const newInvite = {
       token,
+      url,
       role,
       permissions,
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: now.toISOString(),
+      expiresAt
     }
 
-    try {
-      const raw = localStorage.getItem('ax_h4u_staff_invites')
-      const existing = raw ? JSON.parse(raw) : []
-      localStorage.setItem('ax_h4u_staff_invites', JSON.stringify([newInvite, ...existing]))
-    } catch {
-    }
-
+    addStaffInvite?.(newInvite)
     setGeneratedLink(url)
   }
 

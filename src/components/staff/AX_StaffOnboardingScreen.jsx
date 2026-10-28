@@ -102,6 +102,7 @@ export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
       name: fullName.trim(),
       email: cleanEmail,
       phone: phone.trim(),
+      password: password.trim(),
       code: assignedRole === 'مدير عام' ? 'MGR-' + Math.floor(10 + Math.random() * 90) : 'SEL-' + Math.floor(10 + Math.random() * 90),
       role: assignedRole,
       permissions: assignedPerms,

@@ -29,6 +29,60 @@ const getStoredLang = () => {
   return l
 }
 
+const getStoredTab = () => {
+  if (typeof window === 'undefined') return 'dashboard'
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get('tab')
+    if (fromUrl) return fromUrl
+    return localStorage.getItem('ax_h4u_active_tab') || 'dashboard'
+  } catch {
+    return 'dashboard'
+  }
+}
+
+const DEFAULT_SYSTEM_USERS = [
+  {
+    id: 'usr_master_axonid',
+    name: 'AXONID Master Admin',
+    email: 'axsonid@gmail.com',
+    phone: '01000000000',
+    code: 'ADM-00',
+    role: 'مدير عام',
+    status: 'active',
+    is_master: true,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: true,
+      executors: true,
+      cash: true,
+      reports: true,
+      staff: true,
+      can_edit_prices: true,
+      can_delete_bookings: true
+    }
+  }
+]
+
+const getStoredSystemUsers = () => {
+  if (typeof window === 'undefined') return DEFAULT_SYSTEM_USERS
+  try {
+    const raw = localStorage.getItem('ax_h4u_system_users')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return DEFAULT_SYSTEM_USERS
+}
+
+const getStoredInvites = () => {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('ax_h4u_staff_invites')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
 const getTodayIsoDate = () => {
   try {
     return new Date().toISOString().split('T')[0]
@@ -59,7 +113,16 @@ export const useAXStore = create((set, get) => ({
   },
   profile: getStoredProfile(),
   isAuthLoading: false,
-  setProfile: (profile) => set({ profile }),
+  setProfile: (profile) => {
+    if (typeof localStorage !== 'undefined') {
+      if (profile) {
+        localStorage.setItem('ax_h4u_auth_user', JSON.stringify(profile))
+      } else {
+        localStorage.removeItem('ax_h4u_auth_user')
+      }
+    }
+    set({ profile })
+  },
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('ax_h4u_auth_user')
@@ -69,7 +132,20 @@ export const useAXStore = create((set, get) => ({
   },
   realtimeTrigger: 0,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-  activeTab: 'dashboard',
+  activeTab: getStoredTab(),
+  setActiveTab: (tab) => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_active_tab', tab)
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', tab)
+        window.history.replaceState({}, '', url.toString())
+      } catch {}
+    }
+    set({ activeTab: tab })
+  },
   sidebarPinned: true,
   sidebarCollapsed: false,
   selectedDate: getTodayIsoDate(),
@@ -85,66 +161,90 @@ export const useAXStore = create((set, get) => ({
   wipeAllData: () => {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ax_h4u_staff_invites')
+      localStorage.removeItem('ax_h4u_system_users')
     }
     clearOfflineQueue().catch(() => {})
+    const masterOnly = DEFAULT_SYSTEM_USERS
     set((state) => ({
       bookings: [],
       expenses: [],
       importedDates: {},
       selectedDate: getTodayIsoDate(),
-      systemUsers: state.systemUsers.filter((u) => u.is_master || u.email === 'axsonid@gmail.com'),
+      systemUsers: masterOnly,
+      staffInvites: [],
       executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
     }))
   },
 
   maxUsers: 15,
   setMaxUsers: (val) => set({ maxUsers: Number(val) || 15 }),
-  systemUsers: [
-    {
-      id: 'usr_master_axonid',
-      name: 'AXONID Master Admin',
-      email: 'axsonid@gmail.com',
-      phone: '01000000000',
-      code: 'ADM-00',
-      role: 'مدير عام',
-      status: 'active',
-      is_master: true,
-      permissions: {
-        dashboard: true,
-        daily: true,
-        bookings: true,
-        trips: true,
-        executors: true,
-        cash: true,
-        reports: true,
-        can_edit_prices: true,
-        can_delete_bookings: true
-      }
+  systemUsers: getStoredSystemUsers(),
+  staffInvites: getStoredInvites(),
+
+  addStaffInvite: (invite) => {
+    const prev = get().staffInvites || []
+    const next = [invite, ...prev]
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(next))
     }
-  ],
-  addSystemUser: (user) => set((state) => ({
-    systemUsers: [
+    set({ staffInvites: next })
+  },
+
+  deleteStaffInvite: (token) => {
+    const prev = get().staffInvites || []
+    const next = prev.filter((i) => i.token !== token)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(next))
+    }
+    set({ staffInvites: next })
+  },
+
+  addSystemUser: (user) => {
+    const prev = get().systemUsers || []
+    const next = [
       {
         ...user,
-        id: 'usr_' + Date.now(),
+        id: user.id || 'usr_' + Date.now(),
         code: user.code || 'EMP-' + Math.floor(10 + Math.random() * 90),
-        status: 'active',
+        status: user.status || 'active',
         is_master: false
       },
-      ...state.systemUsers
+      ...prev
     ]
-  })),
-  updateSystemUser: (id, fields) => set((state) => ({
-    systemUsers: state.systemUsers.map((u) => (u.id === id ? { ...u, ...fields } : u))
-  })),
-  deleteSystemUser: (id) => set((state) => ({
-    systemUsers: state.systemUsers.filter((u) => u.id !== id)
-  })),
-  toggleSystemUserStatus: (id) => set((state) => ({
-    systemUsers: state.systemUsers.map((u) =>
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
+    }
+    set({ systemUsers: next })
+  },
+
+  updateSystemUser: (id, fields) => {
+    const prev = get().systemUsers || []
+    const next = prev.map((u) => (u.id === id ? { ...u, ...fields } : u))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
+    }
+    set({ systemUsers: next })
+  },
+
+  deleteSystemUser: (id) => {
+    const prev = get().systemUsers || []
+    const next = prev.filter((u) => u.id !== id)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
+    }
+    set({ systemUsers: next })
+  },
+
+  toggleSystemUserStatus: (id) => {
+    const prev = get().systemUsers || []
+    const next = prev.map((u) =>
       u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
     )
-  })),
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
+    }
+    set({ systemUsers: next })
+  },
 
   // Confirmation Modal
   confirmModal: {
