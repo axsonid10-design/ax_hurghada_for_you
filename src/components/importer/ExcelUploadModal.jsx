@@ -7,13 +7,8 @@ import {
   CheckCircle2,
   RefreshCw,
   Sparkles,
-  Edit3,
-  Plus,
-  Ship,
-  Info,
-  Calendar,
   Layers,
-  ArrowRight
+  Check
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { useAXStore } from '../../store/useAXStore'
@@ -21,15 +16,31 @@ import { parseExcelDailySituation } from '../../utils/excelParser'
 import { soundManager } from '../../utils/soundEffects'
 import { ConfigureUnknownTripsModal } from './ConfigureUnknownTripsModal'
 import { ConfigureSingleTripModal } from './ConfigureSingleTripModal'
+import { AX_BatchExecutorAssigner } from './AX_BatchExecutorAssigner'
+import { AX_TripConfigRow } from './AX_TripConfigRow'
+import { AX_ExcelSummaryCard } from './AX_ExcelSummaryCard'
+import { AX_ExcelDropzone } from './AX_ExcelDropzone'
+import { AX_UnpricedTripsAlert } from './AX_UnpricedTripsAlert'
 
 export function ExcelUploadModal({ isOpen, onClose }) {
-  const { importedDates, tripDefinitions, executors, importExcelBatch } = useAXStore()
+  const {
+    importedDates,
+    tripDefinitions,
+    executors,
+    importExcelBatch,
+    batchAddTripDefinitions
+  } = useAXStore()
 
   const [file, setFile] = useState(null)
   const [isParsing, setIsParsing] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [parsedData, setParsedData] = useState(null)
   const [duplicateWarning, setDuplicateWarning] = useState(null)
+
+  // Session-based Executor Assignments
+  const [sessionAssignments, setSessionAssignments] = useState({})
+  const [selectedExecutorId, setSelectedExecutorId] = useState('')
+  const [selectedTripNames, setSelectedTripNames] = useState(new Set())
 
   // Modals for Trip Pricing
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
@@ -56,16 +67,28 @@ export function ExcelUploadModal({ isOpen, onClose }) {
       const def = findTripDef(tName)
       const isCashPickup = tName.toLowerCase().includes('cash pickup') || tName.toLowerCase().includes('تحصيل')
       const isConfigured = Boolean(def && (def.adult_sell > 0 || isCashPickup))
-      const executor = executors.find((ex) => ex.id === def?.executor_id)
+      const sessionAssigned = sessionAssignments[tName]
+      const executor = executors.find((ex) => ex.id === (sessionAssigned?.executorId || def?.executor_id))
       return {
         name: tName,
         def,
         isConfigured,
         isCashPickup,
+        isAssigned: Boolean(sessionAssigned),
+        assignedExecutorName: sessionAssigned?.executorName || executor?.name,
         executorName: executor?.name || (isCashPickup ? 'انتقالات وتحصيل' : 'غير مسند')
       }
     })
-  }, [parsedData, tripDefinitions, executors])
+  }, [parsedData, tripDefinitions, executors, sessionAssignments])
+
+  // Split trips into unassigned (Top) and assigned (Bottom)
+  const unassignedTrips = useMemo(() => {
+    return analyzedTrips.filter((t) => !sessionAssignments[t.name])
+  }, [analyzedTrips, sessionAssignments])
+
+  const assignedTrips = useMemo(() => {
+    return analyzedTrips.filter((t) => Boolean(sessionAssignments[t.name]))
+  }, [analyzedTrips, sessionAssignments])
 
   const unconfiguredTrips = useMemo(() => {
     return analyzedTrips.filter((t) => !t.isConfigured).map((t) => t.name)
@@ -88,11 +111,13 @@ export function ExcelUploadModal({ isOpen, onClose }) {
     setFile(selectedFile)
     setIsParsing(true)
     setShowUnpricedWarningConfirm(false)
+    setSessionAssignments({})
+    setSelectedExecutorId('')
+    setSelectedTripNames(new Set())
 
     try {
       const buffer = await selectedFile.arrayBuffer()
       const result = await parseExcelDailySituation(buffer)
-
       setParsedData(result)
 
       if (importedDates[result.date]) {
@@ -113,12 +138,60 @@ export function ExcelUploadModal({ isOpen, onClose }) {
     }
   }
 
+  const handleToggleTrip = (tripName) => {
+    setSelectedTripNames((prev) => {
+      const next = new Set(prev)
+      if (next.has(tripName)) next.delete(tripName)
+      else next.add(tripName)
+      return next
+    })
+  }
+
+  const handleSelectAllUnassigned = () => {
+    const allUnassigned = new Set(unassignedTrips.map((t) => t.name))
+    setSelectedTripNames(allUnassigned)
+  }
+
+  const handleClearSelection = () => {
+    setSelectedTripNames(new Set())
+  }
+
+  // Save selected trips to chosen executor -> moves them to bottom
+  const handleSaveBatchAssignment = () => {
+    if (!selectedExecutorId || selectedTripNames.size === 0) return
+    const currentExecutor = executors.find((ex) => ex.id === selectedExecutorId)
+    if (!currentExecutor) return
+
+    soundManager.playSuccess()
+    setSessionAssignments((prev) => {
+      const next = { ...prev }
+      selectedTripNames.forEach((name) => {
+        next[name] = {
+          executorId: selectedExecutorId,
+          executorName: currentExecutor.name
+        }
+      })
+      return next
+    })
+    setSelectedTripNames(new Set())
+  }
+
+  const handleUnassignTrip = (tripName) => {
+    setSessionAssignments((prev) => {
+      const next = { ...prev }
+      delete next[tripName]
+      return next
+    })
+    setSelectedTripNames((prev) => {
+      const next = new Set(prev)
+      next.delete(tripName)
+      return next
+    })
+  }
+
   const handleOpenSingleTrip = (trip) => {
     soundManager.playClick()
-    setSelectedTripForConfig({
-      name: trip.name,
-      def: trip.def
-    })
+    setSelectedTripForConfig({ name: trip.name, def: trip.def })
     setIsSingleTripModalOpen(true)
   }
 
@@ -130,21 +203,40 @@ export function ExcelUploadModal({ isOpen, onClose }) {
 
   const handleFinalImport = (overwrite = false) => {
     if (!parsedData) return
-
     soundManager.playSuccess()
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.6 }
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } })
+
+    const finalBookings = parsedData.bookings.map((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      const match = Object.entries(sessionAssignments).find(([name]) => {
+        const cleanName = name.toLowerCase().trim().replace(/\s+/g, ' ')
+        return cleanName === cleanType
+      })
+      if (match) {
+        return { ...b, executor_id: match[1].executorId }
+      }
+      return b
     })
+
+    const defsToUpdate = Object.entries(sessionAssignments).map(([tripName, assign]) => {
+      const existingDef = findTripDef(tripName)
+      return {
+        ...(existingDef || { id: 'td_' + Date.now() + Math.random().toString(36).substr(2, 4) }),
+        sheet_name: tripName,
+        display_name: existingDef?.display_name || tripName,
+        executor_id: assign.executorId
+      }
+    })
+    if (defsToUpdate.length > 0) {
+      batchAddTripDefinitions(defsToUpdate)
+    }
 
     importExcelBatch({
       date: parsedData.date,
       filename: file.name,
-      rawBookings: parsedData.bookings,
+      rawBookings: finalBookings,
       overwrite
     })
-
     onClose()
   }
 
@@ -185,93 +277,40 @@ export function ExcelUploadModal({ isOpen, onClose }) {
           <div className="flex-1 overflow-y-auto py-3 space-y-4 pr-1">
             {/* Drag & Drop Zone */}
             {!parsedData && (
-              <div
+              <AX_ExcelDropzone
+                fileInputRef={fileInputRef}
+                isParsing={isParsing}
+                errorMsg={errorMsg}
                 onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 hover:border-[#0284c7] rounded-3xl p-8 sm:p-10 text-center cursor-pointer bg-slate-50 hover:bg-sky-50/50 transition-all space-y-3"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={(e) => handleFileSelected(e.target.files[0])}
-                />
-
-                <div className="w-16 h-16 rounded-full bg-white shadow-soft text-[#0284c7] mx-auto flex items-center justify-center">
-                  {isParsing ? (
-                    <RefreshCw className="w-7 h-7 animate-spin text-[#0284c7]" />
-                  ) : (
-                    <UploadCloud className="w-8 h-8" />
-                  )}
-                </div>
-
-                <div>
-                  <div className="text-sm font-black text-slate-800">
-                    {isParsing ? 'جاري قراءة واستخراج بيانات اليومية...' : 'اسحب ملف الإكسيل هنا أو اضغط للاختيار'}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1 font-bold">
-                    يدعم ملفات Daily Situation بصيغة (.xlsx)
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {errorMsg && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0" />
-                <span>{errorMsg}</span>
-              </div>
+                onFileSelected={handleFileSelected}
+              />
             )}
 
             {/* Parsed Summary & Trip Inspector */}
             {parsedData && (
               <div className="space-y-4">
-                {/* File Header Card */}
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs font-bold grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">اسم الملف</span>
-                    <span className="text-slate-800 font-mono truncate block" title={file?.name}>
-                      {file?.name}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">تاريخ اليومية</span>
-                    <span className="text-[#0284c7] font-black font-mono block">
-                      {parsedData.date}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">الحجوزات المستخرجة</span>
-                    <span className="text-emerald-600 font-black font-mono block">
-                      {parsedData.totalRows} حجز
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">أنواع الرحلات بالشيت</span>
-                    <span className="text-slate-700 font-black block">
-                      {analyzedTrips.length} رحلة
-                    </span>
-                  </div>
-                </div>
+                <AX_ExcelSummaryCard
+                  filename={file?.name}
+                  date={parsedData.date}
+                  totalRows={parsedData.totalRows}
+                  tripsCount={analyzedTrips.length}
+                  duplicateWarning={duplicateWarning}
+                />
 
-                {/* Duplicate Date Warning Box */}
-                {duplicateWarning && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
-                    <div className="flex items-start gap-2.5">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-xs">
-                        <div className="font-black text-amber-900">
-                          تنبيه تكرار: تم استيراد يومية سابقة بنفس هذا التاريخ!
-                        </div>
-                        <div className="text-amber-800 mt-1 leading-relaxed">
-                          يومية تاريخ <strong className="font-mono text-slate-800">[{duplicateWarning.date}]</strong> مسجلة بالفعل وبها <strong>{duplicateWarning.prevCount}</strong> حجز.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Batch Executor Assignment Bar */}
+                <AX_BatchExecutorAssigner
+                  executors={executors}
+                  unassignedTripsCount={unassignedTrips.length}
+                  assignedTripsCount={assignedTrips.length}
+                  selectedExecutorId={selectedExecutorId}
+                  setSelectedExecutorId={setSelectedExecutorId}
+                  selectedTripNames={selectedTripNames}
+                  onToggleTrip={handleToggleTrip}
+                  onSelectAllUnassigned={handleSelectAllUnassigned}
+                  onClearSelection={handleClearSelection}
+                  onSaveBatchAssignment={handleSaveBatchAssignment}
+                  canSelectAll={selectedTripNames.size < unassignedTrips.length}
+                />
 
                 {/* Detected Trips Inspector (Visual Checklist) */}
                 <div className="border border-slate-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
@@ -279,7 +318,7 @@ export function ExcelUploadModal({ isOpen, onClose }) {
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs font-black text-[#0a2540] flex items-center gap-1.5">
                         <Layers className="w-4 h-4 text-[#0284c7]" />
-                        <span>فحص وتسعير رحلات الشيت ({analyzedTrips.length})</span>
+                        <span>رحلات الشيت ({analyzedTrips.length})</span>
                       </h4>
                       <div className="flex items-center gap-1.5">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
@@ -300,144 +339,74 @@ export function ExcelUploadModal({ isOpen, onClose }) {
                         className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-[11px] font-black shadow-sm flex items-center gap-1 transition-all active:scale-95 self-start sm:self-auto"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>تسعير الرحلات الجديدة دفعة واحدة ({unconfiguredCount})</span>
+                        <span>تسعير الرحلات الجديدة ({unconfiguredCount})</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="text-[11px] text-slate-500 font-bold">
-                    اضغط على أي رحلة لضبط أسعارها (البيع والتكلفة ونسبة الأطفال والمنفذ) قبل الاعتماد:
-                  </div>
-
-                  {/* Trip Rows List */}
-                  <div className="space-y-2 max-h-60 sm:max-h-72 overflow-y-auto pr-1">
-                    {analyzedTrips.map((trip, idx) => {
-                      const isConfigured = trip.isConfigured
-                      const def = trip.def
-
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => handleOpenSingleTrip(trip)}
-                          className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                            isConfigured
-                              ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50'
-                              : 'bg-amber-50/50 border-amber-300 hover:border-amber-400 hover:bg-amber-50 animate-pulse'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="flex-shrink-0">
-                              {isConfigured ? (
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                              ) : (
-                                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                              )}
-                            </div>
-
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-black text-slate-800 truncate">
-                                  {trip.name}
-                                </span>
-                                {def?.display_name && def.display_name !== trip.name && (
-                                  <span className="text-[10px] text-slate-400 font-bold truncate">
-                                    ({def.display_name})
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="text-[11px] mt-0.5 flex items-center gap-2 text-slate-500 font-mono">
-                                {isConfigured ? (
-                                  trip.isCashPickup ? (
-                                    <span className="text-slate-600 font-bold">
-                                      تحصيل نقدي مباشر (بدون تكلفة توريد)
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <span className="text-emerald-700 font-black">
-                                        بيع: {def.adult_sell} {def.currency || 'EUR'}
-                                      </span>
-                                      <span className="text-slate-300">•</span>
-                                      <span className="text-slate-600 font-bold">
-                                        تكلفة: {def.adult_cost} {def.currency || 'EUR'}
-                                      </span>
-                                      <span className="text-slate-300">•</span>
-                                      <span className="text-slate-500 font-bold text-[10px]">
-                                        {def.pricing_type === 'trip' ? 'بالرحلة' : 'للبالغ'}
-                                      </span>
-                                      <span className="text-slate-300 hidden sm:inline">•</span>
-                                      <span className="text-slate-600 font-bold hidden sm:inline text-[10px]">
-                                        المنفذ: {trip.executorName}
-                                      </span>
-                                    </>
-                                  )
-                                ) : (
-                                  <span className="text-amber-800 font-bold">
-                                    ⚠️ رحلة جديدة لم تسعر بعد (سعر بيعها 0) - اضغط للتسعير
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            {isConfigured ? (
-                              <button
-                                type="button"
-                                className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-xs font-black shadow-sm flex items-center gap-1 transition-all"
-                              >
-                                <Edit3 className="w-3.5 h-3.5 text-[#0284c7]" />
-                                <span className="hidden sm:inline">تعديل</span>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm flex items-center gap-1 transition-all active:scale-95"
-                              >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                <span>تسعير الآن</span>
-                              </button>
-                            )}
-                          </div>
+                  {/* Trip Rows List - Unassigned at Top, Assigned at Bottom */}
+                  <div className="space-y-2 max-h-64 sm:max-h-72 overflow-y-auto pr-1">
+                    {/* 1. Unassigned Trips (TOP OF LIST) */}
+                    {unassignedTrips.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] font-black text-[#0a2540] flex items-center justify-between pb-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>رحلات بانتظار إسناد المنفذ ({unassignedTrips.length})</span>
+                          </span>
+                          {selectedExecutorId && (
+                            <span className="text-[10px] text-[#0284c7] font-bold">
+                              اضغط على أي رحلة لتحديدها
+                            </span>
+                          )}
                         </div>
-                      )
-                    })}
+                        {unassignedTrips.map((trip) => (
+                          <AX_TripConfigRow
+                            key={trip.name}
+                            trip={trip}
+                            isAssigned={false}
+                            isSelected={selectedTripNames.has(trip.name)}
+                            canSelect={Boolean(selectedExecutorId)}
+                            onToggleSelect={handleToggleTrip}
+                            onOpenSingleTrip={handleOpenSingleTrip}
+                            onUnassign={handleUnassignTrip}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 2. Assigned Trips (BOTTOM OF LIST - Locked) */}
+                    {assignedTrips.length > 0 && (
+                      <div className="space-y-1.5 pt-3 border-t border-slate-100">
+                        <div className="text-[11px] font-black text-emerald-800 flex items-center gap-1.5 pb-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>رحلات تم إسنادها للمنفذين وتثبيتها ({assignedTrips.length})</span>
+                        </div>
+                        {assignedTrips.map((trip) => (
+                          <AX_TripConfigRow
+                            key={trip.name}
+                            trip={trip}
+                            isAssigned={true}
+                            assignedExecutorName={trip.assignedExecutorName}
+                            isSelected={false}
+                            canSelect={false}
+                            onToggleSelect={handleToggleTrip}
+                            onOpenSingleTrip={handleOpenSingleTrip}
+                            onUnassign={handleUnassignTrip}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Unpriced Warning Confirmation Dialog */}
                 {showUnpricedWarningConfirm && (
-                  <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3 animate-fadeIn">
-                    <div className="flex items-start gap-2.5">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-xs">
-                        <div className="font-black text-amber-900">
-                          تنبيه: يوجد ({unconfiguredCount}) رحلات جديدة لم تقم بتسعيرها بعد!
-                        </div>
-                        <div className="text-amber-800 mt-1 leading-relaxed">
-                          استيراد اليومية دون تسعير هذه الرحلات سيجعل تكاليفها وأرباحها المحسوبة صفر. يُفضل تسعيرها أولاً لتكون التقارير والحسابات دقيقة 100%.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={handleOpenBatchConfig}
-                        className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>تسعير الرحلات الجديدة الآن (موصى به)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleFinalImport(Boolean(duplicateWarning))}
-                        className="flex-1 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full text-xs font-bold transition-all"
-                      >
-                        المتابعة والاستيراد على أي حال
-                      </button>
-                    </div>
-                  </div>
+                  <AX_UnpricedTripsAlert
+                    unconfiguredCount={unconfiguredCount}
+                    onOpenBatchConfig={handleOpenBatchConfig}
+                    onProceedAnyway={() => handleFinalImport(Boolean(duplicateWarning))}
+                  />
                 )}
               </div>
             )}
