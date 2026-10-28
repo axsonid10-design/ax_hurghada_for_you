@@ -1,6 +1,21 @@
 export const INITIAL_EXECUTORS = []
 export const INITIAL_EXPENSES = []
 
+export const DEFAULT_TRIP_CATEGORIES = [
+  { id: 'islands', label: 'جزر ويخوت بحرية' },
+  { id: 'safari', label: 'سفاري ومغامرات صحراوية' },
+  { id: 'aqua', label: 'غوص ودولفين هاوس وأكوا' },
+  { id: 'sea', label: 'رحلات بحرية خاصة' },
+  { id: 'transfers', label: 'انتقالات وخدمات سياحية' }
+]
+
+export const DEFAULT_EXECUTOR_CATEGORIES = [
+  'رحلات بحرية وجزر',
+  'سفاري ومغامرات',
+  'غوص ودولفين هاوس',
+  'نقل وخدمات خاصة'
+]
+
 export function inferTripCategory(name = '') {
   const lower = (name || '').toLowerCase()
   if (lower.includes('safari') || lower.includes('سفاري') || lower.includes('باجي') || lower.includes('buggy') || lower.includes('quad') || lower.includes('صحراء')) return 'safari'
@@ -15,22 +30,12 @@ export const INITIAL_TRIP_DEFINITIONS = []
 export function computeBookingFinancials(booking, tripDefs = []) {
   const cleanTripType = (booking.trip_type || '').toLowerCase().trim().replace(/\s+/g, ' ')
   
-  // Exact or normalized match
   let tripDef = tripDefs.find((td) => {
     const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
     const dName = (td.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
     return sName === cleanTripType || dName === cleanTripType
   })
 
-  // Substring fallback match if not exact
-  if (!tripDef) {
-    tripDef = tripDefs.find((td) => {
-      const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
-      return cleanTripType.includes(sName) || sName.includes(cleanTripType)
-    })
-  }
-
-  // Cash Pickup handling
   if (cleanTripType.includes('cash pickup') || cleanTripType.includes('تحصيل')) {
     const cashAmount = booking.rest_eur || 0
     return {
@@ -64,7 +69,6 @@ export function computeBookingFinancials(booking, tripDefs = []) {
     totalCost = tripDef.adult_cost
     totalSell = tripDef.adult_sell
   } else {
-    // Per Pax
     const adultCost = (booking.adult || 0) * tripDef.adult_cost
     const adultSell = (booking.adult || 0) * tripDef.adult_sell
 

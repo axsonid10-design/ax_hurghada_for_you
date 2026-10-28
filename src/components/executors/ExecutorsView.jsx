@@ -16,19 +16,24 @@ import {
   Receipt,
   FileText,
   Tag,
-  Coins
+  Coins,
+  Edit3,
+  Settings
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { QuickAddExecutorModal } from './QuickAddExecutorModal'
 import { ExecutorInvoiceModal } from './ExecutorInvoiceModal'
+import { ManageCategoriesModal } from '../common/ManageCategoriesModal'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 
 export function ExecutorsView() {
-  const { t, executors, bookings, tripDefinitions, recordExecutorPayment } = useAXStore()
+  const { t, executors, bookings, tripDefinitions, executorCategories, recordExecutorPayment } = useAXStore()
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const [editingExecutor, setEditingExecutor] = useState(null)
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false)
   const [invoiceModal, setInvoiceModal] = useState({ isOpen: false, executor: null })
   const [paymentModal, setPaymentModal] = useState({
     isOpen: false,
@@ -40,11 +45,7 @@ export function ExecutorsView() {
 
   const categories = [
     { id: 'all', label: 'جميع الأقسام' },
-    { id: 'sea', label: 'رحلات بحرية ويخوت' },
-    { id: 'islands', label: 'رحلات الجزر' },
-    { id: 'safari', label: 'السفاري والصحراء' },
-    { id: 'aqua', label: 'الغوص والأكوا' },
-    { id: 'transfers', label: 'النقل والتحصيل' }
+    ...executorCategories.map((c) => ({ id: c, label: c }))
   ]
 
   const filtered = useMemo(() => {
@@ -55,27 +56,7 @@ export function ExecutorsView() {
 
       if (!matchSearch) return false
       if (activeCategory === 'all') return true
-
-      const exCategories = ex.categories || []
-      const catText = (ex.category || '').toLowerCase()
-
-      if (activeCategory === 'sea') {
-        return exCategories.includes('sea') || catText.includes('بحر') || catText.includes('يخوت')
-      }
-      if (activeCategory === 'islands') {
-        return exCategories.includes('islands') || catText.includes('جزر') || catText.includes('جزيرة')
-      }
-      if (activeCategory === 'safari') {
-        return exCategories.includes('safari') || catText.includes('سفاري') || catText.includes('صحراء')
-      }
-      if (activeCategory === 'aqua') {
-        return exCategories.includes('aqua') || catText.includes('غوص') || catText.includes('دولفين')
-      }
-      if (activeCategory === 'transfers') {
-        return exCategories.includes('transfers') || catText.includes('نقل') || catText.includes('ليموزين')
-      }
-
-      return true
+      return ex.category === activeCategory
     })
   }, [executors, search, activeCategory])
 
@@ -135,6 +116,18 @@ export function ExecutorsView() {
           <button
             onClick={() => {
               soundManager.playClick()
+              setIsManageCategoriesOpen(true)
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0"
+          >
+            <Settings className="w-3.5 h-3.5 text-slate-500" />
+            <span>إدارة الأنشطة</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundManager.playClick()
+              setEditingExecutor(null)
               setIsAddOpen(true)
             }}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0"
@@ -231,15 +224,28 @@ export function ExecutorsView() {
                     </div>
                   </div>
 
-                  {ex.phone && (
-                    <a
-                      href={`tel:${ex.phone}`}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        soundManager.playClick()
+                        setEditingExecutor(ex)
+                        setIsAddOpen(true)
+                      }}
                       className="p-2 rounded-full bg-slate-50 hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-colors border border-slate-200/60"
-                      title={ex.phone}
+                      title="تعديل بيانات المنفذ"
                     >
-                      <Phone className="w-3.5 h-3.5" />
-                    </a>
-                  )}
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    {ex.phone && (
+                      <a
+                        href={`tel:${ex.phone}`}
+                        className="p-2 rounded-full bg-slate-50 hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-colors border border-slate-200/60"
+                        title={ex.phone}
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 {/* 3 Bento Financial Blocks */}
@@ -421,10 +427,20 @@ export function ExecutorsView() {
         </div>
       )}
 
-      {/* Quick Add Executor Modal */}
+      {/* Quick Add / Edit Executor Modal */}
       <QuickAddExecutorModal
         isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
+        existingExecutor={editingExecutor}
+        onClose={() => {
+          setIsAddOpen(false)
+          setEditingExecutor(null)
+        }}
+      />
+
+      <ManageCategoriesModal
+        isOpen={isManageCategoriesOpen}
+        mode="executor"
+        onClose={() => setIsManageCategoriesOpen(false)}
       />
 
       {/* 360° Printable Supplier Invoice Modal */}

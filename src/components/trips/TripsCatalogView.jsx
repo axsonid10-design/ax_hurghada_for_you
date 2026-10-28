@@ -16,19 +16,22 @@ import {
   Sparkles,
   Waves,
   SunMedium,
-  Coins
+  Coins,
+  Settings
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { inferTripCategory } from '../../data/initialSetup'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { QuickAddExecutorModal } from '../executors/QuickAddExecutorModal'
+import { ManageCategoriesModal } from '../common/ManageCategoriesModal'
 
 export function TripsCatalogView() {
   const {
     t,
     lang,
     tripDefinitions,
+    tripCategories,
     executors,
     updateTripDefinition,
     addTripDefinition
@@ -39,6 +42,7 @@ export function TripsCatalogView() {
   const [editingTrip, setEditingTrip] = useState(null)
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false)
   const [isQuickAddExecutorOpen, setIsQuickAddExecutorOpen] = useState(false)
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false)
 
   // New Trip Form State
   const [newTripData, setNewTripData] = useState({
@@ -65,14 +69,15 @@ export function TripsCatalogView() {
     }))
   }, [tripDefinitions])
 
-  const categories = [
-    { id: 'all', label: t('cat_all'), icon: Tag, color: 'text-slate-600' },
-    { id: 'sea', label: t('cat_sea'), icon: Ship, color: 'text-sky-600' },
-    { id: 'islands', label: t('cat_islands'), icon: SunMedium, color: 'text-emerald-600' },
-    { id: 'safari', label: t('cat_safari'), icon: Compass, color: 'text-amber-600' },
-    { id: 'aqua', label: t('cat_aqua'), icon: Waves, color: 'text-indigo-600' },
-    { id: 'transfers', label: t('cat_transfers'), icon: Coins, color: 'text-purple-600' }
-  ]
+  const categories = useMemo(() => [
+    { id: 'all', label: t('cat_all') || 'الكل', icon: Tag, color: 'text-slate-600' },
+    ...tripCategories.map((c) => ({
+      id: c.id,
+      label: c.label,
+      icon: Ship,
+      color: 'text-[#0284c7]'
+    }))
+  ], [tripCategories, t])
 
   const categoryCounts = useMemo(() => {
     const counts = { all: enrichedTrips.length }
@@ -82,15 +87,14 @@ export function TripsCatalogView() {
       }
     })
     return counts
-  }, [enrichedTrips])
+  }, [enrichedTrips, categories])
 
-  const categoryOptions = [
-    { value: 'sea', label: t('cat_sea') },
-    { value: 'islands', label: t('cat_islands') },
-    { value: 'safari', label: t('cat_safari') },
-    { value: 'aqua', label: t('cat_aqua') },
-    { value: 'transfers', label: t('cat_transfers') }
-  ]
+  const categoryOptions = useMemo(() => {
+    return tripCategories.map((c) => ({
+      value: c.id,
+      label: c.label
+    }))
+  }, [tripCategories])
 
   const pricingTypeOptions = [
     { value: 'pax', label: t('pricing_per_pax') },
@@ -185,6 +189,17 @@ export function TripsCatalogView() {
             />
             <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
           </div>
+
+          <button
+            onClick={() => {
+              soundManager.playClick()
+              setIsManageCategoriesOpen(true)
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0"
+          >
+            <Settings className="w-3.5 h-3.5 text-slate-500" />
+            <span>إدارة الأقسام</span>
+          </button>
 
           <button
             onClick={() => {
@@ -472,7 +487,7 @@ export function TripsCatalogView() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 mb-1">
-                    {editingTrip.pricing_type === 'pax' ? 'تكلفة البالغ (€)' : 'تكلفة الرحلة (€)'}
+                    {editingTrip.pricing_type === 'pax' ? 'تكلفة البالغ (€) (للمنفذ المورد)' : 'تكلفة الرحلة (€) (للمنفذ المورد)'}
                   </label>
                   <input
                     type="number"
@@ -489,7 +504,7 @@ export function TripsCatalogView() {
                 </div>
                 <div>
                   <label className="block text-slate-700 mb-1">
-                    {editingTrip.pricing_type === 'pax' ? 'بيع البالغ (€)' : 'بيع الرحلة (€)'}
+                    {editingTrip.pricing_type === 'pax' ? 'بيع البالغ (€) (للعميل)' : 'بيع الرحلة (€) (للعميل)'}
                   </label>
                   <input
                     type="number"
@@ -543,7 +558,7 @@ export function TripsCatalogView() {
                   {editingTrip.child_pricing_mode === 'percent' ? (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-slate-500 text-[10px]">نسبة التكلفة (%)</label>
+                        <label className="block text-slate-500 text-[10px]">نسبة تكلفة الطفل (للمنفذ)</label>
                         <input
                           type="number"
                           value={editingTrip.child_cost_percent}
@@ -557,7 +572,7 @@ export function TripsCatalogView() {
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-500 text-[10px]">نسبة البيع (%)</label>
+                        <label className="block text-slate-500 text-[10px]">نسبة بيع الطفل (للعميل)</label>
                         <input
                           type="number"
                           value={editingTrip.child_sell_percent}
@@ -574,7 +589,7 @@ export function TripsCatalogView() {
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-slate-500 text-[10px]">تكلفة الطفل (€)</label>
+                        <label className="block text-slate-500 text-[10px]">تكلفة الطفل الثابتة (للمنفذ)</label>
                         <input
                           type="number"
                           value={editingTrip.child_cost_fixed}
@@ -588,7 +603,7 @@ export function TripsCatalogView() {
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-500 text-[10px]">سعر بيع الطفل (€)</label>
+                        <label className="block text-slate-500 text-[10px]">سعر بيع الطفل الثابت (للعميل)</label>
                         <input
                           type="number"
                           value={editingTrip.child_sell_fixed}
@@ -691,7 +706,9 @@ export function TripsCatalogView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 mb-1">سعر التكلفة (€)</label>
+                  <label className="block text-slate-700 mb-1">
+                    {newTripData.pricing_type === 'pax' ? 'تكلفة البالغ (€) (للمنفذ المورد)' : 'تكلفة الرحلة (€) (للمنفذ المورد)'}
+                  </label>
                   <input
                     type="number"
                     step="0.5"
@@ -706,7 +723,9 @@ export function TripsCatalogView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 mb-1">سعر البيع (€)</label>
+                  <label className="block text-slate-700 mb-1">
+                    {newTripData.pricing_type === 'pax' ? 'بيع البالغ (€) (للعميل)' : 'بيع الرحلة (€) (للعميل)'}
+                  </label>
                   <input
                     type="number"
                     step="0.5"
@@ -741,6 +760,12 @@ export function TripsCatalogView() {
           </div>
         </div>
       )}
+
+      <ManageCategoriesModal
+        isOpen={isManageCategoriesOpen}
+        mode="trip"
+        onClose={() => setIsManageCategoriesOpen(false)}
+      />
     </div>
   )
 }

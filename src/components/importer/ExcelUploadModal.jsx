@@ -40,21 +40,13 @@ export function ExcelUploadModal({ isOpen, onClose }) {
 
   const fileInputRef = useRef(null)
 
-  // Lookup helper for trip definition
   const findTripDef = (rawName) => {
     const clean = (rawName || '').toLowerCase().trim().replace(/\s+/g, ' ')
-    let found = tripDefinitions.find((td) => {
+    return tripDefinitions.find((td) => {
       const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
       const dName = (td.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
       return sName === clean || dName === clean
     })
-    if (!found) {
-      found = tripDefinitions.find((td) => {
-        const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
-        return clean.includes(sName) || sName.includes(clean)
-      })
-    }
-    return found
   }
 
   // Analyzed trip list with configuration status

@@ -11,13 +11,16 @@ import {
   Waves,
   SunMedium,
   Coins,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  Settings
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { inferTripCategory } from '../../data/initialSetup'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { QuickAddExecutorModal } from '../executors/QuickAddExecutorModal'
+import { ManageCategoriesModal } from '../common/ManageCategoriesModal'
 
 export function ConfigureSingleTripModal({
   isOpen,
@@ -26,8 +29,19 @@ export function ConfigureSingleTripModal({
   onClose,
   onSaved
 }) {
-  const { executors, addTripDefinition, updateTripDefinition } = useAXStore()
+  const {
+    executors,
+    tripCategories,
+    addTripCategory,
+    addTripDefinition,
+    updateTripDefinition,
+    tripDefinitions
+  } = useAXStore()
+
   const [isAddExecutorOpen, setIsAddExecutorOpen] = useState(false)
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false)
+  const [isInlineAddCategoryOpen, setIsInlineAddCategoryOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
 
   const [formData, setFormData] = useState({
     display_name: '',
@@ -46,6 +60,7 @@ export function ConfigureSingleTripModal({
 
   useEffect(() => {
     if (!isOpen) return
+    const defaultCat = tripCategories[0]?.id || 'sea'
     if (existingDef) {
       setFormData({
         display_name: existingDef.display_name || tripName || '',
@@ -64,7 +79,7 @@ export function ConfigureSingleTripModal({
     } else {
       setFormData({
         display_name: tripName || '',
-        category: inferTripCategory(tripName),
+        category: inferTripCategory(tripName) || defaultCat,
         pricing_type: 'pax',
         currency: 'EUR',
         adult_cost: 0,
@@ -77,7 +92,7 @@ export function ConfigureSingleTripModal({
         executor_id: executors[0]?.id || 'exec_marina'
       })
     }
-  }, [isOpen, tripName, existingDef, executors])
+  }, [isOpen, tripName, existingDef, executors, tripCategories])
 
   if (!isOpen) return null
 
@@ -102,6 +117,18 @@ export function ConfigureSingleTripModal({
 
   const handleExecutorCreated = (newExecutor) => {
     handleFieldChange('executor_id', newExecutor.id)
+  }
+
+  const handleQuickAddCategory = (e) => {
+    e.preventDefault()
+    const clean = newCategoryName.trim()
+    if (!clean) return
+    soundManager.playSuccess()
+    const newId = 'cat_' + Date.now()
+    addTripCategory({ id: newId, label: clean })
+    handleFieldChange('category', newId)
+    setNewCategoryName('')
+    setIsInlineAddCategoryOpen(false)
   }
 
   const handleSubmit = (e) => {
@@ -132,9 +159,15 @@ export function ConfigureSingleTripModal({
       executor_id: formData.executor_id
     }
 
-    if (existingDef && existingDef.id) {
-      updateTripDefinition(existingDef.id, payload)
-      if (onSaved) onSaved({ ...existingDef, ...payload })
+    const cleanSheet = (tripName || '').toLowerCase().trim().replace(/\s+/g, ' ')
+    const existingInStore = tripDefinitions.find((td) => {
+      const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      return (existingDef && td.id === existingDef.id) || (cleanSheet && sName === cleanSheet)
+    })
+
+    if (existingInStore) {
+      updateTripDefinition(existingInStore.id, payload)
+      if (onSaved) onSaved({ ...existingInStore, ...payload })
     } else {
       const newId = 'trip_' + Date.now()
       const newDef = { ...payload, id: newId }
@@ -195,17 +228,56 @@ export function ConfigureSingleTripModal({
             {/* Category and Pricing Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
               <div>
-                <label className="block text-slate-700 mb-1">تصنيف وقسم الرحلة</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-700">تصنيف وقسم الرحلة</label>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsInlineAddCategoryOpen((prev) => !prev)}
+                      className="text-[11px] text-[#0284c7] hover:underline flex items-center gap-0.5 font-black"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>قسم جديد</span>
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsManageCategoriesOpen(true)}
+                      className="text-[11px] text-slate-500 hover:text-slate-800 flex items-center gap-0.5 font-bold"
+                    >
+                      <Settings className="w-3 h-3" />
+                      <span>إدارة</span>
+                    </button>
+                  </div>
+                </div>
+
+                {isInlineAddCategoryOpen && (
+                  <div className="flex items-center gap-1.5 mb-2 p-1.5 bg-sky-50 rounded-2xl border border-sky-200 animate-fadeIn">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="اسم القسم الجديد..."
+                      className="flex-1 bg-white border border-sky-300 rounded-full px-3 py-1 text-xs font-bold text-slate-800 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleQuickAddCategory}
+                      className="px-2.5 py-1 bg-[#0284c7] text-white rounded-full text-[11px] font-black"
+                    >
+                      حفظ
+                    </button>
+                  </div>
+                )}
+
                 <AX_SearchableSelect
                   value={formData.category}
                   onChange={(val) => handleFieldChange('category', val)}
-                  options={[
-                    { value: 'islands', label: 'جزر ويخوت بحرية' },
-                    { value: 'safari', label: 'سفاري ومغامرات صحراوية' },
-                    { value: 'aqua', label: 'غوص ودولفين هاوس وأكوا' },
-                    { value: 'sea', label: 'رحلات بحرية خاصة' },
-                    { value: 'transfers', label: 'انتقالات وخدمات سياحية' }
-                  ]}
+                  options={tripCategories.map((c) => ({
+                    value: c.id,
+                    label: c.label
+                  }))}
                   searchable={false}
                 />
               </div>
@@ -297,7 +369,7 @@ export function ConfigureSingleTripModal({
 
                 <div>
                   <label className="block text-slate-700 mb-1">
-                    {isPax ? 'تكلفة البالغ' : 'تكلفة الرحلة'}
+                    {isPax ? 'تكلفة البالغ (للمنفذ المورد)' : 'تكلفة الرحلة كاملة (للمنفذ المورد)'}
                   </label>
                   <input
                     type="number"
@@ -311,7 +383,7 @@ export function ConfigureSingleTripModal({
 
                 <div>
                   <label className="block text-slate-700 mb-1">
-                    {isPax ? 'سعر بيع البالغ' : 'سعر بيع الرحلة'}
+                    {isPax ? 'سعر بيع البالغ (للعميل)' : 'سعر بيع الرحلة (للعميل)'}
                   </label>
                   <input
                     type="number"
@@ -367,7 +439,7 @@ export function ConfigureSingleTripModal({
                     <div className="grid grid-cols-2 gap-3 text-xs font-bold">
                       <div>
                         <div className="flex justify-between text-[11px] mb-1">
-                          <span className="text-slate-600">نسبة التكلفة للطفل</span>
+                          <span className="text-slate-600">نسبة تكلفة الطفل (للمنفذ المورد)</span>
                           <span className="text-slate-500 font-mono">(= {computedChildCost} {formData.currency})</span>
                         </div>
                         <input
@@ -382,7 +454,7 @@ export function ConfigureSingleTripModal({
                       </div>
                       <div>
                         <div className="flex justify-between text-[11px] mb-1">
-                          <span className="text-slate-600">نسبة البيع للطفل</span>
+                          <span className="text-slate-600">نسبة بيع الطفل (للعميل)</span>
                           <span className="text-slate-500 font-mono">(= {computedChildSell} {formData.currency})</span>
                         </div>
                         <input
@@ -399,7 +471,7 @@ export function ConfigureSingleTripModal({
                   ) : (
                     <div className="grid grid-cols-2 gap-3 text-xs font-bold">
                       <div>
-                        <label className="block text-slate-600 mb-1">تكلفة الطفل الثابتة</label>
+                        <label className="block text-slate-600 mb-1">تكلفة الطفل الثابتة (للمنفذ المورد)</label>
                         <input
                           type="number"
                           min="0"
@@ -410,7 +482,7 @@ export function ConfigureSingleTripModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-600 mb-1">سعر بيع الطفل الثابت</label>
+                        <label className="block text-slate-600 mb-1">سعر بيع الطفل الثابت (للعميل)</label>
                         <input
                           type="number"
                           min="0"
@@ -451,6 +523,12 @@ export function ConfigureSingleTripModal({
         isOpen={isAddExecutorOpen}
         onClose={() => setIsAddExecutorOpen(false)}
         onCreated={handleExecutorCreated}
+      />
+
+      <ManageCategoriesModal
+        isOpen={isManageCategoriesOpen}
+        mode="trip"
+        onClose={() => setIsManageCategoriesOpen(false)}
       />
     </>
   )

@@ -5,6 +5,8 @@ import {
   INITIAL_EXECUTORS,
   INITIAL_TRIP_DEFINITIONS,
   INITIAL_EXPENSES,
+  DEFAULT_TRIP_CATEGORIES,
+  DEFAULT_EXECUTOR_CATEGORIES,
   computeBookingFinancials,
   buildInitialBookings
 } from '../data/initialSetup'
@@ -78,11 +80,43 @@ if (typeof window !== 'undefined') {
   }
 }
 
+const getStoredTripCategories = () => {
+  if (typeof window === 'undefined') return DEFAULT_TRIP_CATEGORIES
+  try {
+    const raw = localStorage.getItem('ax_h4u_trip_categories')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return DEFAULT_TRIP_CATEGORIES
+}
+
+const getStoredExecutorCategories = () => {
+  if (typeof window === 'undefined') return DEFAULT_EXECUTOR_CATEGORIES
+  try {
+    const raw = localStorage.getItem('ax_h4u_executor_categories')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return DEFAULT_EXECUTOR_CATEGORIES
+}
+
 const getStoredTripDefinitions = () => {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem('ax_h4u_trip_definitions')
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        const seen = new Set()
+        const unique = []
+        for (const item of parsed) {
+          const key = (item.sheet_name || item.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+          if (key && !seen.has(key)) {
+            seen.add(key)
+            unique.push(item)
+          }
+        }
+        return unique
+      }
+    }
   } catch {}
   return []
 }
@@ -211,6 +245,8 @@ export const useAXStore = create((set, get) => ({
   pendingSyncCount: 0,
 
   // Data Stores
+  tripCategories: getStoredTripCategories(),
+  executorCategories: getStoredExecutorCategories(),
   executors: getStoredExecutors(),
   tripDefinitions: getStoredTripDefinitions(),
   bookings: getStoredBookings(),
@@ -225,10 +261,14 @@ export const useAXStore = create((set, get) => ({
       localStorage.removeItem('ax_h4u_imported_dates')
       localStorage.removeItem('ax_h4u_trip_definitions')
       localStorage.removeItem('ax_h4u_executors')
+      localStorage.removeItem('ax_h4u_trip_categories')
+      localStorage.removeItem('ax_h4u_executor_categories')
     }
     clearOfflineQueue().catch(() => {})
     const masterOnly = DEFAULT_SYSTEM_USERS
     set(() => ({
+      tripCategories: DEFAULT_TRIP_CATEGORIES,
+      executorCategories: DEFAULT_EXECUTOR_CATEGORIES,
       bookings: [],
       expenses: [],
       importedDates: {},
@@ -363,7 +403,21 @@ export const useAXStore = create((set, get) => ({
   // Trip Definitions Actions
   addTripDefinition: (def) => {
     set((state) => {
-      const newDefs = [...state.tripDefinitions, def]
+      const cleanSheet = (def.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      const existingIdx = state.tripDefinitions.findIndex((td) => {
+        const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+        return (def.id && td.id === def.id) || (cleanSheet && sName === cleanSheet)
+      })
+
+      let newDefs
+      if (existingIdx >= 0) {
+        newDefs = state.tripDefinitions.map((td, idx) =>
+          idx === existingIdx ? { ...td, ...def } : td
+        )
+      } else {
+        newDefs = [...state.tripDefinitions, def]
+      }
+
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
       }
@@ -385,19 +439,95 @@ export const useAXStore = create((set, get) => ({
 
   batchAddTripDefinitions: (defs) => {
     set((state) => {
-      const existingNames = new Set(
-        state.tripDefinitions.map((td) => td.sheet_name.toLowerCase().trim())
-      )
-      const toAdd = defs.filter(
-        (d) => !existingNames.has(d.sheet_name.toLowerCase().trim())
-      )
-      const newDefs = [...state.tripDefinitions, ...toAdd]
+      let currentDefs = [...state.tripDefinitions]
+      defs.forEach((def) => {
+        const cleanSheet = (def.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+        const existingIdx = currentDefs.findIndex((td) => {
+          const sName = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+          return (def.id && td.id === def.id) || (cleanSheet && sName === cleanSheet)
+        })
+        if (existingIdx >= 0) {
+          currentDefs[existingIdx] = { ...currentDefs[existingIdx], ...def }
+        } else {
+          currentDefs.push(def)
+        }
+      })
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(currentDefs))
+      }
+      return { tripDefinitions: currentDefs }
+    })
+  },
+
+  deleteTripDefinition: (id) => {
+    set((state) => {
+      const newDefs = state.tripDefinitions.filter((td) => td.id !== id)
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
       }
       return { tripDefinitions: newDefs }
     })
   },
+
+  // Category Actions
+  addTripCategory: (cat) => set((state) => {
+    const id = cat.id || 'cat_' + Date.now()
+    const label = (cat.label || cat.name || '').trim()
+    if (!label) return state
+    const next = [...state.tripCategories, { id, label }]
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
+    }
+    return { tripCategories: next }
+  }),
+
+  updateTripCategory: (id, newLabel) => set((state) => {
+    const label = (newLabel || '').trim()
+    if (!label) return state
+    const next = state.tripCategories.map((c) => (c.id === id ? { ...c, label } : c))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
+    }
+    return { tripCategories: next }
+  }),
+
+  deleteTripCategory: (id) => set((state) => {
+    const next = state.tripCategories.filter((c) => c.id !== id)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
+    }
+    return { tripCategories: next }
+  }),
+
+  addExecutorCategory: (name) => set((state) => {
+    const clean = (name || '').trim()
+    if (!clean || state.executorCategories.includes(clean)) return state
+    const next = [...state.executorCategories, clean]
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
+    }
+    return { executorCategories: next }
+  }),
+
+  updateExecutorCategory: (oldName, newName) => set((state) => {
+    const clean = (newName || '').trim()
+    if (!clean) return state
+    const next = state.executorCategories.map((c) => (c === oldName ? clean : c))
+    const updatedExecutors = state.executors.map((ex) => (ex.category === oldName ? { ...ex, category: clean } : ex))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
+      localStorage.setItem('ax_h4u_executors', JSON.stringify(updatedExecutors))
+    }
+    return { executorCategories: next, executors: updatedExecutors }
+  }),
+
+  deleteExecutorCategory: (name) => set((state) => {
+    const next = state.executorCategories.filter((c) => c !== name)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
+    }
+    return { executorCategories: next }
+  }),
 
   // Executors Actions
   addExecutor: (executor) => set((state) => {

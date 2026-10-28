@@ -21,7 +21,7 @@ export function ConfigureUnknownTripsModal({
   onClose,
   onSave
 }) {
-  const { executors, batchAddTripDefinitions } = useAXStore()
+  const { executors, tripCategories, batchAddTripDefinitions } = useAXStore()
   const [isAddExecutorOpen, setIsAddExecutorOpen] = useState(false)
   const [activeTripIdx, setActiveTripIdx] = useState(null)
 
@@ -30,12 +30,13 @@ export function ConfigureUnknownTripsModal({
 
   useEffect(() => {
     if (!isOpen || unknownTripNames.length === 0) return
+    const defaultCat = tripCategories[0]?.id || 'sea'
     setTripsState(
       unknownTripNames.map((name, idx) => ({
         id: 'trip_' + Date.now() + '_' + idx,
         sheet_name: name,
         display_name: name,
-        category: inferTripCategory(name),
+        category: inferTripCategory(name) || defaultCat,
         pricing_type: 'pax',
         currency: 'EUR',
         adult_cost: 0,
@@ -48,7 +49,7 @@ export function ConfigureUnknownTripsModal({
         executor_id: executors[0]?.id || 'exec_marina'
       }))
     )
-  }, [isOpen, unknownTripNames, executors])
+  }, [isOpen, unknownTripNames, executors, tripCategories])
 
   if (!isOpen || unknownTripNames.length === 0) return null
 
@@ -236,7 +237,7 @@ export function ConfigureUnknownTripsModal({
 
                       <div>
                         <label className="block text-slate-700 mb-1">
-                          {isPax ? 'تكلفة البالغ' : 'تكلفة الرحلة'}
+                          {isPax ? 'تكلفة البالغ (للمنفذ المورد)' : 'تكلفة الرحلة كاملة (للمنفذ المورد)'}
                         </label>
                         <input
                           type="number"
@@ -250,7 +251,7 @@ export function ConfigureUnknownTripsModal({
 
                       <div>
                         <label className="block text-slate-700 mb-1">
-                          {isPax ? 'سعر بيع البالغ' : 'سعر بيع الرحلة'}
+                          {isPax ? 'سعر بيع البالغ (للعميل)' : 'سعر بيع الرحلة (للعميل)'}
                         </label>
                         <input
                           type="number"
@@ -306,7 +307,7 @@ export function ConfigureUnknownTripsModal({
                           <div className="grid grid-cols-2 gap-3 text-xs font-bold">
                             <div>
                               <div className="flex justify-between text-[11px] mb-1">
-                                <span className="text-slate-600">نسبة التكلفة (%)</span>
+                                <span className="text-slate-600">نسبة تكلفة الطفل (للمنفذ)</span>
                                 <span className="text-slate-400 font-mono">(= {computedChildCost} {trip.currency})</span>
                               </div>
                               <input
@@ -321,7 +322,7 @@ export function ConfigureUnknownTripsModal({
                             </div>
                             <div>
                               <div className="flex justify-between text-[11px] mb-1">
-                                <span className="text-slate-600">نسبة البيع (%)</span>
+                                <span className="text-slate-600">نسبة بيع الطفل (للعميل)</span>
                                 <span className="text-slate-400 font-mono">(= {computedChildSell} {trip.currency})</span>
                               </div>
                               <input
@@ -338,7 +339,7 @@ export function ConfigureUnknownTripsModal({
                         ) : (
                           <div className="grid grid-cols-2 gap-3 text-xs font-bold">
                             <div>
-                              <label className="block text-slate-600 mb-1">تكلفة الطفل الثابتة</label>
+                              <label className="block text-slate-600 mb-1">تكلفة الطفل الثابتة (للمنفذ)</label>
                               <input
                                 type="number"
                                 min="0"
@@ -349,7 +350,7 @@ export function ConfigureUnknownTripsModal({
                               />
                             </div>
                             <div>
-                              <label className="block text-slate-600 mb-1">سعر بيع الطفل الثابت</label>
+                              <label className="block text-slate-600 mb-1">سعر بيع الطفل الثابت (للعميل)</label>
                               <input
                                 type="number"
                                 min="0"
