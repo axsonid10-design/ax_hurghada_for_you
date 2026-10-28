@@ -2,13 +2,25 @@ import React, { useState, useEffect } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 
+const isNewerVersion = (remote, local) => {
+  if (!remote || !local) return false
+  if (remote === local) return false
+  const rParts = String(remote).split('.').map((n) => parseInt(n, 10) || 0)
+  const lParts = String(local).split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < Math.max(rParts.length, lParts.length); i++) {
+    const r = rParts[i] || 0
+    const l = lParts[i] || 0
+    if (r > l) return true
+    if (r < l) return false
+  }
+  return false
+}
+
 export function AppUpdateNotifier() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [newVersion, setNewVersion] = useState('')
 
   useEffect(() => {
-    let currentVersion = localStorage.getItem('ax_hurghada_version') || '1.0.0'
-
     const checkVersion = async () => {
       try {
         const res = await fetch(`/version.json?_t=${Date.now()}`, {
@@ -16,16 +28,22 @@ export function AppUpdateNotifier() {
         })
         if (!res.ok) return
         const data = await res.json()
-        if (data?.version) {
-          if (!localStorage.getItem('ax_hurghada_version')) {
-            localStorage.setItem('ax_hurghada_version', data.version)
-          } else if (data.version !== currentVersion) {
-            setNewVersion(data.version)
-            setUpdateAvailable(true)
-          }
+        if (!data?.version) return
+
+        const storedVersion = localStorage.getItem('ax_hurghada_version') || import.meta.env.VITE_APP_VERSION || '1.0.0'
+
+        if (!localStorage.getItem('ax_hurghada_version')) {
+          localStorage.setItem('ax_hurghada_version', data.version)
+          return
         }
-      } catch {
-      }
+
+        if (isNewerVersion(data.version, storedVersion)) {
+          setNewVersion(data.version)
+          setUpdateAvailable(true)
+        } else {
+          setUpdateAvailable(false)
+        }
+      } catch {}
     }
 
     checkVersion()
