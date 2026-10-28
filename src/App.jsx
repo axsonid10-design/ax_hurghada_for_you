@@ -257,9 +257,26 @@ export function App() {
 
           {activeTab === 'admin' && <AX_StaffManager defaultTab="control" />}
 
-          {/* AXONID Brand Signature Footer */}
-          <footer className="w-full border border-slate-200/80 bg-white/95 backdrop-blur-md py-3 px-4 sm:px-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-black text-slate-700 shadow-sm mt-8 mb-28 lg:mb-4 transition-all text-center sm:text-start select-none">
-            <span>{lang === 'ar' ? 'غردقة فور يو © 2026' : 'HURGHADA FOR YOU © 2026'}</span>
+          {/* AXONID Brand Signature Footer & Mobile/Desktop Version Badge */}
+          <footer className="w-full border border-slate-200/80 bg-white/95 backdrop-blur-md py-3 px-4 sm:px-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-black text-slate-700 shadow-sm mt-8 mb-28 lg:mb-4 transition-all text-center sm:text-start select-none">
+            <span className="text-slate-800 font-black">
+              {lang === 'ar' ? 'غردقة فور يو © 2026' : 'HURGHADA FOR YOU © 2026'}
+            </span>
+
+            {/* Clickable Version Pill */}
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playClick()
+                window.dispatchEvent(new CustomEvent('ax-check-update'))
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200 hover:border-sky-300 font-mono text-[11px] font-black transition-all active:scale-95 cursor-pointer shadow-xs"
+              title="رقم إصدار المنظومة الفعلي — انقر للتحقق من التحديثات"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>v{import.meta.env.VITE_APP_VERSION || '4.5.7'}</span>
+            </button>
+
             <a
               href="https://axsonid.com"
               target="_blank"

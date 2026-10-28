@@ -293,22 +293,35 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
         </div>
 
         {isExpanded ? (
-          <a
-            href="https://axsonid.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 py-1 px-3 rounded-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-sky-400 transition-all group"
-            title="Created by AXONID"
-          >
-            <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
-              Created by
-            </span>
-            <span className="text-[11px] font-black font-mono text-[#0a2540] group-hover:text-sky-600 transition-colors">
-              AXONID
-            </span>
-          </a>
+          <div className="flex items-center justify-between gap-1.5 px-1">
+            <a
+              href="https://axsonid.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 py-1 px-3 rounded-full bg-slate-50 hover:bg-white border border-slate-200 hover:border-sky-400 transition-all group"
+              title="Created by AXONID"
+            >
+              <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
+                Created by
+              </span>
+              <span className="text-[11px] font-black font-mono text-[#0a2540] group-hover:text-sky-600 transition-colors">
+                AXONID
+              </span>
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playClick()
+                window.dispatchEvent(new CustomEvent('ax-check-update'))
+              }}
+              className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-sky-50 text-slate-500 hover:text-sky-700 font-mono text-[10px] font-bold border border-slate-200 transition-all active:scale-95"
+              title="رقم الإصدار — انقر للفحص"
+            >
+              v{import.meta.env.VITE_APP_VERSION || '4.5.7'}
+            </button>
+          </div>
         ) : (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-1">
             <a
               href="https://axsonid.com"
               target="_blank"

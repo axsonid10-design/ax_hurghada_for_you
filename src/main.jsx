@@ -17,6 +17,14 @@ if (typeof window !== 'undefined' && window.location.search) {
     params.delete('_t')
     changed = true
   }
+  if (params.has('_sw_upgraded')) {
+    params.delete('_sw_upgraded')
+    changed = true
+  }
+  if (params.has('_update')) {
+    params.delete('_update')
+    changed = true
+  }
   if (changed) {
     const cleanSearch = params.toString() ? `?${params.toString()}` : ''
     window.history.replaceState({}, '', `${window.location.pathname}${cleanSearch}${window.location.hash}`)

@@ -144,10 +144,13 @@ ${err.stack_trace || 'No stack trace'}
               <ShieldCheck className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base font-black text-slate-900 leading-tight">
                   {isRtl ? 'غرفة التحكم العليا - AXONID' : 'AXONID Master Control'}
                 </h3>
+                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-[10px] font-black border border-amber-200">
+                  v{import.meta.env.VITE_APP_VERSION || '4.5.7'}
+                </span>
                 <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">
                   {profile.email}
                 </span>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 
+export const RUNNING_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0'
+
 const isNewerVersion = (remote, local) => {
   if (!remote || !local) return false
   if (remote === local) return false
@@ -20,34 +22,27 @@ export function AppUpdateNotifier() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [newVersion, setNewVersion] = useState('')
 
+  const checkVersion = async () => {
+    try {
+      const res = await fetch(`/version.json?_t=${Date.now()}`, {
+        cache: 'no-store'
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (!data?.version) return
+
+      if (isNewerVersion(data.version, RUNNING_VERSION)) {
+        setNewVersion(data.version)
+        setUpdateAvailable(true)
+      } else {
+        setUpdateAvailable(false)
+      }
+    } catch {}
+  }
+
   useEffect(() => {
-    const checkVersion = async () => {
-      try {
-        const res = await fetch(`/version.json?_t=${Date.now()}`, {
-          cache: 'no-store'
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        if (!data?.version) return
-
-        const storedVersion = localStorage.getItem('ax_hurghada_version') || import.meta.env.VITE_APP_VERSION || '1.0.0'
-
-        if (!localStorage.getItem('ax_hurghada_version')) {
-          localStorage.setItem('ax_hurghada_version', data.version)
-          return
-        }
-
-        if (isNewerVersion(data.version, storedVersion)) {
-          setNewVersion(data.version)
-          setUpdateAvailable(true)
-        } else {
-          setUpdateAvailable(false)
-        }
-      } catch {}
-    }
-
     checkVersion()
-    const interval = setInterval(checkVersion, 60000)
+    const interval = setInterval(checkVersion, 20000)
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -55,15 +50,23 @@ export function AppUpdateNotifier() {
       }
     }
 
+    const handleTrigger = () => {
+      checkVersion()
+    }
+
     window.addEventListener('pageshow', checkVersion)
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', checkVersion)
+    window.addEventListener('ax-pwa-update-available', handleTrigger)
+    window.addEventListener('ax-check-update', handleTrigger)
 
     return () => {
       clearInterval(interval)
       window.removeEventListener('pageshow', checkVersion)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', checkVersion)
+      window.removeEventListener('ax-pwa-update-available', handleTrigger)
+      window.removeEventListener('ax-check-update', handleTrigger)
     }
   }, [])
 
@@ -78,11 +81,9 @@ export function AppUpdateNotifier() {
         const cacheNames = await caches.keys()
         await Promise.all(cacheNames.map((name) => caches.delete(name)))
       }
-      if (newVersion) {
-        localStorage.setItem('ax_hurghada_version', newVersion)
-      }
+      localStorage.removeItem('ax_hurghada_version')
     } finally {
-      window.location.reload()
+      window.location.replace(`/?_sw_upgraded=${Date.now()}`)
     }
   }
 
