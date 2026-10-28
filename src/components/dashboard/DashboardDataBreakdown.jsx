@@ -5,11 +5,13 @@ import {
   Ship,
   Building2,
   Coins,
-  ChevronDown,
   Layers,
-  ArrowUpDown
+  Flame,
+  Award
 } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
+
+const RANK_BADGES = ['🥇', '🥈', '🥉']
 
 export function DashboardDataBreakdown({
   filteredBookings = [],
@@ -19,6 +21,7 @@ export function DashboardDataBreakdown({
   rates
 }) {
   const [activeTab, setActiveTab] = useState('trips')
+  const [tripsSortMode, setTripsSortMode] = useState('sales')
 
   const egpRate = rates?.EGP || 53.25
   const isEgp = displayCurrency === 'EGP'
@@ -30,11 +33,10 @@ export function DashboardDataBreakdown({
     return `€${Math.round(eurVal).toLocaleString()}`
   }
 
-  // 1. Trips Performance Breakdown
   const tripsData = useMemo(() => {
     const map = new Map()
     filteredBookings.forEach((b) => {
-      const name = b.trip_type || 'رحلة غير محددة'
+      const name = b.trip_type || 'رحلة عامة'
       if (!map.has(name)) {
         map.set(name, {
           name,
@@ -59,10 +61,20 @@ export function DashboardDataBreakdown({
       item.profit += Number(b.profit_eur) || 0
     })
 
-    return Array.from(map.values()).sort((a, b) => b.sales - a.sales)
-  }, [filteredBookings])
+    const list = Array.from(map.values())
+    if (tripsSortMode === 'pax') {
+      return list.sort((a, b) => b.pax - a.pax)
+    }
+    return list.sort((a, b) => b.sales - a.sales)
+  }, [filteredBookings, tripsSortMode])
 
-  // 2. Sellers Performance Breakdown
+  const maxTripMetric = useMemo(() => {
+    if (tripsData.length === 0) return 1
+    return tripsSortMode === 'pax'
+      ? Math.max(...tripsData.map((t) => t.pax), 1)
+      : Math.max(...tripsData.map((t) => t.sales), 1)
+  }, [tripsData, tripsSortMode])
+
   const sellersData = useMemo(() => {
     const map = new Map()
     filteredBookings.forEach((b) => {
@@ -94,7 +106,11 @@ export function DashboardDataBreakdown({
       .sort((a, b) => b.sales - a.sales)
   }, [filteredBookings])
 
-  // 3. Executors & Suppliers Breakdown
+  const maxSellerSales = useMemo(() => {
+    if (sellersData.length === 0) return 1
+    return Math.max(...sellersData.map((s) => s.sales), 1)
+  }, [sellersData])
+
   const executorsData = useMemo(() => {
     const costMap = new Map()
     filteredBookings.forEach((b) => {
@@ -105,17 +121,19 @@ export function DashboardDataBreakdown({
       const cost = Number(b.cost_eur) || 0
 
       if (!costMap.has(execId)) {
-        costMap.set(execId, { count: 0, totalOwed: 0 })
+        costMap.set(execId, { count: 0, totalOwed: 0, pax: 0 })
       }
       const c = costMap.get(execId)
       c.count += 1
       c.totalOwed += cost
+      c.pax += (Number(b.adult) || 0) + (Number(b.child) || 0)
     })
 
     return executors.map((ex) => {
-      const costInfo = costMap.get(ex.id) || { count: 0, totalOwed: 0 }
+      const costInfo = costMap.get(ex.id) || { count: 0, totalOwed: 0, pax: 0 }
       const paid = Number(ex.total_paid) || 0
       const balance = costInfo.totalOwed - paid
+      const payPct = costInfo.totalOwed > 0 ? Math.min(100, Math.round((paid / costInfo.totalOwed) * 100)) : 100
       return {
         id: ex.id,
         name: ex.name,
@@ -123,12 +141,13 @@ export function DashboardDataBreakdown({
         tripsCount: costInfo.count,
         totalOwed: costInfo.totalOwed,
         totalPaid: paid,
-        balance
+        balance,
+        pax: costInfo.pax,
+        payPct
       }
     })
   }, [filteredBookings, tripDefinitions, executors])
 
-  // 4. Hotels & Logistics Breakdown
   const hotelsData = useMemo(() => {
     const map = new Map()
     filteredBookings.forEach((b) => {
@@ -155,7 +174,6 @@ export function DashboardDataBreakdown({
       .sort((a, b) => b.pax - a.pax)
   }, [filteredBookings])
 
-  // 5. Multi-Currency Vault Status
   const currencyData = useMemo(() => {
     const restEur = filteredBookings.reduce((s, b) => s + (Number(b.rest_eur) || 0), 0)
     const restEgp = filteredBookings.reduce((s, b) => s + (Number(b.rest_egp) || 0), 0)
@@ -202,15 +220,15 @@ export function DashboardDataBreakdown({
   }, [filteredBookings, egpRate, rates])
 
   const tabs = [
-    { id: 'trips', label: 'الرحلات الأكثر مبيعاً', icon: Compass, count: tripsData.length },
-    { id: 'sellers', label: 'أداء مناديب المبيعات', icon: Users, count: sellersData.length },
-    { id: 'executors', label: 'موقف الموردين والتنفيذ', icon: Ship, count: executorsData.length },
-    { id: 'hotels', label: 'فنادق النزلاء ومراكز النقل', icon: Building2, count: hotelsData.length },
-    { id: 'currencies', label: 'الخزينة والعملات المتعددة', icon: Coins, count: 4 }
+    { id: 'trips', label: 'الرحلات الأكثر طلباً', icon: Compass, count: tripsData.length },
+    { id: 'sellers', label: 'أداء المناديب وقنوات البيع', icon: Users, count: sellersData.length },
+    { id: 'executors', label: 'أحمال ومستحقات الموردين', icon: Ship, count: executorsData.length },
+    { id: 'hotels', label: 'فنادق النزلاء واللوجستيات', icon: Building2, count: hotelsData.length },
+    { id: 'currencies', label: 'الخزينة والعملات', icon: Coins, count: 4 }
   ]
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-soft p-5 space-y-4">
+    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-soft p-4 sm:p-5 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100">
@@ -218,10 +236,10 @@ export function DashboardDataBreakdown({
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-900">
-              التحليل التفصيلي الشامل لكافة بيانات المنظومة
+              التحليل البصري الشامل للبيانات والترتيب (Ranked & Capacity)
             </h3>
             <p className="text-[11px] text-slate-500 font-bold">
-              بيانات الرحلات، المناديب، الموردين، الفنادق، وأرصدة العملات
+              مؤشرات الأداء التنافسية وأحمال السعة التوريدية والخزائن
             </p>
           </div>
         </div>
@@ -256,65 +274,73 @@ export function DashboardDataBreakdown({
         </div>
       </div>
 
-      {/* Tab 1: Trips Performance */}
       {activeTab === 'trips' && (
-        <div className="space-y-2">
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th className="py-2.5 px-3 font-black">اسم الرحلة</th>
-                  <th className="py-2.5 px-3 font-black text-center">الحجوزات</th>
-                  <th className="py-2.5 px-3 font-black text-center">الأفراد (بالغ / طفل)</th>
-                  <th className="py-2.5 px-3 font-black text-left">إجمالي المبيعات</th>
-                  <th className="py-2.5 px-3 font-black text-left">تكلفة الموردين</th>
-                  <th className="py-2.5 px-3 font-black text-left">صافي الأرباح</th>
-                  <th className="py-2.5 px-3 font-black text-center">هامش الربح</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {tripsData.map((trip) => {
-                  const margin = trip.sales > 0 ? Math.round((trip.profit / trip.sales) * 100) : 0
-                  return (
-                    <tr key={trip.name} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-3 font-black text-slate-900">{trip.name}</td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-600">{trip.bookings}</td>
-                      <td className="py-2.5 px-3 text-center font-mono text-slate-600">
-                        {trip.pax} <span className="text-[10px] text-slate-400">({trip.adults}ب / {trip.children}ط)</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-left font-mono font-black text-slate-900">{formatAmount(trip.sales)}</td>
-                      <td className="py-2.5 px-3 text-left font-mono font-bold text-amber-700">{formatAmount(trip.cost)}</td>
-                      <td className="py-2.5 px-3 text-left font-mono font-black text-emerald-700">{formatAmount(trip.profit)}</td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px]">
-                          {margin}%
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">
+              ترتيب الرحلات حسب الأعلى إقبالاً ومبيعات
+            </span>
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 text-xs font-bold">
+              <button
+                onClick={() => {
+                  soundManager.playClick()
+                  setTripsSortMode('sales')
+                }}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  tripsSortMode === 'sales' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                حسب المبيعات
+              </button>
+              <button
+                onClick={() => {
+                  soundManager.playClick()
+                  setTripsSortMode('pax')
+                }}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  tripsSortMode === 'pax' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                حسب عدد الأفراد
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 lg:hidden">
-            {tripsData.map((trip) => {
-              const margin = trip.sales > 0 ? Math.round((trip.profit / trip.sales) * 100) : 0
+          <div className="space-y-2">
+            {tripsData.slice(0, 8).map((trip, idx) => {
+              const metricVal = tripsSortMode === 'pax' ? trip.pax : trip.sales
+              const pct = Math.min(100, Math.round((metricVal / maxTripMetric) * 100))
+              const badge = RANK_BADGES[idx]
+
               return (
-                <div key={trip.name} className="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-xs text-slate-900">{trip.name}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200">
-                      {margin}%
-                    </span>
+                <div
+                  key={trip.name}
+                  className="p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 text-center font-bold text-sm">
+                        {badge || `#${idx + 1}`}
+                      </span>
+                      <span className="font-black text-slate-900">{trip.name}</span>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        ({trip.bookings} حجز • {trip.pax} فرد)
+                      </span>
+                    </div>
+
+                    <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-black text-slate-900">
+                      <span>{formatAmount(trip.sales)}</span>
+                      <span className="text-[10px] text-emerald-700 font-bold">
+                        (أرباح: {formatAmount(trip.profit)})
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-                    <span>{trip.bookings} حجز • {trip.pax} فرد</span>
-                    <span className="font-mono text-slate-900 font-black">{formatAmount(trip.sales)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono font-bold pt-1 border-t border-slate-200/80">
-                    <span className="text-amber-700">تكلفة: {formatAmount(trip.cost)}</span>
-                    <span className="text-emerald-700 font-black">أرباح: {formatAmount(trip.profit)}</span>
+
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-sky-500 via-sky-600 to-amber-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(5, pct)}%` }}
+                    />
                   </div>
                 </div>
               )
@@ -323,164 +349,124 @@ export function DashboardDataBreakdown({
         </div>
       )}
 
-      {/* Tab 2: Sales Reps */}
       {activeTab === 'sellers' && (
-        <div className="space-y-2">
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th className="py-2.5 px-3 font-black">المندوب / قناة البيع</th>
-                  <th className="py-2.5 px-3 font-black text-center">عدد الحجوزات</th>
-                  <th className="py-2.5 px-3 font-black text-center">إجمالي النزلاء (PAX)</th>
-                  <th className="py-2.5 px-3 font-black text-left">إجمالي المبيعات</th>
-                  <th className="py-2.5 px-3 font-black text-left">الأرباح المحققة</th>
-                  <th className="py-2.5 px-3 font-black text-left">المتبقي للتحصيل</th>
-                  <th className="py-2.5 px-3 font-black text-center">حصة المبيعات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {sellersData.map((seller) => (
-                  <tr key={seller.name} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-black text-slate-900">{seller.name}</td>
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-600">{seller.bookings}</td>
-                    <td className="py-2.5 px-3 text-center font-mono text-slate-600">{seller.pax}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-black text-slate-900">{formatAmount(seller.sales)}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-black text-emerald-700">{formatAmount(seller.profit)}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-bold text-amber-700">{formatAmount(seller.restEur)}</td>
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">
-                      <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-[11px]">
-                        {seller.sharePct}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-3">
+          <span className="text-xs font-bold text-slate-500 block">
+            لوحة شرف مناديب وقنوات المبيعات الأكثر إنجازاً
+          </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 lg:hidden">
-            {sellersData.map((seller) => (
-              <div key={seller.name} className="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-xs text-slate-900">{seller.name}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[10px] font-mono font-bold border border-sky-200">
-                    {seller.sharePct}%
-                  </span>
+          <div className="space-y-2">
+            {sellersData.map((seller, idx) => {
+              const pct = Math.min(100, Math.round((seller.sales / maxSellerSales) * 100))
+              const badge = RANK_BADGES[idx]
+
+              return (
+                <div
+                  key={seller.name}
+                  className="p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 text-center font-bold text-sm">
+                        {badge || `#${idx + 1}`}
+                      </span>
+                      <span className="font-black text-slate-900">{seller.name}</span>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        ({seller.bookings} حجز • {seller.pax} فرد)
+                      </span>
+                    </div>
+
+                    <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-black text-slate-900">
+                      <span>{formatAmount(seller.sales)}</span>
+                      <span className="text-[10px] text-sky-700 font-bold">
+                        ({seller.sharePct}% من المبيعات)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-emerald-500 to-teal-600 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(5, pct)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-                  <span>{seller.bookings} حجز • {seller.pax} فرد</span>
-                  <span className="font-mono text-slate-900 font-black">{formatAmount(seller.sales)}</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px] font-mono font-bold pt-1 border-t border-slate-200/80">
-                  <span className="text-emerald-700 font-black">أرباح: {formatAmount(seller.profit)}</span>
-                  <span className="text-amber-700">متبقي: {formatAmount(seller.restEur)}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* Tab 3: Executors */}
       {activeTab === 'executors' && (
-        <div className="space-y-2">
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th className="py-2.5 px-3 font-black">الجهة المنفذة / المورد</th>
-                  <th className="py-2.5 px-3 font-black">القطاع والنشاط</th>
-                  <th className="py-2.5 px-3 font-black text-center">الرحلات المنفذة</th>
-                  <th className="py-2.5 px-3 font-black text-left">إجمالي المستحق</th>
-                  <th className="py-2.5 px-3 font-black text-left">المسدد له</th>
-                  <th className="py-2.5 px-3 font-black text-left">الرصيد المتبقي</th>
-                  <th className="py-2.5 px-3 font-black text-center">الحالة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {executorsData.map((ex) => (
-                  <tr key={ex.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-black text-slate-900">{ex.name}</td>
-                    <td className="py-2.5 px-3 text-slate-600 font-bold">{ex.category}</td>
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-600">{ex.tripsCount}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-black text-slate-900">{formatAmount(ex.totalOwed)}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-bold text-emerald-700">{formatAmount(ex.totalPaid)}</td>
-                    <td className="py-2.5 px-3 text-left font-mono font-black text-amber-700">{formatAmount(ex.balance)}</td>
-                    <td className="py-2.5 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                        ex.balance <= 0
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-amber-50 text-amber-800 border border-amber-200'
-                      }`}>
-                        {ex.balance <= 0 ? 'مسدد كلياً' : 'مستحق له'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-3">
+          <span className="text-xs font-bold text-slate-500 block">
+            مؤشر كفاءة تسوية مستحقات الموردين والجهات المنفذة (Capacity & Settlement)
+          </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 lg:hidden">
-            {executorsData.map((ex) => (
-              <div key={ex.id} className="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-xs text-slate-900">{ex.name}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                    ex.balance <= 0
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-amber-50 text-amber-800 border border-amber-200'
-                  }`}>
-                    {ex.balance <= 0 ? 'مسدد' : 'مستحق'}
-                  </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {executorsData.map((ex) => {
+              const statusColor =
+                ex.payPct >= 85
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : ex.payPct >= 50
+                  ? 'text-amber-800 bg-amber-50 border-amber-200'
+                  : 'text-rose-700 bg-rose-50 border-rose-200'
+
+              return (
+                <div
+                  key={ex.id}
+                  className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-black text-xs text-slate-900 block">{ex.name}</span>
+                      <span className="text-[10px] text-slate-500 font-bold">
+                        {ex.category} • {ex.tripsCount} رحلة ({ex.pax} فرد)
+                      </span>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black border ${statusColor}`}>
+                      تسوية: {ex.payPct}%
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/80">
+                    <span className="text-slate-500">المستحق: <strong className="font-mono text-slate-900">{formatAmount(ex.totalOwed)}</strong></span>
+                    <span className="text-slate-500">المسدد: <strong className="font-mono text-emerald-700">{formatAmount(ex.totalPaid)}</strong></span>
+                    <span className="text-slate-500">المتبقي: <strong className="font-mono text-amber-700">{formatAmount(ex.balance)}</strong></span>
+                  </div>
+
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        ex.payPct >= 85 ? 'bg-emerald-500' : ex.payPct >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                      }`}
+                      style={{ width: `${Math.max(4, ex.payPct)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-                  <span>{ex.category} ({ex.tripsCount} رحلة)</span>
-                  <span className="font-mono text-slate-900 font-black">{formatAmount(ex.totalOwed)}</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px] font-mono font-bold pt-1 border-t border-slate-200/80">
-                  <span className="text-emerald-700">مسدد: {formatAmount(ex.totalPaid)}</span>
-                  <span className="text-amber-700 font-black">متبقي: {formatAmount(ex.balance)}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* Tab 4: Hotels */}
       {activeTab === 'hotels' && (
-        <div className="space-y-2">
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <th className="py-2.5 px-3 font-black">اسم الفندق / مركز التجميع</th>
-                  <th className="py-2.5 px-3 font-black text-center">عدد النزلاء (PAX)</th>
-                  <th className="py-2.5 px-3 font-black text-center">عدد الحجوزات</th>
-                  <th className="py-2.5 px-3 font-black text-center">الغرف المسجلة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {hotelsData.slice(0, 15).map((hotel) => (
-                  <tr key={hotel.name} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-black text-slate-900">{hotel.name}</td>
-                    <td className="py-2.5 px-3 text-center font-mono font-black text-sky-700">{hotel.pax} فرد</td>
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-600">{hotel.bookings}</td>
-                    <td className="py-2.5 px-3 text-center font-mono text-slate-500">{hotel.roomsCount} غرفة</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-3">
+          <span className="text-xs font-bold text-slate-500 block">
+            توزيع النزلاء ومراكز التجمع بالفنادق (Hotel Dispatch Logistics)
+          </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 lg:hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {hotelsData.slice(0, 15).map((hotel) => (
-              <div key={hotel.name} className="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
+              <div
+                key={hotel.name}
+                className="p-3 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center justify-between"
+              >
                 <div>
                   <span className="font-black text-xs text-slate-900 block">{hotel.name}</span>
-                  <span className="text-[10px] text-slate-500 font-bold">{hotel.bookings} حجز • {hotel.roomsCount} غرفة</span>
+                  <span className="text-[10px] text-slate-500 font-bold">
+                    {hotel.bookings} حجز • {hotel.roomsCount} غرفة
+                  </span>
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-xs font-mono font-black">
                   {hotel.pax} فرد
@@ -491,27 +477,26 @@ export function DashboardDataBreakdown({
         </div>
       )}
 
-      {/* Tab 5: Multi-Currency Vault */}
       {activeTab === 'currencies' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {currencyData.map((curr) => (
-            <div key={curr.currency} className="p-4 rounded-3xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div key={curr.currency} className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-black text-xs text-slate-900">{curr.name}</span>
-                <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-800 font-mono font-black flex items-center justify-center text-xs">
+                <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-800 font-mono font-black flex items-center justify-center text-xs">
                   {curr.symbol}
                 </span>
               </div>
 
-              <div className="space-y-1 pt-1">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+              <div className="space-y-1 pt-1 text-xs font-bold text-slate-600">
+                <div className="flex items-center justify-between">
                   <span>المحصل:</span>
                   <span className="font-mono text-emerald-700 font-black">
                     {curr.symbol}{Math.round(curr.collected).toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-600">
-                  <span>المتبقي في الذمة:</span>
+                <div className="flex items-center justify-between">
+                  <span>المتبقي:</span>
                   <span className="font-mono text-amber-700 font-black">
                     {curr.symbol}{Math.round(curr.rest).toLocaleString()}
                   </span>
@@ -519,7 +504,7 @@ export function DashboardDataBreakdown({
               </div>
 
               <div className="pt-2 border-t border-slate-200 text-[10px] font-mono text-slate-400 font-bold flex justify-between">
-                <span>سعر التحويل:</span>
+                <span>سعر الصرف:</span>
                 <span>{curr.rate} ج.م</span>
               </div>
             </div>
