@@ -16,7 +16,7 @@ import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
 export function BookingsManagement({ onOpenNewBooking }) {
-  const { bookings = [], deleteBooking, updateBooking, openConfirmModal, t } = useAXStore()
+  const { bookings = [], deleteBooking, updateBooking, openConfirmModal, wipeAllData, t } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
@@ -80,13 +80,26 @@ export function BookingsManagement({ onOpenNewBooking }) {
 
   const handleDelete = (sr, name) => {
     openConfirmModal({
-      title: 'حذف الحجز',
+      title: t('booking_delete_title'),
       message: `هل أنت متأكد من حذف حجز النزيل ${name} (SR: ${sr}) نهائياً؟`,
-      confirmText: 'نعم، حذف الحجز',
+      confirmText: t('booking_delete_confirm'),
       type: 'danger',
       onConfirm: () => {
         soundManager.playAlert()
         deleteBooking(sr)
+      }
+    })
+  }
+
+  const handleWipeAll = () => {
+    openConfirmModal({
+      title: t('wipe_confirm_title'),
+      message: t('wipe_confirm_msg'),
+      confirmText: t('wipe_confirm_btn'),
+      type: 'danger',
+      onConfirm: () => {
+        soundManager.playTrash()
+        wipeAllData()
       }
     })
   }
@@ -163,10 +176,21 @@ export function BookingsManagement({ onOpenNewBooking }) {
                 soundManager.playClick()
                 onOpenNewBooking()
               }}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex items-center gap-1 mr-auto"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5 text-sky-200" />
-              <span>حجز جديد</span>
+              <span>{t('new_booking')}</span>
+            </button>
+          )}
+
+          {bookings.length > 0 && (
+            <button
+              onClick={handleWipeAll}
+              title={t('wipe_all_bookings')}
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-full text-xs font-black transition-all active:scale-95 flex items-center gap-1"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>{t('wipe_all_bookings')}</span>
             </button>
           )}
         </div>
@@ -179,10 +203,10 @@ export function BookingsManagement({ onOpenNewBooking }) {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
-            placeholder="بحث بالاسم، الفندق، الغرفة، المندوب، SR..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-full pr-10 pl-4 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+            placeholder={t('search_placeholder')}
+            className="w-full bg-slate-50 border border-slate-200 rounded-full pe-4 ps-10 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-2.5 pointer-events-none" />
         </div>
       </div>
 

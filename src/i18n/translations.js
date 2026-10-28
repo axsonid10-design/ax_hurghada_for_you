@@ -101,11 +101,28 @@ export const translations = {
     cash_pickup_tab: 'حركات Cash Pickup',
     cash_pending_tab: 'متبقي بالعملات',
     
-    // Confirmation
+    // Confirmation & Wiping
     confirm_title: 'تأكيد',
     confirm_logout_msg: 'هل تريد تسجيل الخروج والعودة لبوابة الدخول؟',
     cancel: 'إلغاء',
-    confirm: 'تأكيد'
+    confirm: 'تأكيد',
+    
+    // Additional Global Keys
+    nav_owner: 'تحكم المالك',
+    tab_owner: 'غرفة تحكم المالك',
+    search_menus: 'بحث في القوائم...',
+    operations_system: 'منظومة التشغيل',
+    unpin_sidebar: 'إلغاء التثبيت',
+    pin_sidebar: 'تثبيت السايدبار',
+    wipe_all_bookings: 'تصفير كافة الحجوزات',
+    wipe_confirm_title: 'تصفير ومسح كافة البيانات',
+    wipe_confirm_msg: 'هل أنت متأكد من مسح كافة الحجوزات والمصاريف وسجلات الإكسيل الحالية لبدء تجربة جديدة بملف إكسيل جديد تماماً؟ هذا الإجراء فوري ولا يمكن التراجع عنه.',
+    wipe_confirm_btn: 'نعم، مسح وتصفير كافة البيانات',
+    all_bookings: 'إجمالي الحجوزات',
+    collected: 'المحصل',
+    remaining_due: 'المتبقي في الذمة',
+    booking_delete_title: 'حذف الحجز',
+    booking_delete_confirm: 'نعم، حذف الحجز'
   },
   en: {
     app_title: 'Hurghada For You',
@@ -209,10 +226,27 @@ export const translations = {
     cash_pickup_tab: 'Cash Pickup Movements',
     cash_pending_tab: 'Pending Balances',
     
-    // Confirmation
+    // Confirmation & Wiping
     confirm_title: 'Confirm',
     confirm_logout_msg: 'Are you sure you want to log out?',
     cancel: 'Cancel',
-    confirm: 'Confirm'
+    confirm: 'Confirm',
+    
+    // Additional Global Keys
+    nav_owner: 'Owner Control',
+    tab_owner: 'Master Control Room',
+    search_menus: 'Search menus...',
+    operations_system: 'Operations',
+    unpin_sidebar: 'Unpin sidebar',
+    pin_sidebar: 'Pin sidebar',
+    wipe_all_bookings: 'Wipe All Bookings',
+    wipe_confirm_title: 'Wipe All Data',
+    wipe_confirm_msg: 'Are you sure you want to completely wipe all bookings, expenses, and imported sheets to start fresh with a new Excel file? This cannot be undone.',
+    wipe_confirm_btn: 'Yes, Wipe All Data',
+    all_bookings: 'Total Bookings',
+    collected: 'Collected',
+    remaining_due: 'Balance Due',
+    booking_delete_title: 'Delete Booking',
+    booking_delete_confirm: 'Yes, Delete Booking'
   }
 }

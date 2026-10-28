@@ -63,7 +63,16 @@ class SoundManager {
       this.playTone(400, 'sawtooth', 0.1, 0.12)
       setTimeout(() => this.playTone(320, 'sawtooth', 0.15, 0.12), 120)
     } catch {
-      // Audio context silently ignored
+    }
+  }
+
+  playTrash() {
+    try {
+      this.init()
+      if (this.muted || !this.ctx) return
+      this.playTone(350, 'square', 0.08, 0.12)
+      setTimeout(() => this.playTone(220, 'square', 0.12, 0.14), 70)
+    } catch {
     }
   }
 }

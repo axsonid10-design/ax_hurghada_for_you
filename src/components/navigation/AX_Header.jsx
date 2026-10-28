@@ -132,8 +132,8 @@ export function AX_Header() {
 
           {/* User Capsule & Logout */}
           {profile && (
-            <div className="flex items-center gap-1.5 mr-1 border-r border-slate-700 pr-2">
-              <div className="hidden lg:flex flex-col text-left text-xs">
+            <div className="flex items-center gap-1.5 ms-1 border-s border-slate-700 ps-2">
+              <div className="hidden lg:flex flex-col ltr:text-left rtl:text-right text-xs">
                 <span className="font-bold text-white text-[11px] leading-tight truncate max-w-[110px]">
                   {profile.name}
                 </span>

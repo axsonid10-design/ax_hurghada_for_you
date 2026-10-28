@@ -73,7 +73,12 @@ export const useAXStore = create((set, get) => ({
   bookings: [],
   expenses: [],
   importedDates: {},
-  wipeAllData: () => set({ bookings: [], expenses: [], importedDates: {} }),
+  wipeAllData: () => set((state) => ({
+    bookings: [],
+    expenses: [],
+    importedDates: {},
+    executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
+  })),
 
   maxWarehouses: 10,
   setMaxWarehouses: (val) => set({ maxWarehouses: Number(val) || 10 }),

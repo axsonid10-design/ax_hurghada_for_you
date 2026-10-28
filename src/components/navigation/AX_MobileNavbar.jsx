@@ -4,14 +4,14 @@ import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
 export function AX_MobileNavbar() {
-  const { activeTab, setActiveTab } = useAXStore()
+  const { activeTab, setActiveTab, t } = useAXStore()
 
   const tabs = [
-    { id: 'dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-    { id: 'daily', label: 'اليومية', icon: Ship },
-    { id: 'trips', label: 'الرحلات', icon: Tag },
-    { id: 'executors', label: 'المنفذين', icon: Truck },
-    { id: 'cash', label: 'الخزينة', icon: Banknote }
+    { id: 'dashboard', label: t('tab_dashboard'), icon: LayoutDashboard },
+    { id: 'daily', label: t('tab_daily'), icon: Ship },
+    { id: 'trips', label: t('tab_trips'), icon: Tag },
+    { id: 'executors', label: t('tab_executors'), icon: Truck },
+    { id: 'cash', label: t('tab_cash'), icon: Banknote }
   ]
 
   const handleSelect = (id) => {

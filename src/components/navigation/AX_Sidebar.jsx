@@ -56,9 +56,9 @@ export function AX_Sidebar({ onOpenUploadModal }) {
     ...(isMaster
       ? [
           {
-            title: 'تحكم المالك',
+            title: t('nav_owner'),
             items: [
-              { id: 'admin', label: 'غرفة تحكم المالك', icon: ShieldCheck, badge: '👑' }
+              { id: 'admin', label: t('tab_owner'), icon: ShieldCheck, badge: '👑' }
             ]
           }
         ]
@@ -91,11 +91,11 @@ export function AX_Sidebar({ onOpenUploadModal }) {
         {isExpanded ? (
           <div className="flex items-center justify-between w-full">
             <span className="text-xs font-black text-[#0a2540] tracking-wider uppercase">
-              منظومة التشغيل
+              {t('operations_system')}
             </span>
             <button
               onClick={() => setIsPinned(!isPinned)}
-              title={isPinned ? 'إلغاء التثبيت' : 'تثبيت السايدبار'}
+              title={isPinned ? t('unpin_sidebar') : t('pin_sidebar')}
               className={`p-1.5 rounded-full transition-colors ${
                 isPinned
                   ? 'bg-[#0a2540] text-white shadow-sm'
@@ -109,6 +109,7 @@ export function AX_Sidebar({ onOpenUploadModal }) {
           <div className="w-full flex justify-center">
             <button
               onClick={() => setIsPinned(true)}
+              title={t('pin_sidebar')}
               className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100"
             >
               <Pin className="w-4 h-4" />
@@ -123,10 +124,10 @@ export function AX_Sidebar({ onOpenUploadModal }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="بحث في القوائم..."
+            placeholder={t('search_menus')}
             className="w-full bg-slate-50 border border-slate-200 rounded-full px-8 py-1.5 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
           />
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute start-3.5 top-2.5" />
         </div>
       )}
 
@@ -140,7 +141,7 @@ export function AX_Sidebar({ onOpenUploadModal }) {
           className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>رفع يومية إكسيل</span>
+          <span>{t('upload_sheet')}</span>
         </button>
       ) : (
         <button
@@ -148,14 +149,14 @@ export function AX_Sidebar({ onOpenUploadModal }) {
             soundManager.playClick()
             onOpenUploadModal?.()
           }}
-          title="رفع يومية إكسيل"
+          title={t('upload_sheet')}
           className="w-10 h-10 mx-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md transition-all active:scale-95"
         >
           <FileSpreadsheet className="w-4 h-4" />
         </button>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-4 pe-1">
         {filteredSections.map((section, idx) => (
           <div key={idx} className="space-y-1">
             {isExpanded && (

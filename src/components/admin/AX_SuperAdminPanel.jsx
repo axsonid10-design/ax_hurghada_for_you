@@ -40,7 +40,8 @@ export function AX_SuperAdminPanel() {
     expenses = [],
     importedDates = {},
     wipeAllData,
-    openConfirmModal
+    openConfirmModal,
+    t
   } = useAXStore()
 
   const [activeSubTab, setActiveSubTab] = useState('warehouses') // 'warehouses' | 'users' | 'database' | 'limits'
@@ -138,10 +139,10 @@ export function AX_SuperAdminPanel() {
 
   const handleWipeDatabase = () => {
     openConfirmModal({
-      title: 'تصفير ومسح كافة البيانات',
-      message: 'هل أنت متأكد من مسح كافة الحجوزات والمصاريف وسجلات الإكسيل الحالية لبدء تجربة جديدة بملف إكسيل جديد تماماً؟ هذا الإجراء فوري ولا يمكن التراجع عنه.',
-      confirmText: 'مسح وتصفير كافة البيانات',
-      cancelText: 'إلغاء التراجع',
+      title: t('wipe_confirm_title'),
+      message: t('wipe_confirm_msg'),
+      confirmText: t('wipe_confirm_btn'),
+      cancelText: t('cancel'),
       type: 'danger',
       onConfirm: () => {
         soundManager.playTrash()
