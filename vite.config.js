@@ -95,6 +95,7 @@ export default defineConfig({
   },
   server: {
     port: 8030,
+    strictPort: true,
     host: true,
     watch: {
       ignored: ['**/*.~tmp', '**/*.tmp']

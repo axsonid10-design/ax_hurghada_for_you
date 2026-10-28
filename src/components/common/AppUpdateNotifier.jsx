@@ -64,7 +64,7 @@ export function AppUpdateNotifier() {
         localStorage.setItem('ax_hurghada_version', newVersion)
       }
     } finally {
-      window.location.replace(window.location.origin + window.location.pathname + '?_v=' + Date.now())
+      window.location.reload()
     }
   }
 

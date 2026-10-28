@@ -5,7 +5,23 @@ import App from './App'
 import './index.css'
 import { AX_alertTelegram } from './utils/AX_TelegramAlert'
 
-// Rule 2610 #8: Global Telegram Error Watchdog
+if (typeof window !== 'undefined' && window.location.search) {
+  const params = new URLSearchParams(window.location.search)
+  let changed = false
+  if (params.has('_v')) {
+    params.delete('_v')
+    changed = true
+  }
+  if (params.has('_t')) {
+    params.delete('_t')
+    changed = true
+  }
+  if (changed) {
+    const cleanSearch = params.toString() ? `?${params.toString()}` : ''
+    window.history.replaceState({}, '', `${window.location.pathname}${cleanSearch}${window.location.hash}`)
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
     if (event.error) {
