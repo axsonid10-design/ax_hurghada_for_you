@@ -54,6 +54,13 @@
 
 ## 4. Quad-Lock PWA & Offline Engine
 - PWA أصيل مع عزل `version.json` في كاش المتصفح (`NetworkOnly`).
-- إشعار التحديث الفوري `AppUpdateNotifier`.
+- إشعار التحديث الفوري `AppUpdateNotifier`: مقارنة حية بين نسخة السيرفر ونسخة الحزمة المشغلة (`import.meta.env.VITE_APP_VERSION`) مع حظر تام للاعتماد على `localStorage`.
+- كبسولة رقم الإصدار التفاعلية في الفوتر بأسفل الشاشة على كافة الأجهزة (`🟢 vX.Y.Z`) وتفحص التحديثات فورياً عند النقر.
 - إشعارات ويب 24/7 مع نافذة التفعيل الإلزامي `AX_MandatoryPushModal`.
 - محرك أوفلاين كامل بـ `IndexedDB` وطابور عمليات تلقائي.
+
+## 5. Cloudflare Deployment & Anti-Ghost Binding
+- **تطابق اسم المشروع 1:1:** حظر اللواحق العشوائية (`-9f7`)؛ اسم المشروع في Cloudflare Pages يطابق اسم الخزينة (`ax-hurghada-for-you`).
+- **تطابق سجل الـ CNAME:** توجيه الدومين الرسمي `hurghada.axsonid.com` إلى نفس مشروع Pages النشط 1:1.
+- **أمر النشر المباشر الموحد:** استخدام `npm run deploy` للنشر الفوري عبر Wrangler بدون الاعتماد على Git CI غير المربوط.
+- **فحص التأكيد السحابي الإلزامي بعد كل نشر:** فحص الرابط الحي فورياً عبر `fetch("https://hurghada.axsonid.com/version.json")` للتأكد من وصول التحديث لايف بنسبة 100%.
