@@ -332,12 +332,32 @@ export function ConfigureSingleTripModal({
               </div>
               <AX_SearchableSelect
                 value={formData.executor_id}
-                onChange={(val) => handleFieldChange('executor_id', val)}
+                onChange={(val) => {
+                  handleFieldChange('executor_id', val)
+                  const chosen = executors.find((e) => e.id === val)
+                  if (chosen && Number(chosen.cost_price) > 0 && Number(formData.adult_cost) === 0) {
+                    handleFieldChange('adult_cost', chosen.cost_price)
+                  }
+                }}
                 options={executors.map((ex) => ({
                   value: ex.id,
-                  label: `${ex.name} (${ex.category || 'عام'})`
+                  label: `${ex.name} (${ex.category || 'عام'}${Number(ex.cost_price) > 0 ? ` - تكلفة: ${ex.cost_price} ${ex.currency}` : ''})`
                 }))}
               />
+              {(() => {
+                const selectedEx = executors.find((ex) => ex.id === formData.executor_id)
+                if (selectedEx && Number(selectedEx.cost_price) > 0) {
+                  return (
+                    <div className="mt-1.5 flex items-center justify-between text-[11px] bg-sky-50 text-sky-800 px-3 py-1 rounded-xl border border-sky-200">
+                      <span>تكلفة التوريد المعتمدة لهذا المنفذ:</span>
+                      <span className="font-black font-mono">
+                        {selectedEx.cost_price} {selectedEx.currency || formData.currency} ({selectedEx.pricing_type === 'trip' ? 'بالرحلة' : 'بالفرد'})
+                      </span>
+                    </div>
+                  )
+                }
+                return null
+              })()}
             </div>
 
             {/* Pricing Section */}

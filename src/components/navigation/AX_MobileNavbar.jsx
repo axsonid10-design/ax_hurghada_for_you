@@ -14,12 +14,16 @@ import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
 export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnSelectTab, isVisible = true }) {
-  const { activeTab: storeActiveTab, setActiveTab: storeSetActiveTab, profile, t } = useAXStore()
+  const { activeTab: storeActiveTab, setActiveTab: storeSetActiveTab, profile, tripDefinitions = [], t } = useAXStore()
   const activeTab = propActiveTab || storeActiveTab
   const onSelectTab = propOnSelectTab || storeSetActiveTab
 
   const activeTabRef = useRef(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const unpricedTripsCount = (tripDefinitions || []).filter(
+    (td) => Number(td.adult_cost) === 0 && Number(td.adult_sell) === 0 && td.sheet_name !== 'Cash Pickup'
+  ).length
 
   // Law 1: Modal Collision Avoidance (Automatic Dismiss on Modal Open)
   useEffect(() => {
@@ -90,14 +94,24 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
               ref={isActive ? activeTabRef : null}
               type="button"
               onClick={() => handleSelect(tab.id)}
-              className={`flex-shrink-0 flex flex-col items-center justify-center gap-0.5 py-1 px-3 sm:px-3.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer ${
+              className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 py-1 px-3 sm:px-3.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 isActive
                   ? 'bg-[#0a2540] text-white font-black shadow-sm scale-105'
                   : 'text-slate-600 font-bold hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <div className="relative">
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {tab.id === 'trips' && unpricedTripsCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                )}
+              </div>
               <span className="text-[10px] leading-tight select-none">{tab.label}</span>
+              {tab.id === 'trips' && unpricedTripsCount > 0 && (
+                <span className="text-[8px] font-black text-rose-500 leading-none">
+                  ({unpricedTripsCount})
+                </span>
+              )}
             </button>
           )
         })}

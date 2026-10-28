@@ -248,8 +248,26 @@ export function ExecutorsView() {
                   </div>
                 </div>
 
+                {/* Executor Agreed Cost Rate Badge */}
+                <div className="flex items-center justify-between bg-sky-50/70 border border-sky-100 rounded-2xl px-3 py-1.5 text-xs mt-3">
+                  <span className="font-bold text-sky-800">تكلفة التوريد للمنفذ:</span>
+                  <span className="font-black font-mono text-sky-950">
+                    {Number(ex.cost_price) > 0 ? (
+                      <>
+                        {ex.currency === 'EGP' ? 'EGP ' : ex.currency === 'USD' ? '$' : '€'}
+                        {ex.cost_price}{' '}
+                        <span className="text-[10px] text-sky-600 font-sans">
+                          ({ex.pricing_type === 'trip' ? 'بالرحلة' : 'بالفرد'})
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400 font-sans text-[11px]">حسب تسعيرة الرحلة</span>
+                    )}
+                  </span>
+                </div>
+
                 {/* 3 Bento Financial Blocks */}
-                <div className="grid grid-cols-3 gap-2 pt-3">
+                <div className="grid grid-cols-3 gap-2 pt-2">
                   <div className="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-2.5 text-center">
                     <div className="text-[10px] font-bold text-slate-400 leading-tight">
                       {t('total_due')}

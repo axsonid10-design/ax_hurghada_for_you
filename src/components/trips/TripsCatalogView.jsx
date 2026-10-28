@@ -10,6 +10,7 @@ import {
   Percent,
   DollarSign,
   AlertCircle,
+  AlertTriangle,
   Tag,
   CheckCircle2,
   X,
@@ -106,9 +107,22 @@ export function TripsCatalogView() {
     label: `${ex.name} (${ex.category})`
   }))
 
+  const unpricedTrips = useMemo(() => {
+    return enrichedTrips.filter(
+      (t) => Number(t.adult_cost) === 0 && Number(t.adult_sell) === 0 && t.sheet_name !== 'Cash Pickup'
+    )
+  }, [enrichedTrips])
+
   const filteredTrips = useMemo(() => {
     return enrichedTrips.filter((t) => {
-      const matchCat = activeCategory === 'all' || t.category === activeCategory
+      let matchCat = false
+      if (activeCategory === 'all') {
+        matchCat = true
+      } else if (activeCategory === 'unpriced') {
+        matchCat = Number(t.adult_cost) === 0 && Number(t.adult_sell) === 0 && t.sheet_name !== 'Cash Pickup'
+      } else {
+        matchCat = t.category === activeCategory
+      }
       const matchSearch =
         !search ||
         t.display_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -214,8 +228,85 @@ export function TripsCatalogView() {
         </div>
       </div>
 
+      {/* ⚠️ Unpriced Trips Alarm Ribbon */}
+      {unpricedTrips.length > 0 && (
+        <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm animate-pulse">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white uppercase tracking-wider">
+                  تنبيه تسعير
+                </span>
+                <h3 className="text-xs sm:text-sm font-black text-rose-950">
+                  يوجد ({unpricedTrips.length}) رحلات مسجلة بدون تسعير!
+                </h3>
+              </div>
+              <p className="text-[11px] text-rose-800 font-bold mt-0.5">
+                تكلفة وأرباح هذه الرحلات غير محتسبة في الحجوزات والتقارير.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playClick()
+                setActiveCategory('unpriced')
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 ${
+                activeCategory === 'unpriced'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-100'
+              }`}
+            >
+              فلترة غير المسعر ({unpricedTrips.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playClick()
+                setEditingTrip(unpricedTrips[0])
+              }}
+              className="px-4 py-1.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              <span>تسعير أول رحلة الآن</span>
+              <span className="font-mono text-sky-300">←</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Category Tabs Bar (Soothing colors & clean active states) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full">
+        {unpricedTrips.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              soundManager.playClick()
+              setActiveCategory('unpriced')
+            }}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all flex-shrink-0 border ${
+              activeCategory === 'unpriced'
+                ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+            }`}
+          >
+            <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+            <span>غير مسعرة</span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                activeCategory === 'unpriced' ? 'bg-white/20 text-white' : 'bg-rose-200 text-rose-800'
+              }`}
+            >
+              {unpricedTrips.length}
+            </span>
+          </button>
+        )}
+
         {categories.map((cat) => {
           const Icon = cat.icon
           const isActive = activeCategory === cat.id

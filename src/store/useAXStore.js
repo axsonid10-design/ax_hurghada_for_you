@@ -2,6 +2,19 @@ import { create } from 'zustand'
 import { translations } from '../i18n/translations'
 import { clearOfflineQueue } from '../services/offlineQueue'
 import {
+  cloudSaveTrip,
+  cloudDeleteTrip,
+  cloudSaveExecutor,
+  cloudDeleteExecutor,
+  cloudSaveBooking,
+  cloudDeleteBooking,
+  cloudSaveBatch,
+  cloudSaveExpense,
+  cloudDeleteExpense,
+  cloudSaveSettings,
+  cloudWipeAll
+} from '../services/realtimeSync'
+import {
   INITIAL_EXECUTORS,
   INITIAL_TRIP_DEFINITIONS,
   INITIAL_EXPENSES,
@@ -295,6 +308,7 @@ export const useAXStore = create((set, get) => ({
       localStorage.setItem('ax_h4u_system_users', JSON.stringify(baseUsers))
     }
     clearOfflineQueue().catch(() => {})
+    cloudWipeAll().catch(() => {})
     set(() => ({
       tripCategories: DEFAULT_TRIP_CATEGORIES,
       executorCategories: DEFAULT_EXECUTOR_CATEGORIES,
@@ -431,6 +445,7 @@ export const useAXStore = create((set, get) => ({
 
   // Trip Definitions Actions
   addTripDefinition: (def) => {
+    cloudSaveTrip(def)
     set((state) => {
       const cleanSheet = (def.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
       const existingIdx = state.tripDefinitions.findIndex((td) => {
@@ -455,6 +470,10 @@ export const useAXStore = create((set, get) => ({
   },
 
   updateTripDefinition: (id, updatedFields) => {
+    const existing = get().tripDefinitions.find((t) => t.id === id)
+    if (existing) {
+      cloudSaveTrip({ ...existing, ...updatedFields })
+    }
     set((state) => {
       const newDefs = state.tripDefinitions.map((td) =>
         td.id === id ? { ...td, ...updatedFields } : td
@@ -467,6 +486,7 @@ export const useAXStore = create((set, get) => ({
   },
 
   batchAddTripDefinitions: (defs) => {
+    defs.forEach((d) => cloudSaveTrip(d))
     set((state) => {
       let currentDefs = [...state.tripDefinitions]
       defs.forEach((def) => {
@@ -489,6 +509,7 @@ export const useAXStore = create((set, get) => ({
   },
 
   deleteTripDefinition: (id) => {
+    cloudDeleteTrip(id)
     set((state) => {
       const newDefs = state.tripDefinitions.filter((td) => td.id !== id)
       if (typeof localStorage !== 'undefined') {
@@ -507,6 +528,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
     }
+    cloudSaveSettings('trip_categories', next)
     return { tripCategories: next }
   }),
 
@@ -517,6 +539,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
     }
+    cloudSaveSettings('trip_categories', next)
     return { tripCategories: next }
   }),
 
@@ -525,6 +548,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_trip_categories', JSON.stringify(next))
     }
+    cloudSaveSettings('trip_categories', next)
     return { tripCategories: next }
   }),
 
@@ -535,6 +559,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
     }
+    cloudSaveSettings('executor_categories', next)
     return { executorCategories: next }
   }),
 
@@ -547,6 +572,7 @@ export const useAXStore = create((set, get) => ({
       localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
       localStorage.setItem('ax_h4u_executors', JSON.stringify(updatedExecutors))
     }
+    cloudSaveSettings('executor_categories', next)
     return { executorCategories: next, executors: updatedExecutors }
   }),
 
@@ -555,93 +581,119 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(next))
     }
+    cloudSaveSettings('executor_categories', next)
     return { executorCategories: next }
   }),
 
   // Executors Actions
-  addExecutor: (executor) => set((state) => {
-    const next = [...state.executors, executor]
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
-    }
-    return { executors: next }
-  }),
+  addExecutor: (executor) => {
+    cloudSaveExecutor(executor)
+    set((state) => {
+      const next = [...state.executors, executor]
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+      }
+      return { executors: next }
+    })
+  },
 
-  updateExecutor: (id, updatedFields) => set((state) => {
-    const next = state.executors.map((ex) => (ex.id === id ? { ...ex, ...updatedFields } : ex))
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+  updateExecutor: (id, updatedFields) => {
+    const existing = get().executors.find((e) => e.id === id)
+    if (existing) {
+      cloudSaveExecutor({ ...existing, ...updatedFields })
     }
-    return { executors: next }
-  }),
+    set((state) => {
+      const next = state.executors.map((ex) => (ex.id === id ? { ...ex, ...updatedFields } : ex))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+      }
+      return { executors: next }
+    })
+  },
 
-  deleteExecutor: (id) => set((state) => {
-    const next = state.executors.filter((ex) => ex.id !== id)
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
-    }
-    return { executors: next }
-  }),
+  deleteExecutor: (id) => {
+    cloudDeleteExecutor(id)
+    set((state) => {
+      const next = state.executors.filter((ex) => ex.id !== id)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+      }
+      return { executors: next }
+    })
+  },
 
-  recordExecutorPayment: (id, payment) => set((state) => {
+  recordExecutorPayment: (id, payment) => {
     const isObj = typeof payment === 'object' && payment !== null
     const amt = isObj ? Number(payment.amount) || 0 : Number(payment) || 0
     const currency = isObj ? payment.currency || 'EUR' : 'EUR'
     const notes = isObj ? payment.notes || '' : ''
     const date = isObj ? payment.date || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
 
-    const next = state.executors.map((ex) => {
-      if (ex.id !== id) return ex
-      const prevPayments = ex.payments || []
-      const newPaymentRecord = {
-        id: 'pay_' + Date.now(),
-        date,
-        amount: amt,
-        currency,
-        notes
-      }
-      return {
-        ...ex,
-        total_paid: (ex.total_paid || 0) + amt,
-        payments: [newPaymentRecord, ...prevPayments]
-      }
-    })
+    let updatedEx = null
+    set((state) => {
+      const next = state.executors.map((ex) => {
+        if (ex.id !== id) return ex
+        const prevPayments = ex.payments || []
+        const newPaymentRecord = {
+          id: 'pay_' + Date.now(),
+          date,
+          amount: amt,
+          currency,
+          notes
+        }
+        updatedEx = {
+          ...ex,
+          total_paid: (ex.total_paid || 0) + amt,
+          payments: [newPaymentRecord, ...prevPayments]
+        }
+        return updatedEx
+      })
 
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+      }
+      return { executors: next }
+    })
+    if (updatedEx) {
+      cloudSaveExecutor(updatedEx)
     }
-    return { executors: next }
-  }),
+  },
 
   // Operational Expenses Actions
-  addExpense: (expense) => set((state) => {
-    const next = [
-      {
-        ...expense,
-        id: expense.id || 'exp_' + Date.now(),
-        date: expense.date || new Date().toISOString().split('T')[0]
-      },
-      ...state.expenses
-    ]
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+  addExpense: (expense) => {
+    const newExpense = {
+      ...expense,
+      id: expense.id || 'exp_' + Date.now(),
+      date: expense.date || new Date().toISOString().split('T')[0]
     }
-    return { expenses: next }
-  }),
+    cloudSaveExpense(newExpense)
+    set((state) => {
+      const next = [newExpense, ...state.expenses]
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+      }
+      return { expenses: next }
+    })
+  },
 
-  deleteExpense: (id) => set((state) => {
-    const next = state.expenses.filter((e) => e.id !== id)
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
-    }
-    return { expenses: next }
-  }),
+  deleteExpense: (id) => {
+    cloudDeleteExpense(id)
+    set((state) => {
+      const next = state.expenses.filter((e) => e.id !== id)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+      }
+      return { expenses: next }
+    })
+  },
 
   // Bookings Actions
   addBooking: (booking) => {
-    const { tripDefinitions, bookings } = get()
-    const fin = computeBookingFinancials(booking, tripDefinitions)
-    const next = [{ ...booking, ...fin }, ...bookings]
+    const { tripDefinitions, executors, bookings } = get()
+    const fin = computeBookingFinancials(booking, tripDefinitions, executors)
+    const newBooking = { ...booking, ...fin }
+    cloudSaveBooking(newBooking)
+    const next = [newBooking, ...bookings]
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
     }
@@ -649,35 +701,43 @@ export const useAXStore = create((set, get) => ({
   },
 
   updateBooking: (sr, updatedFields) => {
-    const { tripDefinitions, bookings } = get()
+    const { tripDefinitions, executors, bookings } = get()
+    let updatedBooking = null
     const next = bookings.map((b) => {
       if (b.sr === sr) {
         const merged = { ...b, ...updatedFields }
-        const fin = computeBookingFinancials(merged, tripDefinitions)
-        return { ...merged, ...fin }
+        const fin = computeBookingFinancials(merged, tripDefinitions, executors)
+        updatedBooking = { ...merged, ...fin }
+        return updatedBooking
       }
       return b
     })
+    if (updatedBooking) {
+      cloudSaveBooking(updatedBooking)
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
     }
     set({ bookings: next })
   },
 
-  deleteBooking: (sr) => set((state) => {
-    const next = state.bookings.filter((b) => b.sr !== sr)
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
-    }
-    return { bookings: next }
-  }),
+  deleteBooking: (sr) => {
+    cloudDeleteBooking(sr)
+    set((state) => {
+      const next = state.bookings.filter((b) => b.sr !== sr)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
+      }
+      return { bookings: next }
+    })
+  },
 
   // Excel Batch Import Engine
   importExcelBatch: ({ date, filename, rawBookings, overwrite = false }) => {
-    const { tripDefinitions, bookings, importedDates } = get()
+    const { tripDefinitions, executors, bookings, importedDates } = get()
 
     const calculated = rawBookings.map((b) => {
-      const fin = computeBookingFinancials(b, tripDefinitions)
+      const fin = computeBookingFinancials(b, tripDefinitions, executors)
       return {
         ...b,
         date,
@@ -708,6 +768,8 @@ export const useAXStore = create((set, get) => ({
       localStorage.setItem('ax_h4u_bookings', JSON.stringify(nextBookings))
       localStorage.setItem('ax_h4u_imported_dates', JSON.stringify(nextImportedDates))
     }
+
+    cloudSaveBatch(date, filename, calculated, overwrite)
 
     set({
       bookings: nextBookings,

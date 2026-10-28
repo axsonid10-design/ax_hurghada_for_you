@@ -22,7 +22,7 @@ import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
 export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
-  const { activeTab, setActiveTab, profile, logout, openConfirmModal, t } = useAXStore()
+  const { activeTab, setActiveTab, profile, logout, openConfirmModal, tripDefinitions = [], t } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,6 +30,12 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
   const isExpanded = isPinned || isHovered
 
   const isMaster = profile?.is_master || profile?.role === 'Super Admin' || profile?.email === 'axsonid@gmail.com'
+
+  const unpricedTripsCount = useMemo(() => {
+    return tripDefinitions.filter(
+      (td) => Number(td.adult_cost) === 0 && Number(td.adult_sell) === 0 && td.sheet_name !== 'Cash Pickup'
+    ).length
+  }, [tripDefinitions])
 
   const menuSections = [
     {
@@ -43,7 +49,13 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
     {
       title: t('nav_trips'),
       items: [
-        { id: 'trips', label: t('tab_trips'), icon: Tag },
+        {
+          id: 'trips',
+          label: t('tab_trips'),
+          icon: Tag,
+          badge: unpricedTripsCount > 0 ? `${unpricedTripsCount} غير مسعر` : null,
+          isAlert: unpricedTripsCount > 0
+        },
         { id: 'executors', label: t('tab_executors'), icon: Truck }
       ]
     },
@@ -190,13 +202,18 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
                   {isExpanded && item.badge && (
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive
+                        item.isAlert
+                          ? 'bg-rose-600 text-white animate-pulse'
+                          : isActive
                           ? 'bg-[#0284c7] text-white'
                           : 'bg-slate-200 text-slate-700'
                       }`}
                     >
                       {item.badge}
                     </span>
+                  )}
+                  {!isExpanded && item.isAlert && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 absolute top-2 right-2 animate-ping" />
                   )}
                 </button>
               )

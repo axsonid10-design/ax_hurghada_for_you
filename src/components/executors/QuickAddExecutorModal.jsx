@@ -16,6 +16,9 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
     name: '',
     phone: '',
     category: '',
+    pricing_type: 'pax',
+    cost_price: 0,
+    currency: 'EUR',
     notes: ''
   })
 
@@ -31,6 +34,9 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
         name: existingExecutor.name || '',
         phone: existingExecutor.phone || '',
         category: existingExecutor.category || defaultCat,
+        pricing_type: existingExecutor.pricing_type || 'pax',
+        cost_price: existingExecutor.cost_price !== undefined ? existingExecutor.cost_price : 0,
+        currency: existingExecutor.currency || 'EUR',
         notes: existingExecutor.notes || ''
       })
     } else {
@@ -38,6 +44,9 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
         name: '',
         phone: '',
         category: defaultCat,
+        pricing_type: 'pax',
+        cost_price: 0,
+        currency: 'EUR',
         notes: ''
       })
     }
@@ -67,6 +76,9 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         category: formData.category,
+        pricing_type: formData.pricing_type || 'pax',
+        cost_price: Number(formData.cost_price) || 0,
+        currency: formData.currency || 'EUR',
         notes: formData.notes.trim()
       }
       updateExecutor(existingExecutor.id, payload)
@@ -78,6 +90,9 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         category: formData.category,
+        pricing_type: formData.pricing_type || 'pax',
+        cost_price: Number(formData.cost_price) || 0,
+        currency: formData.currency || 'EUR',
         notes: formData.notes.trim(),
         total_paid: 0
       }
@@ -184,6 +199,65 @@ export function QuickAddExecutorModal({ isOpen, existingExecutor = null, onClose
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1">نوع المحاسبة والتكلفة للمنفذ</label>
+              <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, pricing_type: 'pax' })}
+                  className={`py-1.5 rounded-full text-xs font-black transition-all ${
+                    formData.pricing_type === 'pax'
+                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  بالفرد (Per Pax)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, pricing_type: 'trip' })}
+                  className={`py-1.5 rounded-full text-xs font-black transition-all ${
+                    formData.pricing_type === 'trip'
+                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  بالرحلة (Per Trip)
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-slate-700 mb-1">
+                  {formData.pricing_type === 'trip' ? 'سعر تكلفة الرحلة' : 'سعر تكلفة الفرد'}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={formData.cost_price}
+                  onChange={(e) => setFormData({ ...formData, cost_price: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.0"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-center font-mono focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1">العملة</label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-full px-3 py-2 text-center font-mono focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                >
+                  <option value="EUR">يورو (€)</option>
+                  <option value="USD">دولار ($)</option>
+                  <option value="EGP">جنيه (EGP)</option>
+                  <option value="GBP">إسترليني (£)</option>
+                </select>
+              </div>
             </div>
 
             <div>

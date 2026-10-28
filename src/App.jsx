@@ -25,10 +25,19 @@ import { useAXStore } from './store/useAXStore'
 import { hasModuleAccess, getFirstAllowedModule } from './utils/permissionsConfig'
 import { soundManager } from './utils/soundEffects'
 import { useScrollDirection } from './hooks/useScrollDirection'
+import { initRealtimeSync } from './services/realtimeSync'
 
 export function App() {
   const { activeTab, setActiveTab, profile, setProfile, logout, lang, addExpense } = useAXStore()
   const isChromeVisible = useScrollDirection()
+
+  // Real-time Cloud Synchronization
+  useEffect(() => {
+    const cleanup = initRealtimeSync()
+    return () => {
+      if (typeof cleanup === 'function') cleanup()
+    }
+  }, [])
   const [activeInviteToken, setActiveInviteToken] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('invite')

@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Search,
   Trash2,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Plus,
   Users,
   CreditCard,
@@ -16,11 +17,33 @@ import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
 export function BookingsManagement({ onOpenUploadModal }) {
-  const { bookings = [], deleteBooking, updateBooking, openConfirmModal, wipeAllData, t } = useAXStore()
+  const {
+    bookings = [],
+    deleteBooking,
+    updateBooking,
+    openConfirmModal,
+    wipeAllData,
+    tripDefinitions = [],
+    setActiveTab,
+    t
+  } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 20
+
+  const unpricedBookings = useMemo(() => {
+    return (bookings || []).filter((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      const matched = tripDefinitions.find((td) => {
+        const sName = (td.sheet_name || '').toLowerCase().trim()
+        const dName = (td.display_name || '').toLowerCase().trim()
+        return sName === cleanType || dName === cleanType
+      })
+      return !matched || (Number(matched.adult_cost) === 0 && Number(matched.adult_sell) === 0)
+    })
+  }, [bookings, tripDefinitions])
 
   const filtered = (bookings || []).filter((b) => {
     if (!b) return false
@@ -209,6 +232,33 @@ export function BookingsManagement({ onOpenUploadModal }) {
           <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-2.5 pointer-events-none" />
         </div>
       </div>
+
+      {/* ⚠️ Operational Warning for Unpriced Bookings */}
+      {unpricedBookings.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-amber-950 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-black text-xs sm:text-sm block">
+                تنبيه: يوجد ({unpricedBookings.length}) حجوزات لرحلات لم يتم تسعيرها في دليل الرحلات!
+              </span>
+              <span className="text-[11px] text-amber-800 block mt-0.5">
+                تكاليف الموردين وأرباح هذه الحجوزات مسجلة كأصفار حتى يتم تسعيرها.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('trips')}
+            className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm"
+          >
+            <span>تسعير الرحلات الآن</span>
+            <span className="text-sky-300">←</span>
+          </button>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">

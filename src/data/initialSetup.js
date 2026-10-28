@@ -27,7 +27,7 @@ export function inferTripCategory(name = '') {
 
 export const INITIAL_TRIP_DEFINITIONS = []
 
-export function computeBookingFinancials(booking, tripDefs = []) {
+export function computeBookingFinancials(booking, tripDefs = [], executors = []) {
   const cleanTripType = (booking.trip_type || '').toLowerCase().trim().replace(/\s+/g, ' ')
   
   let tripDef = tripDefs.find((td) => {
@@ -36,6 +36,9 @@ export function computeBookingFinancials(booking, tripDefs = []) {
     return sName === cleanTripType || dName === cleanTripType
   })
 
+  const assignedExecutorId = booking.executor_id || tripDef?.executor_id
+  const executor = executors.find((ex) => ex.id === assignedExecutorId)
+
   if (cleanTripType.includes('cash pickup') || cleanTripType.includes('تحصيل')) {
     const cashAmount = booking.rest_eur || 0
     return {
@@ -43,7 +46,7 @@ export function computeBookingFinancials(booking, tripDefs = []) {
       sell_eur: cashAmount,
       profit_eur: 0,
       collected_eur: cashAmount,
-      executor_id: tripDef?.executor_id || 'exec_transfers',
+      executor_id: assignedExecutorId || 'exec_transfers',
       pricing_type: 'trip',
       currency: 'EUR'
     }
@@ -51,13 +54,14 @@ export function computeBookingFinancials(booking, tripDefs = []) {
 
   if (!tripDef) {
     const sellPrice = booking.rest_eur || 0
+    const exCost = executor && Number(executor.cost_price) > 0 ? Number(executor.cost_price) : 0
     return {
-      cost_eur: 0,
+      cost_eur: exCost,
       sell_eur: sellPrice,
-      profit_eur: 0,
+      profit_eur: Math.max(0, sellPrice - exCost),
       collected_eur: 0,
-      executor_id: 'exec_marina',
-      pricing_type: 'pax',
+      executor_id: assignedExecutorId || 'exec_marina',
+      pricing_type: executor?.pricing_type || 'pax',
       currency: 'EUR'
     }
   }
@@ -65,28 +69,39 @@ export function computeBookingFinancials(booking, tripDefs = []) {
   let totalCost = 0
   let totalSell = 0
 
-  if (tripDef.pricing_type === 'trip') {
-    totalCost = tripDef.adult_cost
-    totalSell = tripDef.adult_sell
-  } else {
-    const adultCost = (booking.adult || 0) * tripDef.adult_cost
-    const adultSell = (booking.adult || 0) * tripDef.adult_sell
+  const hasExecutorCost = executor && Number(executor.cost_price) > 0
 
-    let childCostUnit = 0
-    let childSellUnit = 0
-
-    if (tripDef.child_pricing_mode === 'percent') {
-      childCostUnit = tripDef.adult_cost * ((tripDef.child_cost_percent || 0) / 100)
-      childSellUnit = tripDef.adult_sell * ((tripDef.child_sell_percent || 0) / 100)
+  if (hasExecutorCost) {
+    if (executor.pricing_type === 'trip') {
+      totalCost = Number(executor.cost_price)
     } else {
-      childCostUnit = tripDef.child_cost_fixed || 0
-      childSellUnit = tripDef.child_sell_fixed || 0
+      totalCost = ((booking.adult || 0) + (booking.child || 0)) * Number(executor.cost_price)
     }
-
+  } else if (tripDef.pricing_type === 'trip') {
+    totalCost = Number(tripDef.adult_cost) || 0
+  } else {
+    const adultCost = (booking.adult || 0) * (Number(tripDef.adult_cost) || 0)
+    let childCostUnit = 0
+    if (tripDef.child_pricing_mode === 'percent') {
+      childCostUnit = (Number(tripDef.adult_cost) || 0) * ((Number(tripDef.child_cost_percent) || 0) / 100)
+    } else {
+      childCostUnit = Number(tripDef.child_cost_fixed) || 0
+    }
     const childCost = (booking.child || 0) * childCostUnit
-    const childSell = (booking.child || 0) * childSellUnit
-
     totalCost = adultCost + childCost
+  }
+
+  if (tripDef.pricing_type === 'trip') {
+    totalSell = Number(tripDef.adult_sell) || 0
+  } else {
+    const adultSell = (booking.adult || 0) * (Number(tripDef.adult_sell) || 0)
+    let childSellUnit = 0
+    if (tripDef.child_pricing_mode === 'percent') {
+      childSellUnit = (Number(tripDef.adult_sell) || 0) * ((Number(tripDef.child_sell_percent) || 0) / 100)
+    } else {
+      childSellUnit = Number(tripDef.child_sell_fixed) || 0
+    }
+    const childSell = (booking.child || 0) * childSellUnit
     totalSell = adultSell + childSell
   }
 
@@ -99,7 +114,7 @@ export function computeBookingFinancials(booking, tripDefs = []) {
     sell_eur: totalSell,
     profit_eur: profitEur,
     collected_eur: collectedEur,
-    executor_id: tripDef.executor_id,
+    executor_id: assignedExecutorId || tripDef.executor_id || 'exec_marina',
     pricing_type: tripDef.pricing_type,
     currency: tripDef.currency || 'EUR'
   }

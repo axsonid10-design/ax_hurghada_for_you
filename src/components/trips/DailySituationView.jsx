@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Users,
   Euro,
@@ -8,7 +8,8 @@ import {
   CheckCircle2,
   Hotel,
   Truck,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
@@ -24,6 +25,8 @@ export function DailySituationView({ onOpenUploadModal }) {
     updateBooking,
     openConfirmModal,
     executors,
+    tripDefinitions = [],
+    setActiveTab,
     t
   } = useAXStore()
 
@@ -34,6 +37,19 @@ export function DailySituationView({ onOpenUploadModal }) {
   const pageSize = 20
 
   const dailyBookings = bookings.filter((b) => b.date === selectedDate)
+
+  const unpricedDailyTrips = useMemo(() => {
+    return dailyBookings.filter((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      const matched = tripDefinitions.find((td) => {
+        const sName = (td.sheet_name || '').toLowerCase().trim()
+        const dName = (td.display_name || '').toLowerCase().trim()
+        return sName === cleanType || dName === cleanType
+      })
+      return !matched || (Number(matched.adult_cost) === 0 && Number(matched.adult_sell) === 0)
+    })
+  }, [dailyBookings, tripDefinitions])
 
   const filteredBookings = dailyBookings.filter((b) => {
     const matchesTrip = filterTripType === 'ALL' || b.trip_type === filterTripType
@@ -169,6 +185,33 @@ export function DailySituationView({ onOpenUploadModal }) {
           <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-2.5 pointer-events-none" />
         </div>
       </div>
+
+      {/* ⚠️ Unpriced Bookings Alert Banner */}
+      {unpricedDailyTrips.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-amber-950 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-black text-xs sm:text-sm block">
+                تنبيه تشغيلي: يوجد ({unpricedDailyTrips.length}) حجوزات لرحلات لم يتم تسعيرها بعد في دليل الرحلات!
+              </span>
+              <span className="text-[11px] text-amber-800 block mt-0.5">
+                تكاليف وأرباح هذه الرحلات غير محتسبة بدقة حتى يتم تحديد سعر التكلفة والبيع.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('trips')}
+            className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm"
+          >
+            <span>تسعير الرحلات في الدليل</span>
+            <span className="text-sky-300">←</span>
+          </button>
+        </div>
+      )}
 
       {/* Bento Stats Banner - Responsive */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
