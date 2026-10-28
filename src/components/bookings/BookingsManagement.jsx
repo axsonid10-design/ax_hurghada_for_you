@@ -15,7 +15,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
-export function BookingsManagement() {
+export function BookingsManagement({ onOpenUploadModal }) {
   const { bookings = [], deleteBooking, updateBooking, openConfirmModal, wipeAllData, t } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -205,21 +205,18 @@ export function BookingsManagement() {
             <Users className="w-7 h-7" />
           </div>
           <h3 className="text-base font-black text-slate-800">
-            لا توجد حجوزات مسجلة في هذا العرض
+            لا توجد حجوزات مسجلة
           </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            سجل الحجوزات نظيف 100%. يمكنك البدء بإضافة حجز جديد أو رفع شيت إكسيل اليومية.
-          </p>
-          {onOpenNewBooking && (
+          {onOpenUploadModal && (
             <div className="pt-2">
               <button
                 onClick={() => {
                   soundManager.playClick()
-                  onOpenNewBooking()
+                  onOpenUploadModal()
                 }}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-2"
               >
-                تسجيل حجز جديد
+                <span>رفع شيت إكسيل</span>
               </button>
             </div>
           )}

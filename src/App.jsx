@@ -191,7 +191,9 @@ export function App() {
           )}
 
           {activeTab === 'bookings' && (
-            <BookingsManagement />
+            <BookingsManagement
+              onOpenUploadModal={() => setIsUploadModalOpen(true)}
+            />
           )}
 
           {activeTab === 'trips' && <TripsCatalogView />}
