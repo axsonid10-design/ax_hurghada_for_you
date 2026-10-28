@@ -10,11 +10,13 @@ import {
   CreditCard,
   Euro,
   DollarSign,
-  Wallet
+  Wallet,
+  RefreshCw
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
+import { resumeOfflineSync } from '../../services/realtimeSync'
 
 export function BookingsManagement({ onOpenUploadModal }) {
   const {
@@ -25,6 +27,7 @@ export function BookingsManagement({ onOpenUploadModal }) {
     wipeAllData,
     tripDefinitions = [],
     setActiveTab,
+    syncStatus,
     t
   } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
@@ -158,6 +161,26 @@ export function BookingsManagement({ onOpenUploadModal }) {
           <span className="text-base sm:text-lg font-black font-mono text-amber-700">€{Math.round(totalRestEur).toLocaleString()}</span>
         </div>
       </div>
+
+      {syncStatus?.pendingCount > 0 && (
+        <div className="bg-sky-50 border border-sky-200 rounded-3xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2 text-sky-950 font-bold">
+            <RefreshCw className={`w-4 h-4 text-sky-600 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
+            <span>
+              {syncStatus.isSyncing
+                ? `جاري مزامنة ${syncStatus.pendingCount} حجز مع السحابة (${syncStatus.progress}%)...`
+                : `يوجد ${syncStatus.pendingCount} حجز بانتظار المزامنة مع السحابة`}
+            </span>
+          </div>
+          <button
+            onClick={() => resumeOfflineSync()}
+            disabled={syncStatus.isSyncing}
+            className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full text-xs font-black transition-all active:scale-95 disabled:opacity-50"
+          >
+            مزامنة الآن
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-3xl border border-slate-200/90 shadow-soft">
         <div className="flex items-center gap-1.5 flex-wrap">

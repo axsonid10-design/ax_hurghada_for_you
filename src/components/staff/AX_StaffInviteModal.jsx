@@ -11,6 +11,8 @@ import { STAFF_MODULES, AVAILABLE_ROLES } from '../../utils/staffPermissionsConf
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
 
+import { cloudSaveSettings } from '../../services/realtimeSync'
+
 export function AX_StaffInviteModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
@@ -48,7 +50,8 @@ export function AX_StaffInviteModal({ isOpen, onClose }) {
     const token = `inv_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`
     const url = `${window.location.origin}/?invite=${token}&role=${encodeURIComponent(role)}`
     const now = new Date()
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    // Rule 2610 #9: 48h Expiration Strict Cap
+    const expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString()
 
     const newInvite = {
       token,
@@ -61,6 +64,15 @@ export function AX_StaffInviteModal({ isOpen, onClose }) {
     }
 
     addStaffInvite?.(newInvite)
+
+    // Sync to Supabase ax_h4u_settings for multi-device access
+    try {
+      const raw = localStorage.getItem('ax_h4u_staff_invites')
+      const stored = raw ? JSON.parse(raw) : []
+      const merged = [newInvite, ...stored.filter((i) => i.token !== token)]
+      cloudSaveSettings('staff_invites', merged)
+    } catch {}
+
     setGeneratedLink(url)
   }
 

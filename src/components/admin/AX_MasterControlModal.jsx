@@ -10,7 +10,13 @@ import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 
 export function AX_MasterControlModal({ isOpen, onClose }) {
-  if (!isOpen) return null
+  const profile = useAXStore((state) => state.profile)
+  const isMaster =
+    profile?.email?.toLowerCase() === 'axsonid@gmail.com' ||
+    profile?.email?.toLowerCase() === 'axonid@gmail.com' ||
+    (profile?.is_master === true && (profile?.email?.toLowerCase()?.includes('axsonid') || profile?.email?.toLowerCase()?.includes('axonid')))
+
+  if (!isOpen || !isMaster) return null
 
   const {
     maxUsers = 15,

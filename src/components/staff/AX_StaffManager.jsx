@@ -38,16 +38,11 @@ export function AX_StaffManager() {
 
   const isRtl = lang === 'ar'
 
+  // Rule 2610 #10: Strict Master Control Isolation exclusively for AXONID Email / Master Identity
   const isMaster =
-    profile?.is_master === true ||
-    profile?.role === 'Super Admin' ||
-    profile?.role === 'مدير عام' ||
-    profile?.role === 'General Manager' ||
-    profile?.role === 'Operations Director' ||
-    profile?.role === 'Admin' ||
-    profile?.email === 'axsonid@gmail.com' ||
-    profile?.email === 'axonid@gmail.com' ||
-    !profile?.role
+    profile?.email?.toLowerCase() === 'axsonid@gmail.com' ||
+    profile?.email?.toLowerCase() === 'axonid@gmail.com' ||
+    (profile?.is_master === true && (profile?.email?.toLowerCase()?.includes('axsonid') || profile?.email?.toLowerCase()?.includes('axonid')))
 
   const handleWipeAllData = () => {
     soundManager.playClick()

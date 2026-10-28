@@ -280,6 +280,16 @@ export const useAXStore = create((set, get) => ({
   selectedDate: getTodayIsoDate(),
   searchQuery: '',
   pendingSyncCount: 0,
+  syncStatus: {
+    isSyncing: false,
+    progress: 0,
+    pendingCount: 0,
+    message: ''
+  },
+  setSyncStatus: (status) =>
+    set((state) => ({
+      syncStatus: { ...state.syncStatus, ...status }
+    })),
 
   // Data Stores
   tripCategories: getStoredTripCategories(),

@@ -1,5 +1,20 @@
 import { supabase } from './supabaseClient'
 import { useAXStore } from '../store/useAXStore'
+import { addOfflineAction, getOfflineActions, removeOfflineAction } from './offlineQueue'
+import { AX_alertTelegram } from '../utils/AX_TelegramAlert'
+
+export {
+  cloudSaveTrip,
+  cloudDeleteTrip,
+  cloudSaveExecutor,
+  cloudDeleteExecutor,
+  cloudSaveBooking,
+  cloudDeleteBooking,
+  cloudSaveExpense,
+  cloudDeleteExpense,
+  cloudSaveSettings,
+  cloudWipeAll
+} from './cloudDataServices'
 
 let realtimeChannel = null
 
@@ -171,18 +186,18 @@ export function initRealtimeSync() {
         const current = useAXStore.getState().bookings || []
         if (payload.eventType === 'INSERT') {
           const b = payload.new
-          if (!current.some((x) => x.id === b.id || (x.sr === b.sr && x.date === b.date))) {
+          if (!current.some((x) => x.id === b.id || x.sr === b.sr)) {
             const next = [b, ...current]
             useAXStore.setState({ bookings: next })
             localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
           }
         } else if (payload.eventType === 'UPDATE') {
           const b = payload.new
-          const next = current.map((x) => (x.id === b.id || (x.sr === b.sr && x.date === b.date) ? { ...x, ...b } : x))
+          const next = current.map((x) => (x.id === b.id || x.sr === b.sr ? { ...x, ...b } : x))
           useAXStore.setState({ bookings: next })
           localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
         } else if (payload.eventType === 'DELETE') {
-          const next = current.filter((x) => x.id !== payload.old.id && x.sr !== payload.old.sr)
+          const next = current.filter((x) => x.id !== payload.old?.id && x.sr !== payload.old?.sr)
           useAXStore.setState({ bookings: next })
           localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
         }
@@ -194,14 +209,19 @@ export function initRealtimeSync() {
       (payload) => {
         const current = useAXStore.getState().expenses || []
         if (payload.eventType === 'INSERT') {
-          const exp = payload.new
-          if (!current.some((x) => x.id === exp.id)) {
-            const next = [exp, ...current]
+          const ex = payload.new
+          if (!current.some((x) => x.id === ex.id)) {
+            const next = [ex, ...current]
             useAXStore.setState({ expenses: next })
             localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
           }
+        } else if (payload.eventType === 'UPDATE') {
+          const ex = payload.new
+          const next = current.map((x) => (x.id === ex.id ? { ...x, ...ex } : x))
+          useAXStore.setState({ expenses: next })
+          localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
         } else if (payload.eventType === 'DELETE') {
-          const next = current.filter((x) => x.id !== payload.old.id)
+          const next = current.filter((x) => x.id !== payload.old?.id)
           useAXStore.setState({ expenses: next })
           localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
         }
@@ -232,118 +252,59 @@ export function initRealtimeSync() {
       useAXStore.setState({ isOnline: status === 'SUBSCRIBED' })
     })
 
+  const handleOnline = async () => {
+    useAXStore.setState({ isOnline: true })
+    await resumeOfflineSync()
+  }
+
+  const handleOffline = () => {
+    useAXStore.setState({ isOnline: false })
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+  }
+
   return () => {
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel)
     }
-  }
-}
-
-// Background Cloud Persistence Helpers
-export async function cloudSaveTrip(trip) {
-  try {
-    const payload = {
-      id: trip.id,
-      sheet_name: trip.sheet_name,
-      display_name: trip.display_name,
-      category: trip.category || 'sea',
-      pricing_type: trip.pricing_type || 'pax',
-      currency: trip.currency || 'EUR',
-      adult_cost: Number(trip.adult_cost) || 0,
-      adult_sell: Number(trip.adult_sell) || 0,
-      child_pricing_mode: trip.child_pricing_mode || 'percent',
-      child_cost_percent: Number(trip.child_cost_percent) || 0,
-      child_sell_percent: Number(trip.child_sell_percent) || 0,
-      child_cost_fixed: Number(trip.child_cost_fixed) || 0,
-      child_sell_fixed: Number(trip.child_sell_fixed) || 0,
-      executor_id: trip.executor_id || 'exec_marina'
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
-    await supabase.from('ax_h4u_trips').upsert(payload)
-  } catch (e) {
-    console.error('cloudSaveTrip error:', e)
-  }
-}
-
-export async function cloudDeleteTrip(id) {
-  try {
-    await supabase.from('ax_h4u_trips').delete().eq('id', id)
-  } catch (e) {
-    console.error('cloudDeleteTrip error:', e)
-  }
-}
-
-export async function cloudSaveExecutor(ex) {
-  try {
-    const payload = {
-      id: ex.id,
-      name: ex.name,
-      phone: ex.phone || '',
-      category: ex.category || 'رحلات بحرية وجزر',
-      cost_price: Number(ex.cost_price) || 0,
-      pricing_type: ex.pricing_type || 'pax',
-      currency: ex.currency || 'EUR',
-      notes: ex.notes || '',
-      total_paid: Number(ex.total_paid) || 0
-    }
-    await supabase.from('ax_h4u_executors').upsert(payload)
-  } catch (e) {
-    console.error('cloudSaveExecutor error:', e)
-  }
-}
-
-export async function cloudDeleteExecutor(id) {
-  try {
-    await supabase.from('ax_h4u_executors').delete().eq('id', id)
-  } catch (e) {
-    console.error('cloudDeleteExecutor error:', e)
-  }
-}
-
-export async function cloudSaveBooking(booking) {
-  try {
-    const payload = {
-      id: booking.id || `bk_${booking.sr}_${booking.date}`,
-      sr: String(booking.sr),
-      date: booking.date,
-      time: booking.time || '',
-      seller: booking.seller || '',
-      channel: booking.channel || '',
-      trip_type: booking.trip_type || '',
-      trip_id: booking.trip_id || null,
-      hotel: booking.hotel || '',
-      guest_name: booking.guest_name || '',
-      room: String(booking.room || ''),
-      adult: Number(booking.adult) || 0,
-      child: Number(booking.child) || 0,
-      infant: Number(booking.infant) || 0,
-      ps_snk: booking.ps_snk || '',
-      rest_eur: Number(booking.rest_eur) || 0,
-      rest_egp: Number(booking.rest_egp) || 0,
-      rest_usd: Number(booking.rest_usd) || 0,
-      rest_gbp: Number(booking.rest_gbp) || 0,
-      cost_eur: Number(booking.cost_eur) || 0,
-      sell_eur: Number(booking.sell_eur) || 0,
-      profit_eur: Number(booking.profit_eur) || 0,
-      collected_eur: Number(booking.collected_eur) || 0,
-      executor_id: booking.executor_id || 'exec_marina',
-      status: booking.status || 'pending'
-    }
-    await supabase.from('ax_h4u_bookings').upsert(payload)
-  } catch (e) {
-    console.error('cloudSaveBooking error:', e)
-  }
-}
-
-export async function cloudDeleteBooking(srOrId) {
-  try {
-    await supabase.from('ax_h4u_bookings').delete().or(`id.eq.${srOrId},sr.eq.${srOrId}`)
-  } catch (e) {
-    console.error('cloudDeleteBooking error:', e)
   }
 }
 
 export async function cloudSaveBatch(date, filename, bookings, overwrite = false) {
+  const store = useAXStore.getState()
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
+
+  if (!isOnline) {
+    await addOfflineAction({
+      type: 'SAVE_BATCH',
+      date,
+      filename,
+      bookings,
+      overwrite
+    })
+    store.setSyncStatus({
+      isSyncing: false,
+      pendingCount: bookings.length,
+      message: `أوفلاين: تم حفظ ${bookings.length} حجز محلياً بانتظار عودة الاتصال`
+    })
+    return
+  }
+
   try {
+    store.setSyncStatus({
+      isSyncing: true,
+      progress: 5,
+      pendingCount: bookings.length,
+      message: `جاري تحضير مزامنة الدفعة (${bookings.length} حجز)...`
+    })
+
     if (overwrite) {
       await supabase.from('ax_h4u_bookings').delete().eq('date', date)
     }
@@ -359,7 +320,6 @@ export async function cloudSaveBatch(date, filename, bookings, overwrite = false
     }
     await supabase.from('ax_h4u_batches').upsert(payloadBatch)
 
-    // Insert bookings in chunks of 50
     const rows = bookings.map((b) => ({
       id: b.id || `bk_${b.sr}_${date}`,
       sr: String(b.sr),
@@ -391,57 +351,52 @@ export async function cloudSaveBatch(date, filename, bookings, overwrite = false
     for (let i = 0; i < rows.length; i += 50) {
       const chunk = rows.slice(i, i + 50)
       await supabase.from('ax_h4u_bookings').upsert(chunk)
+
+      const percent = Math.min(95, Math.round(((i + chunk.length) / rows.length) * 100))
+      store.setSyncStatus({
+        isSyncing: true,
+        progress: percent,
+        pendingCount: rows.length - (i + chunk.length),
+        message: `جاري مزامنة الدفعة مع السحابة (${i + chunk.length} من ${rows.length})...`
+      })
+
+      if (i + 50 < rows.length) {
+        await new Promise((r) => setTimeout(r, 60))
+      }
     }
+
+    store.setSyncStatus({
+      isSyncing: false,
+      progress: 100,
+      pendingCount: 0,
+      message: `تمت المزامنة السحابية بنجاح (${rows.length} حجز)`
+    })
+
+    setTimeout(() => {
+      useAXStore.getState().setSyncStatus({ message: '' })
+    }, 3000)
   } catch (e) {
     console.error('cloudSaveBatch error:', e)
-  }
-}
-
-export async function cloudSaveExpense(expense) {
-  try {
-    const payload = {
-      id: expense.id,
-      title: expense.title,
-      category: expense.category,
-      amount: Number(expense.amount) || 0,
-      currency: expense.currency || 'EUR',
-      date: expense.date,
-      notes: expense.notes || ''
-    }
-    await supabase.from('ax_h4u_expenses').upsert(payload)
-  } catch (e) {
-    console.error('cloudSaveExpense error:', e)
-  }
-}
-
-export async function cloudDeleteExpense(id) {
-  try {
-    await supabase.from('ax_h4u_expenses').delete().eq('id', id)
-  } catch (e) {
-    console.error('cloudDeleteExpense error:', e)
-  }
-}
-
-export async function cloudSaveSettings(key, value) {
-  try {
-    await supabase.from('ax_h4u_settings').upsert({
-      key,
-      value,
-      updated_at: new Date().toISOString()
+    AX_alertTelegram('SUPABASE_BATCH_SYNC_ERROR', e)
+    store.setSyncStatus({
+      isSyncing: false,
+      message: 'تعذر الاتصال بالسحابة - تم تأمين البيانات محلياً'
     })
-  } catch (e) {
-    console.error('cloudSaveSettings error:', e)
   }
 }
 
-export async function cloudWipeAll() {
+export async function resumeOfflineSync() {
   try {
-    await Promise.all([
-      supabase.from('ax_h4u_bookings').delete().neq('id', '_none_'),
-      supabase.from('ax_h4u_expenses').delete().neq('id', '_none_'),
-      supabase.from('ax_h4u_batches').delete().neq('date', '1970-01-01')
-    ])
+    const actions = await getOfflineActions()
+    if (!actions || actions.length === 0) return
+
+    for (const act of actions) {
+      if (act.type === 'SAVE_BATCH') {
+        await cloudSaveBatch(act.date, act.filename, act.bookings, act.overwrite)
+        await removeOfflineAction(act.id)
+      }
+    }
   } catch (e) {
-    console.error('cloudWipeAll error:', e)
+    console.error('resumeOfflineSync error:', e)
   }
 }

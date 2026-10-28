@@ -15,6 +15,8 @@ import {
 import { useAXStore } from '../../store/useAXStore'
 import { AVAILABLE_ROLES, STAFF_MODULES } from '../../utils/staffPermissionsConfig'
 import { soundManager } from '../../utils/soundEffects'
+import { supabase } from '../../services/supabaseClient'
+import { cloudSaveSettings } from '../../services/realtimeSync'
 
 export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
   const { addSystemUser, setProfile } = useAXStore()
@@ -40,34 +42,57 @@ export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
       return
     }
 
-    try {
-      const rawInvites = localStorage.getItem('ax_h4u_staff_invites')
-      const storedInvites = rawInvites ? JSON.parse(rawInvites) : []
-      const found = storedInvites.find((i) => i.token === inviteToken)
+    const verifyInvite = async () => {
+      try {
+        let storedInvites = []
+        try {
+          const rawInvites = localStorage.getItem('ax_h4u_staff_invites')
+          storedInvites = rawInvites ? JSON.parse(rawInvites) : []
+        } catch {}
 
-      if (found) {
-        if (found.status === 'claimed') {
-          setErrorStatus('تم استخدام رابط الدعوة هذا من قبل بالفعل')
-        } else {
-          setInviteData(found)
+        // Fetch from Supabase settings for cross-device validation
+        try {
+          const { data } = await supabase.from('ax_h4u_settings').select('value').eq('key', 'staff_invites').maybeSingle()
+          if (data?.value && Array.isArray(data.value)) {
+            const cloudInvites = data.value
+            // Merge cloud and local
+            const tokenMap = new Map()
+            cloudInvites.forEach((i) => tokenMap.set(i.token, i))
+            storedInvites.forEach((i) => {
+              if (!tokenMap.has(i.token)) tokenMap.set(i.token, i)
+            })
+            storedInvites = Array.from(tokenMap.values())
+            localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(storedInvites))
+          }
+        } catch {}
+
+        const found = storedInvites.find((i) => i.token === inviteToken)
+
+        // Rule 2610 #9: Strict Token Single-Use and Expiration Verification (No Dummy Fallback)
+        if (!found) {
+          setErrorStatus('رابط الدعوة غير صالح أو تم إلغاؤه من قِبل الإدارة')
+          return
         }
-      } else {
-        const urlParams = new URLSearchParams(window.location.search)
-        const roleFromUrl = urlParams.get('role') || 'مندوب مبيعات'
-        const roleConfig = AVAILABLE_ROLES[roleFromUrl] || AVAILABLE_ROLES['مندوب مبيعات']
 
-        setInviteData({
-          token: inviteToken,
-          role: roleFromUrl,
-          permissions: { ...roleConfig.permissions },
-          status: 'pending'
-        })
+        if (found.status === 'claimed') {
+          setErrorStatus('تم استخدام رابط الدعوة هذا من قبل بالفعل. الرابط مخصص لموظف واحد فقط.')
+          return
+        }
+
+        if (found.expiresAt && new Date(found.expiresAt).getTime() < Date.now()) {
+          setErrorStatus('انتهت صلاحية رابط الدعوة (صلاحية الرابط 48 ساعة فقط). يرجى طلب رابط دعوة جديد من الإدارة.')
+          return
+        }
+
+        setInviteData(found)
+      } catch {
+        setErrorStatus('حدث خطأ أثناء فحص وتأكيد بيانات الدعوة')
+      } finally {
+        setLoading(false)
       }
-    } catch {
-      setErrorStatus('حدث خطأ أثناء قراءة بيانات الدعوة')
-    } finally {
-      setLoading(false)
     }
+
+    verifyInvite()
   }, [inviteToken])
 
   const handleSubmit = (e) => {
@@ -116,9 +141,10 @@ export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
       const rawInvites = localStorage.getItem('ax_h4u_staff_invites')
       const storedInvites = rawInvites ? JSON.parse(rawInvites) : []
       const updated = storedInvites.map((i) =>
-        i.token === inviteToken ? { ...i, status: 'claimed', claimedBy: cleanEmail } : i
+        i.token === inviteToken ? { ...i, status: 'claimed', claimedBy: cleanEmail, claimedAt: new Date().toISOString() } : i
       )
       localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(updated))
+      cloudSaveSettings('staff_invites', updated)
     } catch {
     }
 

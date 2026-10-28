@@ -7,6 +7,7 @@ import { AppUpdateNotifier } from './components/common/AppUpdateNotifier'
 import { AX_MandatoryPushModal } from './components/common/AX_MandatoryPushModal'
 import { AX_ConfirmModal } from './components/common/AX_ConfirmModal'
 import { AX_PwaInstallModal } from './components/common/AX_PwaInstallModal'
+import { AX_SyncProgressBar } from './components/common/AX_SyncProgressBar'
 import { OperationsDashboard } from './components/dashboard/OperationsDashboard'
 import { DailySituationView } from './components/trips/DailySituationView'
 import { BookingsManagement } from './components/bookings/BookingsManagement'
@@ -176,6 +177,9 @@ export function App() {
 
       {/* 6. Lean Responsive Header (Zero Fluff) */}
       <AX_Header isVisible={isChromeVisible} />
+
+      {/* 6.1 Realtime Supabase Sync & Offline Queue Progress Bar */}
+      <AX_SyncProgressBar />
 
       {/* App Update Ribbon Strip */}
       <AppUpdateNotifier />

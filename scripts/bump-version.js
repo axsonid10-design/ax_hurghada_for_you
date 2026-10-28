@@ -8,9 +8,23 @@ const __dirname = path.dirname(__filename);
 const pkgPath = path.resolve(__dirname, '../package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
-const versionParts = pkg.version.split('.').map(Number);
-versionParts[2] += 1;
-pkg.version = versionParts.join('.');
+// Rule 2610 #6: Strict Capped Semantic Rollover (No digit reaches 10)
+let [major, minor, patch] = (pkg.version || '1.0.0').split('.').map(Number);
+if (isNaN(major)) major = 1;
+if (isNaN(minor)) minor = 0;
+if (isNaN(patch)) patch = 0;
+
+patch += 1;
+if (patch >= 10) {
+  patch = 0;
+  minor += 1;
+}
+if (minor >= 10) {
+  minor = 0;
+  major += 1;
+}
+
+pkg.version = `${major}.${minor}.${patch}`;
 
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 
