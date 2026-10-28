@@ -70,7 +70,7 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
   // Law 4: Centered Floating Capsule Architecture (Rule 2 of 2610)
   return (
     <div
-      className={`fixed bottom-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.5rem))] inset-x-0 z-50 flex justify-center px-2.5 sm:px-4 pointer-events-none lg:hidden transition-all duration-300 ease-in-out ${
+      className={`fixed bottom-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.5rem))] inset-x-0 z-50 flex justify-center px-1.5 pointer-events-none lg:hidden transition-all duration-300 ease-in-out ${
         isVisible
           ? 'translate-y-0 opacity-100'
           : 'translate-y-28 opacity-0 pointer-events-none'
@@ -78,7 +78,7 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
     >
       <nav
         dir="rtl"
-        className="pointer-events-auto w-fit max-w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-full py-1.5 px-2 flex items-center gap-1 overflow-x-auto shadow-2xl scrollbar-none overscroll-x-contain touch-pan-x"
+        className="pointer-events-auto max-w-[calc(100vw-1rem)] bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-full py-1.5 px-2 flex items-center gap-1 overflow-x-auto shadow-2xl scrollbar-none overscroll-x-contain touch-pan-x"
       >
         {allTabs.map((tab) => {
           const Icon = tab.icon
