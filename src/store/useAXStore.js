@@ -64,11 +64,33 @@ const DEFAULT_SYSTEM_USERS = [
       can_edit_prices: true,
       can_delete_bookings: true
     }
+  },
+  {
+    id: 'usr_ops_director',
+    name: 'مدير العمليات السياحية',
+    email: 'director@hurghada.com',
+    phone: '01100000000',
+    code: 'OPS-01',
+    role: 'مدير عام',
+    status: 'active',
+    is_master: true,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: true,
+      executors: true,
+      cash: true,
+      reports: true,
+      staff: true,
+      can_edit_prices: true,
+      can_delete_bookings: true
+    }
   }
 ]
 
 if (typeof window !== 'undefined') {
-  const CLEANUP_KEY = 'ax_h4u_clean_slate_v4'
+  const CLEANUP_KEY = 'ax_h4u_clean_slate_v7'
   if (!localStorage.getItem(CLEANUP_KEY)) {
     localStorage.removeItem('ax_h4u_trip_definitions')
     localStorage.removeItem('ax_h4u_executors')
@@ -76,6 +98,8 @@ if (typeof window !== 'undefined') {
     localStorage.removeItem('ax_h4u_expenses')
     localStorage.removeItem('ax_h4u_imported_dates')
     localStorage.removeItem('ax_h4u_staff_invites')
+    localStorage.removeItem('ax_h4u_trip_categories')
+    localStorage.removeItem('ax_h4u_executor_categories')
     localStorage.setItem(CLEANUP_KEY, 'true')
   }
 }
@@ -253,9 +277,14 @@ export const useAXStore = create((set, get) => ({
   expenses: getStoredExpenses(),
   importedDates: getStoredImportedDates(),
   wipeAllData: () => {
+    const currentProfile = get().profile
+    const baseUsers = [...DEFAULT_SYSTEM_USERS]
+    if (currentProfile && !baseUsers.some((u) => u.id === currentProfile.id || u.email?.toLowerCase() === currentProfile.email?.toLowerCase())) {
+      baseUsers.push(currentProfile)
+    }
+
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ax_h4u_staff_invites')
-      localStorage.removeItem('ax_h4u_system_users')
       localStorage.removeItem('ax_h4u_bookings')
       localStorage.removeItem('ax_h4u_expenses')
       localStorage.removeItem('ax_h4u_imported_dates')
@@ -263,9 +292,9 @@ export const useAXStore = create((set, get) => ({
       localStorage.removeItem('ax_h4u_executors')
       localStorage.removeItem('ax_h4u_trip_categories')
       localStorage.removeItem('ax_h4u_executor_categories')
+      localStorage.setItem('ax_h4u_system_users', JSON.stringify(baseUsers))
     }
     clearOfflineQueue().catch(() => {})
-    const masterOnly = DEFAULT_SYSTEM_USERS
     set(() => ({
       tripCategories: DEFAULT_TRIP_CATEGORIES,
       executorCategories: DEFAULT_EXECUTOR_CATEGORIES,
@@ -275,7 +304,7 @@ export const useAXStore = create((set, get) => ({
       tripDefinitions: [],
       executors: [],
       selectedDate: getTodayIsoDate(),
-      systemUsers: masterOnly,
+      systemUsers: baseUsers,
       staffInvites: []
     }))
   },

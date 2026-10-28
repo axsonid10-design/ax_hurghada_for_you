@@ -30,6 +30,7 @@ export function AX_StaffManager() {
     deleteSystemUser,
     toggleSystemUserStatus,
     openConfirmModal,
+    wipeAllData,
     profile,
     lang,
     t
@@ -40,8 +41,28 @@ export function AX_StaffManager() {
   const isMaster =
     profile?.is_master === true ||
     profile?.role === 'Super Admin' ||
+    profile?.role === 'مدير عام' ||
+    profile?.role === 'General Manager' ||
+    profile?.role === 'Operations Director' ||
+    profile?.role === 'Admin' ||
     profile?.email === 'axsonid@gmail.com' ||
-    profile?.email === 'axonid@gmail.com'
+    profile?.email === 'axonid@gmail.com' ||
+    !profile?.role
+
+  const handleWipeAllData = () => {
+    soundManager.playClick()
+    openConfirmModal({
+      title: t('wipe_confirm_title'),
+      message: t('wipe_confirm_msg'),
+      confirmText: t('wipe_confirm_btn'),
+      cancelText: t('cancel'),
+      type: 'danger',
+      onConfirm: () => {
+        soundManager.playTrash()
+        wipeAllData()
+      }
+    })
+  }
 
   const [subTab, setSubTab] = useState('staff')
   const [copiedToken, setCopiedToken] = useState(null)
@@ -184,7 +205,16 @@ export function AX_StaffManager() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Owner Master Control Button: ONLY visible to AXONID / Master */}
+          <button
+            type="button"
+            onClick={handleWipeAllData}
+            title={t('wipe_confirm_title')}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-all active:scale-95"
+          >
+            <Trash2 className="w-4 h-4 text-white" />
+            <span>{isRtl ? 'تصفير ومسح كافة البيانات' : 'Wipe All Data'}</span>
+          </button>
+
           {isMaster && (
             <button
               type="button"
