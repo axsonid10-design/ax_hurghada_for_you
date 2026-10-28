@@ -65,6 +65,51 @@ const DEFAULT_SYSTEM_USERS = [
   }
 ]
 
+const getStoredTripDefinitions = () => {
+  if (typeof window === 'undefined') return INITIAL_TRIP_DEFINITIONS
+  try {
+    const raw = localStorage.getItem('ax_h4u_trip_definitions')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return INITIAL_TRIP_DEFINITIONS
+}
+
+const getStoredExecutors = () => {
+  if (typeof window === 'undefined') return INITIAL_EXECUTORS
+  try {
+    const raw = localStorage.getItem('ax_h4u_executors')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return INITIAL_EXECUTORS
+}
+
+const getStoredBookings = () => {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('ax_h4u_bookings')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
+const getStoredExpenses = () => {
+  if (typeof window === 'undefined') return INITIAL_EXPENSES
+  try {
+    const raw = localStorage.getItem('ax_h4u_expenses')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return INITIAL_EXPENSES
+}
+
+const getStoredImportedDates = () => {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem('ax_h4u_imported_dates')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {}
+}
+
 const getStoredSystemUsers = () => {
   if (typeof window === 'undefined') return DEFAULT_SYSTEM_USERS
   try {
@@ -153,15 +198,18 @@ export const useAXStore = create((set, get) => ({
   pendingSyncCount: 0,
 
   // Data Stores
-  executors: INITIAL_EXECUTORS,
-  tripDefinitions: INITIAL_TRIP_DEFINITIONS,
-  bookings: [],
-  expenses: [],
-  importedDates: {},
+  executors: getStoredExecutors(),
+  tripDefinitions: getStoredTripDefinitions(),
+  bookings: getStoredBookings(),
+  expenses: getStoredExpenses(),
+  importedDates: getStoredImportedDates(),
   wipeAllData: () => {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ax_h4u_staff_invites')
       localStorage.removeItem('ax_h4u_system_users')
+      localStorage.removeItem('ax_h4u_bookings')
+      localStorage.removeItem('ax_h4u_expenses')
+      localStorage.removeItem('ax_h4u_imported_dates')
     }
     clearOfflineQueue().catch(() => {})
     const masterOnly = DEFAULT_SYSTEM_USERS
@@ -300,13 +348,10 @@ export const useAXStore = create((set, get) => ({
   addTripDefinition: (def) => {
     set((state) => {
       const newDefs = [...state.tripDefinitions, def]
-      return {
-        tripDefinitions: newDefs,
-        bookings: state.bookings.map((b) => ({
-          ...b,
-          ...computeBookingFinancials(b, newDefs)
-        }))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
       }
+      return { tripDefinitions: newDefs }
     })
   },
 
@@ -315,13 +360,10 @@ export const useAXStore = create((set, get) => ({
       const newDefs = state.tripDefinitions.map((td) =>
         td.id === id ? { ...td, ...updatedFields } : td
       )
-      return {
-        tripDefinitions: newDefs,
-        bookings: state.bookings.map((b) => ({
-          ...b,
-          ...computeBookingFinancials(b, newDefs)
-        }))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
       }
+      return { tripDefinitions: newDefs }
     })
   },
 
@@ -334,28 +376,37 @@ export const useAXStore = create((set, get) => ({
         (d) => !existingNames.has(d.sheet_name.toLowerCase().trim())
       )
       const newDefs = [...state.tripDefinitions, ...toAdd]
-      return {
-        tripDefinitions: newDefs,
-        bookings: state.bookings.map((b) => ({
-          ...b,
-          ...computeBookingFinancials(b, newDefs)
-        }))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
       }
+      return { tripDefinitions: newDefs }
     })
   },
 
   // Executors Actions
-  addExecutor: (executor) => set((state) => ({
-    executors: [...state.executors, executor]
-  })),
+  addExecutor: (executor) => set((state) => {
+    const next = [...state.executors, executor]
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+    }
+    return { executors: next }
+  }),
 
-  updateExecutor: (id, updatedFields) => set((state) => ({
-    executors: state.executors.map((ex) => (ex.id === id ? { ...ex, ...updatedFields } : ex))
-  })),
+  updateExecutor: (id, updatedFields) => set((state) => {
+    const next = state.executors.map((ex) => (ex.id === id ? { ...ex, ...updatedFields } : ex))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+    }
+    return { executors: next }
+  }),
 
-  deleteExecutor: (id) => set((state) => ({
-    executors: state.executors.filter((ex) => ex.id !== id)
-  })),
+  deleteExecutor: (id) => set((state) => {
+    const next = state.executors.filter((ex) => ex.id !== id)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
+    }
+    return { executors: next }
+  }),
 
   recordExecutorPayment: (id, payment) => set((state) => {
     const isObj = typeof payment === 'object' && payment !== null
@@ -364,29 +415,32 @@ export const useAXStore = create((set, get) => ({
     const notes = isObj ? payment.notes || '' : ''
     const date = isObj ? payment.date || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
 
-    return {
-      executors: state.executors.map((ex) => {
-        if (ex.id !== id) return ex
-        const prevPayments = ex.payments || []
-        const newPaymentRecord = {
-          id: 'pay_' + Date.now(),
-          date,
-          amount: amt,
-          currency,
-          notes
-        }
-        return {
-          ...ex,
-          total_paid: (ex.total_paid || 0) + amt,
-          payments: [newPaymentRecord, ...prevPayments]
-        }
-      })
+    const next = state.executors.map((ex) => {
+      if (ex.id !== id) return ex
+      const prevPayments = ex.payments || []
+      const newPaymentRecord = {
+        id: 'pay_' + Date.now(),
+        date,
+        amount: amt,
+        currency,
+        notes
+      }
+      return {
+        ...ex,
+        total_paid: (ex.total_paid || 0) + amt,
+        payments: [newPaymentRecord, ...prevPayments]
+      }
+    })
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_executors', JSON.stringify(next))
     }
+    return { executors: next }
   }),
 
   // Operational Expenses Actions
-  addExpense: (expense) => set((state) => ({
-    expenses: [
+  addExpense: (expense) => set((state) => {
+    const next = [
       {
         ...expense,
         id: expense.id || 'exp_' + Date.now(),
@@ -394,38 +448,54 @@ export const useAXStore = create((set, get) => ({
       },
       ...state.expenses
     ]
-  })),
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+    }
+    return { expenses: next }
+  }),
 
-  deleteExpense: (id) => set((state) => ({
-    expenses: state.expenses.filter((e) => e.id !== id)
-  })),
+  deleteExpense: (id) => set((state) => {
+    const next = state.expenses.filter((e) => e.id !== id)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+    }
+    return { expenses: next }
+  }),
 
   // Bookings Actions
   addBooking: (booking) => {
-    const { tripDefinitions } = get()
+    const { tripDefinitions, bookings } = get()
     const fin = computeBookingFinancials(booking, tripDefinitions)
-    set((state) => ({
-      bookings: [{ ...booking, ...fin }, ...state.bookings]
-    }))
+    const next = [{ ...booking, ...fin }, ...bookings]
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
+    }
+    set({ bookings: next })
   },
 
   updateBooking: (sr, updatedFields) => {
-    const { tripDefinitions } = get()
-    set((state) => ({
-      bookings: state.bookings.map((b) => {
-        if (b.sr === sr) {
-          const merged = { ...b, ...updatedFields }
-          const fin = computeBookingFinancials(merged, tripDefinitions)
-          return { ...merged, ...fin }
-        }
-        return b
-      })
-    }))
+    const { tripDefinitions, bookings } = get()
+    const next = bookings.map((b) => {
+      if (b.sr === sr) {
+        const merged = { ...b, ...updatedFields }
+        const fin = computeBookingFinancials(merged, tripDefinitions)
+        return { ...merged, ...fin }
+      }
+      return b
+    })
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
+    }
+    set({ bookings: next })
   },
 
-  deleteBooking: (sr) => set((state) => ({
-    bookings: state.bookings.filter((b) => b.sr !== sr)
-  })),
+  deleteBooking: (sr) => set((state) => {
+    const next = state.bookings.filter((b) => b.sr !== sr)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
+    }
+    return { bookings: next }
+  }),
 
   // Excel Batch Import Engine
   importExcelBatch: ({ date, filename, rawBookings, overwrite = false }) => {
@@ -443,26 +513,31 @@ export const useAXStore = create((set, get) => ({
 
     let nextBookings = []
     if (overwrite) {
-      // Remove previous bookings for this date and append new
       nextBookings = [...bookings.filter((b) => b.date !== date), ...calculated]
     } else {
-      // Append only non-existing SRs
       const existingSrs = new Set(bookings.map((b) => b.sr))
       const toAppend = calculated.filter((b) => !existingSrs.has(b.sr))
       nextBookings = [...bookings, ...toAppend]
     }
 
+    const nextImportedDates = {
+      ...importedDates,
+      [date]: {
+        filename,
+        importedAt: new Date().toISOString(),
+        count: calculated.length
+      }
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(nextBookings))
+      localStorage.setItem('ax_h4u_imported_dates', JSON.stringify(nextImportedDates))
+    }
+
     set({
       bookings: nextBookings,
       selectedDate: date,
-      importedDates: {
-        ...importedDates,
-        [date]: {
-          filename,
-          importedAt: new Date().toISOString(),
-          count: calculated.length
-        }
-      }
+      importedDates: nextImportedDates
     })
   }
 }))
