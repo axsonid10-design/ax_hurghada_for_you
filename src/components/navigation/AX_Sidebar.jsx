@@ -58,17 +58,7 @@ export function AX_Sidebar({ onOpenUploadModal }) {
       items: [
         { id: 'staff', label: t('tab_staff'), icon: Users }
       ]
-    },
-    ...(isMaster
-      ? [
-          {
-            title: t('nav_owner'),
-            items: [
-              { id: 'admin', label: t('tab_owner'), icon: ShieldCheck, badge: '👑' }
-            ]
-          }
-        ]
-      : [])
+    }
   ]
 
   const filteredSections = menuSections
