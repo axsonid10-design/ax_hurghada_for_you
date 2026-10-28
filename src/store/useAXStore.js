@@ -101,20 +101,139 @@ export const useAXStore = create((set, get) => ({
   maxUsers: 15,
   setMaxUsers: (val) => set({ maxUsers: Number(val) || 15 }),
   systemUsers: [
-    { id: 'usr_master_axonid', name: 'AXONID Master Admin', email: 'axsonid@gmail.com', role: 'Super Admin', branch: 'كافة الفروع', status: 'active', is_master: true },
-    { id: 'usr_ops_director', name: 'مدير العمليات السياحية', email: 'director@hurghada.com', role: 'Operations Director', branch: 'مارينا الغردقة الرئيسي', status: 'active' },
-    { id: 'usr_cashier_1', name: 'محاسب الخزينة المركزي', email: 'cashier@hurghada.com', role: 'Accountant', branch: 'مارينا الغردقة الرئيسي', status: 'active' },
-    { id: 'usr_seller_1', name: 'Meghane (مندوب مبيعات)', email: 'meghane@hurghada.com', role: 'Seller', branch: 'نقطة انطلاق سفاري الصحراء', status: 'active' },
-    { id: 'usr_seller_2', name: 'Laure (مندوب مبيعات)', email: 'laure@hurghada.com', role: 'Seller', branch: 'مخزن ومارينا الجونة', status: 'active' }
+    {
+      id: 'usr_master_axonid',
+      name: 'AXONID Master Admin',
+      email: 'axsonid@gmail.com',
+      phone: '01000000000',
+      code: 'ADM-00',
+      role: 'Super Admin',
+      branch: 'كافة الفروع',
+      status: 'active',
+      is_master: true,
+      permissions: {
+        dashboard: true,
+        daily: true,
+        bookings: true,
+        trips: true,
+        executors: true,
+        cash: true,
+        reports: true,
+        can_edit_prices: true,
+        can_delete_bookings: true
+      }
+    },
+    {
+      id: 'usr_ops_director',
+      name: 'مدير العمليات السياحية',
+      email: 'director@hurghada.com',
+      phone: '01012345678',
+      code: 'OPS-01',
+      role: 'Operations Director',
+      branch: 'مارينا الغردقة الرئيسي (Main Marina)',
+      status: 'active',
+      is_master: false,
+      permissions: {
+        dashboard: true,
+        daily: true,
+        bookings: true,
+        trips: true,
+        executors: true,
+        cash: true,
+        reports: true,
+        can_edit_prices: true,
+        can_delete_bookings: true
+      }
+    },
+    {
+      id: 'usr_cashier_1',
+      name: 'محاسب الخزينة المركزي',
+      email: 'cashier@hurghada.com',
+      phone: '01123456789',
+      code: 'ACC-02',
+      role: 'Accountant',
+      branch: 'مارينا الغردقة الرئيسي (Main Marina)',
+      status: 'active',
+      is_master: false,
+      permissions: {
+        dashboard: true,
+        daily: false,
+        bookings: true,
+        trips: false,
+        executors: true,
+        cash: true,
+        reports: true,
+        can_edit_prices: false,
+        can_delete_bookings: false
+      }
+    },
+    {
+      id: 'usr_seller_1',
+      name: 'Meghane (مندوب مبيعات)',
+      email: 'meghane@hurghada.com',
+      phone: '01234567890',
+      code: 'SEL-03',
+      role: 'Seller',
+      branch: 'نقطة انطلاق سفاري الصحراء (Safari Hub)',
+      status: 'active',
+      is_master: false,
+      permissions: {
+        dashboard: true,
+        daily: true,
+        bookings: true,
+        trips: false,
+        executors: false,
+        cash: false,
+        reports: false,
+        can_edit_prices: false,
+        can_delete_bookings: false
+      }
+    },
+    {
+      id: 'usr_seller_2',
+      name: 'Laure (مندوب مبيعات)',
+      email: 'laure@hurghada.com',
+      phone: '01567890123',
+      code: 'SEL-04',
+      role: 'Seller',
+      branch: 'مخزن ومارينا الجونة (El Gouna Branch)',
+      status: 'active',
+      is_master: false,
+      permissions: {
+        dashboard: true,
+        daily: true,
+        bookings: true,
+        trips: false,
+        executors: false,
+        cash: false,
+        reports: false,
+        can_edit_prices: false,
+        can_delete_bookings: false
+      }
+    }
   ],
   addSystemUser: (user) => set((state) => ({
-    systemUsers: [{ ...user, id: 'usr_' + Date.now() }, ...state.systemUsers]
+    systemUsers: [
+      {
+        ...user,
+        id: 'usr_' + Date.now(),
+        code: user.code || 'EMP-' + Math.floor(10 + Math.random() * 90),
+        status: 'active',
+        is_master: false
+      },
+      ...state.systemUsers
+    ]
   })),
   updateSystemUser: (id, fields) => set((state) => ({
     systemUsers: state.systemUsers.map((u) => (u.id === id ? { ...u, ...fields } : u))
   })),
   deleteSystemUser: (id) => set((state) => ({
     systemUsers: state.systemUsers.filter((u) => u.id !== id)
+  })),
+  toggleSystemUserStatus: (id) => set((state) => ({
+    systemUsers: state.systemUsers.map((u) =>
+      u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+    )
   })),
 
   // Confirmation Modal

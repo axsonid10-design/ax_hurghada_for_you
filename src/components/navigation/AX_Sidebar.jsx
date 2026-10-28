@@ -53,6 +53,12 @@ export function AX_Sidebar({ onOpenUploadModal }) {
         { id: 'reports', label: t('tab_reports'), icon: BarChart3 }
       ]
     },
+    {
+      title: t('tab_staff'),
+      items: [
+        { id: 'staff', label: t('tab_staff'), icon: Users }
+      ]
+    },
     ...(isMaster
       ? [
           {

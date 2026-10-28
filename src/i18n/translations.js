@@ -18,6 +18,7 @@ export const translations = {
     tab_executors: 'المنفذين والتوريد',
     tab_cash: 'الخزينة والعملات',
     tab_reports: 'تقارير الأداء',
+    tab_staff: 'الموظفين والصلاحيات',
     
     // Daily Situation
     daily_date: 'تاريخ اليومية',
@@ -143,6 +144,7 @@ export const translations = {
     tab_executors: 'Executors & Suppliers',
     tab_cash: 'Cash Drawer',
     tab_reports: 'Performance Reports',
+    tab_staff: 'Staff & Permissions',
     
     // Daily Situation
     daily_date: 'Situation Date',

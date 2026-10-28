@@ -14,7 +14,7 @@ import { TripsCatalogView } from './components/trips/TripsCatalogView'
 import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
 import { PerformanceReports } from './components/reports/PerformanceReports'
-import { AX_SuperAdminPanel } from './components/admin/AX_SuperAdminPanel'
+import { AX_StaffManager } from './components/staff/AX_StaffManager'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
@@ -119,7 +119,9 @@ export function App() {
 
           {activeTab === 'reports' && <PerformanceReports />}
 
-          {activeTab === 'admin' && <AX_SuperAdminPanel />}
+          {activeTab === 'staff' && <AX_StaffManager />}
+
+          {activeTab === 'admin' && <AX_StaffManager defaultTab="control" />}
 
           {/* AXONID Brand Signature Footer */}
           <footer className="w-full border border-slate-200/80 bg-white/95 backdrop-blur-md py-3 px-4 sm:px-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs font-black text-slate-700 shadow-sm mt-8 mb-28 lg:mb-4 transition-all text-center sm:text-start select-none">
