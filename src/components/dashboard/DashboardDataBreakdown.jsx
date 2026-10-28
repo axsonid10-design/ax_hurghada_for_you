@@ -220,11 +220,11 @@ export function DashboardDataBreakdown({
   }, [filteredBookings, egpRate, rates])
 
   const tabs = [
-    { id: 'trips', label: 'الرحلات الأكثر طلباً', icon: Compass, count: tripsData.length },
-    { id: 'sellers', label: 'أداء المناديب وقنوات البيع', icon: Users, count: sellersData.length },
-    { id: 'executors', label: 'أحمال ومستحقات الموردين', icon: Ship, count: executorsData.length },
-    { id: 'hotels', label: 'فنادق النزلاء واللوجستيات', icon: Building2, count: hotelsData.length },
-    { id: 'currencies', label: 'الخزينة والعملات', icon: Coins, count: 4 }
+    { id: 'trips', label: 'الرحلات', icon: Compass, count: tripsData.length },
+    { id: 'sellers', label: 'المناديب', icon: Users, count: sellersData.length },
+    { id: 'executors', label: 'المنفذين', icon: Ship, count: executorsData.length },
+    { id: 'hotels', label: 'الفنادق', icon: Building2, count: hotelsData.length },
+    { id: 'currencies', label: 'الخزينة', icon: Coins, count: 4 }
   ]
 
   return (
@@ -234,14 +234,9 @@ export function DashboardDataBreakdown({
           <div className="p-2 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100">
             <Layers className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-900">
-              التحليل البصري الشامل للبيانات والترتيب (Ranked & Capacity)
-            </h3>
-            <p className="text-[11px] text-slate-500 font-bold">
-              مؤشرات الأداء التنافسية وأحمال السعة التوريدية والخزائن
-            </p>
-          </div>
+          <h3 className="text-sm font-black text-slate-900">
+            بيانات التشغيل
+          </h3>
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">

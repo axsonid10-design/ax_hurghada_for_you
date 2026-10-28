@@ -259,9 +259,6 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           <h3 className="text-base font-black text-slate-800">
             لا توجد حجوزات مسجلة لهذا التاريخ ({selectedDate})
           </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            قاعدة البيانات جاهزة لاستقبال ملف الإكسيل الجديد (Daily Situation) أو تسجيل حجز فردي يدوي.
-          </p>
           <div className="flex items-center justify-center gap-2 pt-2">
             <button
               onClick={() => {

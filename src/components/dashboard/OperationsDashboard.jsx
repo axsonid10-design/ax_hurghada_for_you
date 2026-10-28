@@ -174,18 +174,15 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
       />
 
       {bookings.length === 0 && (
-        <div className="p-6 bg-white rounded-3xl border border-sky-200 shadow-soft flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn">
+        <div className="p-4 sm:p-5 bg-white rounded-3xl border border-slate-200 shadow-soft flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
-              <FileSpreadsheet className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
               <h4 className="text-sm font-black text-slate-900">
-                قاعدة البيانات جاهزة لاستقبال ملف الإكسيل الجديد
+                لا توجد حجوزات مسجلة
               </h4>
-              <p className="text-xs text-slate-500">
-                يمكنك رفع شيت اليومية (Daily Situation) الآن لتحديث كافة الرسوم البيانية ومؤشرات الربحية فوراً.
-              </p>
             </div>
           </div>
 
@@ -194,10 +191,10 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
               soundManager.playClick()
               onOpenUploadModal()
             }}
-            className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-full text-xs font-black shadow-md shadow-emerald-950/10 transition-all active:scale-95 shrink-0 flex items-center gap-2"
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 shrink-0 flex items-center gap-2"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-            <span>رفع ملف الإكسيل الآن</span>
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>رفع ملف إكسيل</span>
           </button>
         </div>
       )}

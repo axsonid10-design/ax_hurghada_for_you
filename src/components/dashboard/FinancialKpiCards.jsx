@@ -213,8 +213,8 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-600 whitespace-nowrap">
-            <span>نسبة الإشغال</span>
-            <span className="font-mono font-bold text-sky-700">100% نشط</span>
+            <span>الحجوزات المسجلة</span>
+            <span className="font-mono font-bold text-slate-800">{totalBookings} حجز</span>
           </div>
         </div>
       </div>
@@ -226,8 +226,8 @@ export function FinancialKpiCards({
               <Wallet className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-xs font-black text-slate-900 flex items-center gap-2">
-                <span>مقياس السيولة النقدية مقابل مديونية النزلاء (Cash vs Credit Ratio)</span>
+              <div className="text-xs font-black text-slate-900">
+                موقف التحصيل والسيولة
               </div>
               <div className="text-[11px] font-mono text-slate-500 flex items-center gap-3 mt-0.5">
                 <span className="flex items-center gap-1">
@@ -242,15 +242,20 @@ export function FinancialKpiCards({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-            <span className="text-slate-500">الذمم بالعملات:</span>
-            {totalRestEur > 0 && <span className="font-mono font-black text-sky-700">€{totalRestEur.toLocaleString()}</span>}
-            {totalRestEgp > 0 && <span className="font-mono font-black text-emerald-700">{totalRestEgp.toLocaleString()} ج.م</span>}
-            {totalRestUsd > 0 && <span className="font-mono font-black text-blue-700">${totalRestUsd.toLocaleString()}</span>}
-            {totalRestGbp > 0 && <span className="font-mono font-black text-purple-700">£{totalRestGbp.toLocaleString()}</span>}
-            {totalRestEur === 0 && totalRestEgp === 0 && totalRestUsd === 0 && totalRestGbp === 0 && (
-              <span className="text-emerald-700 font-black text-[11px]">كافة الحجوزات مسددة</span>
-            )}
+          <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700">
+            {totalRestEur > 0 || totalRestEgp > 0 || totalRestUsd > 0 || totalRestGbp > 0 ? (
+              <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 text-amber-900">
+                <span>المتبقي:</span>
+                {totalRestEur > 0 && <span className="font-mono font-black text-sky-800">€{totalRestEur.toLocaleString()}</span>}
+                {totalRestEgp > 0 && <span className="font-mono font-black text-emerald-800">{totalRestEgp.toLocaleString()} ج.م</span>}
+                {totalRestUsd > 0 && <span className="font-mono font-black text-blue-800">${totalRestUsd.toLocaleString()}</span>}
+                {totalRestGbp > 0 && <span className="font-mono font-black text-purple-800">£{totalRestGbp.toLocaleString()}</span>}
+              </div>
+            ) : totalBookings > 0 ? (
+              <div className="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200 font-black text-[11px]">
+                مدفوع كلي
+              </div>
+            ) : null}
           </div>
         </div>
 

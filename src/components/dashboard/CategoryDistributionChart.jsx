@@ -116,14 +116,9 @@ export function CategoryDistributionChart({
           <div className="p-2 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100">
             <PieChart className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-900">
-              حلقة التوزيع والأنشطة الدائرية (Categorical Donut)
-            </h3>
-            <p className="text-[11px] text-slate-500 font-bold">
-              توزيع المبيعات والنزلاء عبر الأقسام الرئيسية
-            </p>
-          </div>
+          <h3 className="text-sm font-black text-slate-900">
+            توزيع الأنشطة
+          </h3>
         </div>
 
         <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">

@@ -52,8 +52,7 @@ export function QuickExpenseModal({ isOpen, onClose, onAddExpense }) {
               <Receipt className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black">تسجيل مصروف تشغيلي جديد</h3>
-              <p className="text-[11px] text-slate-400">إدراج تكلفة تشغيلية أو إدارية في حسابات اليومية</p>
+              <h3 className="text-base font-black">تسجيل مصروف</h3>
             </div>
           </div>
           <button

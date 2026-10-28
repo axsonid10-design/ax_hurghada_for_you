@@ -40,27 +40,17 @@ export function DashboardFilterBar({
   return (
     <div className="w-full space-y-3">
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-soft p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black bg-sky-50 text-sky-700 border border-sky-200">
-              <TrendingUp className="w-3.5 h-3.5 text-sky-600" />
-              <span>لوحة المتابعة التشغيلية والمالية</span>
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-              <ArrowLeftRight className="w-3 h-3 text-slate-500" />
-              <span>1€ = {egpRate} ج.م</span>
-            </span>
-          </div>
-
-          <div className="flex items-baseline gap-2.5 pt-1">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              التقرير المالي وحركات التشغيل اليومي
-            </h1>
-            <span className="text-xs font-mono font-bold text-slate-500">
-              ({totalBookingsCount} حجز مسجل)
-            </span>
-          </div>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            لوحة المتابعة
+          </h1>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <ArrowLeftRight className="w-3.5 h-3.5 text-slate-500" />
+            <span>1€ = {egpRate} ج.م</span>
+          </span>
+          <span className="text-xs font-mono font-bold text-slate-400">
+            ({totalBookingsCount} حجز)
+          </span>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
