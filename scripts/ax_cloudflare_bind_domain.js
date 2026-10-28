@@ -64,7 +64,7 @@ function cfRequest({ endpoint, method = 'GET', body = null }) {
   })
 }
 
-export async function bindPagesDomain({ projectName = 'ax-hurghada-for-you-9f7', domain = 'hurghada.axsonid.com' }) {
+export async function bindPagesDomain({ projectName = 'ax-hurghada-for-you', domain = 'hurghada.axsonid.com' }) {
   if (!CF_API_TOKEN || !CF_ACCOUNT_ID) {
     console.error('[CF_LINKER] Missing Cloudflare credentials.')
     return false
