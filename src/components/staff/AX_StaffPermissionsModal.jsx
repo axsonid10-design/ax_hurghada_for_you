@@ -2,38 +2,35 @@ import React, { useState, useEffect } from 'react'
 import {
   X,
   ShieldCheck,
-  CheckCircle2,
-  Lock,
-  Sparkles,
-  Sliders
+  CheckCircle2
 } from 'lucide-react'
-import { STAFF_MODULES, PRESET_ROLES } from '../../utils/staffPermissionsConfig'
+import { STAFF_MODULES, AVAILABLE_ROLES } from '../../utils/staffPermissionsConfig'
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
 
 export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
   if (!isOpen || !user) return null
 
-  const { updateSystemUser, t, lang } = useAXStore()
+  const { updateSystemUser, lang } = useAXStore()
   const isRtl = lang === 'ar'
 
   const [permissions, setPermissions] = useState(user.permissions || {})
-  const [role, setRole] = useState(user.role || 'Staff')
+  const [role, setRole] = useState(user.role || 'مندوب مبيعات')
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   useEffect(() => {
     if (user) {
       setPermissions(user.permissions || {})
-      setRole(user.role || 'Staff')
+      setRole(user.role || 'مندوب مبيعات')
       setSavedSuccess(false)
     }
   }, [user])
 
-  const applyPreset = (presetKey) => {
+  const applyRole = (selectedRole) => {
     soundManager.playClick()
-    setRole(presetKey)
-    if (PRESET_ROLES[presetKey]) {
-      setPermissions({ ...PRESET_ROLES[presetKey].permissions })
+    setRole(selectedRole)
+    if (AVAILABLE_ROLES[selectedRole]) {
+      setPermissions({ ...AVAILABLE_ROLES[selectedRole].permissions })
     }
   }
 
@@ -58,12 +55,12 @@ export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
     setTimeout(() => {
       setSavedSuccess(false)
       onClose()
-    }, 600)
+    }, 500)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0a2540]/70 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative animate-scaleUp my-8 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative animate-scaleUp my-8 max-h-[90vh] flex flex-col text-start">
         <button
           onClick={() => {
             soundManager.playClick()
@@ -83,7 +80,7 @@ export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
               {isRtl ? `تعديل صلاحيات: ${user.name}` : `Edit Permissions: ${user.name}`}
             </h3>
             <span className="text-xs text-slate-500 font-bold block mt-0.5">
-              {user.email} • {user.branch}
+              {user.email} • {user.code}
             </span>
           </div>
         </div>
@@ -91,31 +88,31 @@ export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
         {savedSuccess && (
           <div className="mt-3 p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center justify-center gap-2 animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{isRtl ? 'تم حفظ الصلاحيات وتحديث دور الموظف بنجاح' : 'Permissions saved successfully'}</span>
+            <span>{isRtl ? 'تم حفظ الصلاحيات بنجاح' : 'Permissions saved successfully'}</span>
           </div>
         )}
 
         <div className="overflow-y-auto space-y-4 py-4 flex-1 pe-1">
-          <div>
-            <span className="text-xs font-black text-slate-700 block mb-2">
-              {isRtl ? 'قوالب الأدوار الجاهزة (Presets):' : 'Role Presets:'}
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              {Object.keys(PRESET_ROLES).map((key) => {
-                const preset = PRESET_ROLES[key]
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+            <label className="text-xs font-black text-slate-800 block">
+              {isRtl ? 'الدور الوظيفي:' : 'Role:'}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.keys(AVAILABLE_ROLES).map((key) => {
                 const isSelected = role === key
+                const r = AVAILABLE_ROLES[key]
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => applyPreset(key)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1.5 border ${
+                    onClick={() => applyRole(key)}
+                    className={`py-2 px-3 rounded-xl border text-xs transition-all ${
                       isSelected
-                        ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0a2540] text-white border-[#0a2540] font-black shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-bold'
                     }`}
                   >
-                    <span>{isRtl ? preset.title : preset.titleEn}</span>
+                    {isRtl ? r.title : r.titleEn}
                   </button>
                 )
               })}
@@ -136,13 +133,13 @@ export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
                     onClick={() => togglePermission(mod.id)}
                     className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                       isGranted
-                        ? 'bg-sky-50/70 border-sky-300 shadow-xs'
+                        ? 'bg-sky-50/70 border-sky-300 shadow-2xs'
                         : 'bg-slate-50 border-slate-200 opacity-60 hover:opacity-100'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
                           isGranted ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-500'
                         }`}
                       >

@@ -3,19 +3,15 @@ import {
   Users,
   UserPlus,
   Search,
-  Phone,
-  Mail,
   ShieldCheck,
-  Edit2,
   Trash2,
   CheckCircle2,
   Sliders,
-  Zap,
-  Lock
+  Zap
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
-import { PRESET_ROLES } from '../../utils/staffPermissionsConfig'
+import { AVAILABLE_ROLES } from '../../utils/staffPermissionsConfig'
 import { AX_StaffPermissionsModal } from './AX_StaffPermissionsModal'
 import { AX_StaffInviteModal } from './AX_StaffInviteModal'
 import { AX_MasterControlModal } from '../admin/AX_MasterControlModal'
@@ -26,7 +22,6 @@ export function AX_StaffManager() {
     maxUsers = 15,
     deleteSystemUser,
     toggleSystemUserStatus,
-    warehouses = [],
     openConfirmModal,
     profile,
     lang,
@@ -71,14 +66,13 @@ export function AX_StaffManager() {
         (emp.name || '').toLowerCase().includes(q) ||
         (emp.email || '').toLowerCase().includes(q) ||
         (emp.phone || '').includes(q) ||
-        (emp.code || '').toLowerCase().includes(q) ||
-        (emp.branch || '').toLowerCase().includes(q)
+        (emp.code || '').toLowerCase().includes(q)
       )
     })
   }, [visibleStaff, roleFilter, statusFilter, searchQuery])
 
   const activeCount = visibleStaff.filter((e) => e.status === 'active').length
-  const sellersCount = visibleStaff.filter((e) => e.role === 'Seller').length
+  const sellersCount = visibleStaff.filter((e) => e.role === 'مندوب مبيعات' || e.role === 'Seller').length
   const isQuotaFull = visibleStaff.length >= maxUsers
 
   const handleOpenPermissions = (emp) => {
@@ -118,7 +112,7 @@ export function AX_StaffManager() {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-              {isRtl ? 'إدارة الموظفين والصلاحيات' : 'Staff & Permissions Management'}
+              {isRtl ? 'الموظفين والصلاحيات' : 'Staff & Permissions'}
             </h2>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs font-bold text-slate-500">
@@ -147,7 +141,7 @@ export function AX_StaffManager() {
                 soundManager.playClick()
                 setIsMasterModalOpen(true)
               }}
-              title={isRtl ? 'غرفة تحكم التراخيص والمنظومة' : 'Master Control Room'}
+              title={isRtl ? 'غرفة تحكم المنظومة' : 'Master Control Room'}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm transition-all active:scale-95"
             >
               <ShieldCheck className="w-4 h-4 text-slate-950" />
@@ -169,7 +163,7 @@ export function AX_StaffManager() {
             }`}
           >
             <UserPlus className="w-4 h-4 text-sky-300" />
-            <span>{isRtl ? 'إضافة موظف جديد' : 'Add Employee'}</span>
+            <span>{isRtl ? 'إضافة موظف' : 'Add Staff'}</span>
           </button>
         </div>
       </div>
@@ -282,9 +276,9 @@ export function AX_StaffManager() {
           className="bg-slate-50 border border-slate-200 rounded-full px-3.5 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
         >
           <option value="ALL">{isRtl ? 'كافة الأدوار' : 'All Roles'}</option>
-          {Object.keys(PRESET_ROLES).map((key) => (
+          {Object.keys(AVAILABLE_ROLES).map((key) => (
             <option key={key} value={key}>
-              {isRtl ? PRESET_ROLES[key].title : PRESET_ROLES[key].titleEn}
+              {isRtl ? AVAILABLE_ROLES[key].title : AVAILABLE_ROLES[key].titleEn}
             </option>
           ))}
         </select>
@@ -309,7 +303,6 @@ export function AX_StaffManager() {
                 <th className="px-4 text-start">{isRtl ? 'الموظف والكود' : 'Staff'}</th>
                 <th className="px-4 text-start">{isRtl ? 'بيانات التواصل' : 'Contact'}</th>
                 <th className="px-4 text-start">{isRtl ? 'الدور الوظيفي' : 'Role'}</th>
-                <th className="px-4 text-start">{isRtl ? 'الفرع / الموقع' : 'Branch'}</th>
                 <th className="px-4 text-start">{isRtl ? 'صلاحيات الشاشات' : 'Permissions'}</th>
                 <th className="px-4 text-center">{isRtl ? 'الحالة' : 'Status'}</th>
                 <th className="px-4 text-center">{isRtl ? 'الإجراءات' : 'Actions'}</th>
@@ -318,13 +311,13 @@ export function AX_StaffManager() {
             <tbody className="divide-y divide-slate-100 font-bold text-slate-800">
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     {isRtl ? 'لا يوجد موظفين مسجلين حالياً' : 'No staff found'}
                   </td>
                 </tr>
               ) : (
                 filteredStaff.map((emp) => {
-                  const roleConfig = PRESET_ROLES[emp.role] || PRESET_ROLES['Staff']
+                  const roleConfig = AVAILABLE_ROLES[emp.role] || AVAILABLE_ROLES['مندوب مبيعات']
                   const isActive = emp.status === 'active'
                   const grantedCount = Object.values(emp.permissions || {}).filter(Boolean).length
 
@@ -367,12 +360,6 @@ export function AX_StaffManager() {
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${roleConfig.color}`}
                         >
                           <span>{isRtl ? roleConfig.title : roleConfig.titleEn}</span>
-                        </span>
-                      </td>
-
-                      <td className="px-4">
-                        <span className="text-[11px] text-slate-600 truncate block max-w-[160px]">
-                          {emp.branch || 'كافة الفروع'}
                         </span>
                       </td>
 
@@ -448,7 +435,7 @@ export function AX_StaffManager() {
           </div>
         ) : (
           filteredStaff.map((emp) => {
-            const roleConfig = PRESET_ROLES[emp.role] || PRESET_ROLES['Staff']
+            const roleConfig = AVAILABLE_ROLES[emp.role] || AVAILABLE_ROLES['مندوب مبيعات']
             const isActive = emp.status === 'active'
             const grantedCount = Object.values(emp.permissions || {}).filter(Boolean).length
 
@@ -493,15 +480,15 @@ export function AX_StaffManager() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400 font-bold">{isRtl ? 'الفرع:' : 'Branch:'}</span>
-                    <span className="font-bold text-slate-700 truncate max-w-[170px]">
-                      {emp.branch}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
                     <span className="text-slate-400 font-bold">{isRtl ? 'الإيميل:' : 'Email:'}</span>
                     <span className="font-mono text-slate-600 text-[10px]">{emp.email}</span>
                   </div>
+                  {emp.phone && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400 font-bold">{isRtl ? 'الهاتف:' : 'Phone:'}</span>
+                      <span className="font-mono text-slate-600 text-[10px]">{emp.phone}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5 pt-1">
@@ -529,11 +516,10 @@ export function AX_StaffManager() {
         )}
       </div>
 
-      {/* Staff Invite & Direct Add Modal (H&A Import / Gezert Al Arab style) */}
+      {/* Staff Invite Modal */}
       <AX_StaffInviteModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        branches={warehouses}
       />
 
       {/* Permissions Edit Modal */}

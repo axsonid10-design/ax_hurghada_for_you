@@ -15,6 +15,7 @@ import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
 import { PerformanceReports } from './components/reports/PerformanceReports'
 import { AX_StaffManager } from './components/staff/AX_StaffManager'
+import { AX_StaffOnboardingScreen } from './components/staff/AX_StaffOnboardingScreen'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
@@ -24,6 +25,12 @@ import { useAXStore } from './store/useAXStore'
 
 export function App() {
   const { activeTab, profile, lang } = useAXStore()
+  const [activeInviteToken, setActiveInviteToken] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('invite')
+    }
+    return null
+  })
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -32,6 +39,20 @@ export function App() {
     }
     return false
   })
+
+  // Staff Invite Onboarding Guard
+  if (activeInviteToken) {
+    return (
+      <div className="min-h-screen font-tajawal antialiased">
+        <AX_StaffOnboardingScreen
+          inviteToken={activeInviteToken}
+          onComplete={() => {
+            setActiveInviteToken(null)
+          }}
+        />
+      </div>
+    )
+  }
 
   // Fortress Auth Guard
   if (!profile?.id) {

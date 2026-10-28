@@ -80,24 +80,6 @@ export const useAXStore = create((set, get) => ({
     executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
   })),
 
-  maxWarehouses: 10,
-  setMaxWarehouses: (val) => set({ maxWarehouses: Number(val) || 10 }),
-  warehouses: [
-    { id: 'wh_1', name: 'مارينا الغردقة الرئيسي (Main Marina)', code: 'MAR-01', location: 'مارينا الغردقة السياحي', capacity: 150, manager: 'كابتن محمود البحراوي', phone: '01001122334', status: 'active' },
-    { id: 'wh_2', name: 'نقطة انطلاق سفاري الصحراء (Safari Hub)', code: 'SAF-02', location: 'طريق المطار - الغردقة', capacity: 80, manager: 'حمزة البدوي', phone: '01229988776', status: 'active' },
-    { id: 'wh_3', name: 'مخزن ومارينا الجونة (El Gouna Branch)', code: 'GON-03', location: 'مارينا الجونة الشمالي', capacity: 60, manager: 'كابتن طارق سليم', phone: '01114455667', status: 'active' },
-    { id: 'wh_4', name: 'نقطة انطلاق مكادي وسهل حشيش', code: 'MAK-04', location: 'خليج سهل حشيش', capacity: 70, manager: 'حسام نصر', phone: '01099881122', status: 'active' }
-  ],
-  addWarehouse: (wh) => set((state) => ({
-    warehouses: [{ ...wh, id: 'wh_' + Date.now() }, ...state.warehouses]
-  })),
-  updateWarehouse: (id, fields) => set((state) => ({
-    warehouses: state.warehouses.map((w) => (w.id === id ? { ...w, ...fields } : w))
-  })),
-  deleteWarehouse: (id) => set((state) => ({
-    warehouses: state.warehouses.filter((w) => w.id !== id)
-  })),
-
   maxUsers: 15,
   setMaxUsers: (val) => set({ maxUsers: Number(val) || 15 }),
   systemUsers: [
@@ -107,8 +89,7 @@ export const useAXStore = create((set, get) => ({
       email: 'axsonid@gmail.com',
       phone: '01000000000',
       code: 'ADM-00',
-      role: 'Super Admin',
-      branch: 'كافة الفروع',
+      role: 'مدير عام',
       status: 'active',
       is_master: true,
       permissions: {
@@ -124,13 +105,12 @@ export const useAXStore = create((set, get) => ({
       }
     },
     {
-      id: 'usr_ops_director',
-      name: 'مدير العمليات السياحية',
-      email: 'director@hurghada.com',
+      id: 'usr_director',
+      name: 'أحمد محمود',
+      email: 'ahmed@hurghada.com',
       phone: '01012345678',
-      code: 'OPS-01',
-      role: 'Operations Director',
-      branch: 'مارينا الغردقة الرئيسي (Main Marina)',
+      code: 'GM-01',
+      role: 'مدير عام',
       status: 'active',
       is_master: false,
       permissions: {
@@ -146,35 +126,12 @@ export const useAXStore = create((set, get) => ({
       }
     },
     {
-      id: 'usr_cashier_1',
-      name: 'محاسب الخزينة المركزي',
-      email: 'cashier@hurghada.com',
-      phone: '01123456789',
-      code: 'ACC-02',
-      role: 'Accountant',
-      branch: 'مارينا الغردقة الرئيسي (Main Marina)',
-      status: 'active',
-      is_master: false,
-      permissions: {
-        dashboard: true,
-        daily: false,
-        bookings: true,
-        trips: false,
-        executors: true,
-        cash: true,
-        reports: true,
-        can_edit_prices: false,
-        can_delete_bookings: false
-      }
-    },
-    {
       id: 'usr_seller_1',
-      name: 'Meghane (مندوب مبيعات)',
+      name: 'Meghane',
       email: 'meghane@hurghada.com',
       phone: '01234567890',
-      code: 'SEL-03',
-      role: 'Seller',
-      branch: 'نقطة انطلاق سفاري الصحراء (Safari Hub)',
+      code: 'REP-02',
+      role: 'مندوب مبيعات',
       status: 'active',
       is_master: false,
       permissions: {
@@ -191,12 +148,11 @@ export const useAXStore = create((set, get) => ({
     },
     {
       id: 'usr_seller_2',
-      name: 'Laure (مندوب مبيعات)',
+      name: 'Laure',
       email: 'laure@hurghada.com',
       phone: '01567890123',
-      code: 'SEL-04',
-      role: 'Seller',
-      branch: 'مخزن ومارينا الجونة (El Gouna Branch)',
+      code: 'REP-03',
+      role: 'مندوب مبيعات',
       status: 'active',
       is_master: false,
       permissions: {
