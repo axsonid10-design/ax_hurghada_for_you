@@ -250,7 +250,44 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
         </div>
       </div>
 
-      {/* Mobile Bento Cards View (lg:hidden) */}
+      {/* Empty State Banner if no bookings exist for this date */}
+      {filteredBookings.length === 0 ? (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+            <FileSpreadsheet className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-slate-800">
+            لا توجد حجوزات مسجلة لهذا التاريخ ({selectedDate})
+          </h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            قاعدة البيانات جاهزة لاستقبال ملف الإكسيل الجديد (Daily Situation) أو تسجيل حجز فردي يدوي.
+          </p>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                onOpenUploadModal()
+              }}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>رفع ملف إكسيل جديد</span>
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                onOpenNewBooking()
+              }}
+              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5 text-sky-400" />
+              <span>حجز جديد</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Mobile Bento Cards View (lg:hidden) */}
       <div className="space-y-3 lg:hidden">
         {paginatedBookings.map((b) => {
           const executor = executors.find((ex) => ex.id === b.executor_id)
@@ -424,6 +461,8 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
         pageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
       />
+        </>
+      )}
     </div>
   )
 }

@@ -14,6 +14,7 @@ import { TripsCatalogView } from './components/trips/TripsCatalogView'
 import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
 import { PerformanceReports } from './components/reports/PerformanceReports'
+import { AX_SuperAdminPanel } from './components/admin/AX_SuperAdminPanel'
 import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
@@ -99,6 +100,8 @@ export function App() {
           {activeTab === 'cash' && <CashDrawer />}
 
           {activeTab === 'reports' && <PerformanceReports />}
+
+          {activeTab === 'admin' && <AX_SuperAdminPanel />}
         </main>
       </div>
 

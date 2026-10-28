@@ -127,7 +127,33 @@ export function BookingsManagement() {
         </div>
       </div>
 
-      {/* Bookings Bento List for Mobile */}
+      {/* Empty State Banner if no bookings exist */}
+      {filtered.length === 0 ? (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
+          <div className="w-14 h-14 rounded-full bg-sky-50 text-[#0284c7] flex items-center justify-center mx-auto border border-sky-200">
+            <Users className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-slate-800">
+            لا توجد حجوزات مسجلة في المنظومة حالياً
+          </h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            سجل الحجوزات نظيف 100%. يمكنك البدء بإضافة حجز جديد أو رفع شيت إكسيل اليومية.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                onOpenNewBooking()
+              }}
+              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+            >
+              تسجيل حجز جديد
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Bookings Bento List for Mobile */}
       <div className="space-y-3 lg:hidden">
         {paginated.map((b) => {
           const badge = getPaymentBadge(b)
@@ -267,6 +293,8 @@ export function BookingsManagement() {
         pageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
       />
+        </>
+      )}
     </div>
   )
 }

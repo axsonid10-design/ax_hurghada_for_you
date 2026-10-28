@@ -7,41 +7,21 @@ import { useAXStore } from '../../store/useAXStore'
 export function AX_MandatoryPushModal() {
   const isStorePushModalOpen = useAXStore((state) => state.isPushModalOpen)
   const closePushModal = useAXStore((state) => state.closePushModal)
-  const [autoOpen, setAutoOpen] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && pushManager.isSupported()) {
-      const dismissCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
-      if (dismissCount < 2 && pushManager.getPermission() === 'default') {
-        const timer = setTimeout(() => {
-          setAutoOpen(true)
-        }, 1500)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [])
-
-  const isOpen = isStorePushModalOpen || autoOpen
 
   const handleClose = () => {
     soundManager.playClick()
     const currentCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
     localStorage.setItem('ax_push_dismiss_count', String(currentCount + 1))
-    setAutoOpen(false)
     closePushModal()
   }
 
   const handleEnable = async () => {
     soundManager.playClick()
-    const permission = await pushManager.requestPermission()
-    if (permission === 'granted') {
-      await pushManager.sendTestNotification()
-    }
-    setAutoOpen(false)
+    await pushManager.requestPermission()
     closePushModal()
   }
 
-  if (!isOpen) return null
+  if (!isStorePushModalOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a2540]/60 backdrop-blur-sm animate-fadeIn">

@@ -14,7 +14,8 @@ import {
   Tag,
   LayoutDashboard,
   FileSpreadsheet,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
@@ -27,20 +28,22 @@ export function AX_Sidebar({ onOpenUploadModal }) {
 
   const isExpanded = isPinned || isHovered
 
+  const isMaster = profile?.is_master || profile?.role === 'Super Admin' || profile?.email === 'axsonid@gmail.com'
+
   const menuSections = [
     {
       title: t('nav_operations'),
       items: [
         { id: 'dashboard', label: t('tab_dashboard'), icon: LayoutDashboard },
-        { id: 'daily', label: t('tab_daily'), icon: Ship, badge: '57' },
+        { id: 'daily', label: t('tab_daily'), icon: Ship },
         { id: 'bookings', label: t('tab_bookings'), icon: CalendarCheck }
       ]
     },
     {
       title: t('nav_trips'),
       items: [
-        { id: 'trips', label: t('tab_trips'), icon: Tag, badge: '19' },
-        { id: 'executors', label: t('tab_executors'), icon: Truck, badge: '4' }
+        { id: 'trips', label: t('tab_trips'), icon: Tag },
+        { id: 'executors', label: t('tab_executors'), icon: Truck }
       ]
     },
     {
@@ -49,7 +52,17 @@ export function AX_Sidebar({ onOpenUploadModal }) {
         { id: 'cash', label: t('tab_cash'), icon: Banknote },
         { id: 'reports', label: t('tab_reports'), icon: BarChart3 }
       ]
-    }
+    },
+    ...(isMaster
+      ? [
+          {
+            title: 'تحكم المالك',
+            items: [
+              { id: 'admin', label: 'غرفة تحكم المالك', icon: ShieldCheck, badge: '👑' }
+            ]
+          }
+        ]
+      : [])
   ]
 
   const filteredSections = menuSections
