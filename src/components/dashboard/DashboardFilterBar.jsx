@@ -1,8 +1,5 @@
 import React from 'react'
 import {
-  FileSpreadsheet,
-  Plus,
-  Receipt,
   Calendar,
   ArrowLeftRight,
   TrendingUp,
@@ -106,28 +103,6 @@ export function DashboardFilterBar({
               ج.م
             </button>
           </div>
-
-          <button
-            onClick={() => {
-              soundManager.playClick()
-              onOpenUploadModal()
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-            <span>رفع شيت إكسيل</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundManager.playClick()
-              onOpenNewExpense?.()
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-700 rounded-full text-xs font-black border border-rose-300 shadow-sm transition-all active:scale-95"
-          >
-            <Receipt className="w-4 h-4 text-rose-600" />
-            <span>تسجيل مصروف</span>
-          </button>
         </div>
       </div>
 

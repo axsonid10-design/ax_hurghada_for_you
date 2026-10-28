@@ -8,8 +8,7 @@ import {
   CheckCircle2,
   Hotel,
   Truck,
-  TrendingUp,
-  FileSpreadsheet
+  TrendingUp
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
@@ -111,7 +110,7 @@ export function DailySituationView({ onOpenUploadModal }) {
     <div className="w-full space-y-4">
       {/* Top Filter & Action Bar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200 shadow-soft space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-center">
           {/* Date Picker */}
           <div>
             <AX_CompanyDatePicker
@@ -152,20 +151,6 @@ export function DailySituationView({ onOpenUploadModal }) {
                 ...executors.map((ex) => ({ value: ex.id, label: ex.name }))
               ]}
             />
-          </div>
-
-          {/* Upload Button */}
-          <div>
-            <button
-              onClick={() => {
-                soundManager.playClick()
-                onOpenUploadModal?.()
-              }}
-              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-              <span>{t('upload_sheet')}</span>
-            </button>
           </div>
         </div>
 

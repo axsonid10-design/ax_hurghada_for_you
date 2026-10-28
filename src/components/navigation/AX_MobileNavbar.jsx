@@ -4,7 +4,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
-export function AX_MobileNavbar() {
+export function AX_MobileNavbar({ isVisible = true }) {
   const { activeTab, setActiveTab, profile, t } = useAXStore()
 
   const allTabs = [
@@ -27,7 +27,13 @@ export function AX_MobileNavbar() {
   if (visibleTabs.length === 0) return null
 
   return (
-    <nav className="fixed bottom-4 left-3 right-3 z-50 lg:hidden">
+    <nav
+      className={`fixed bottom-4 left-3 right-3 z-50 lg:hidden transition-all duration-300 ease-in-out ${
+        isVisible
+          ? 'translate-y-0 opacity-100 pointer-events-auto'
+          : 'translate-y-24 opacity-0 pointer-events-none'
+      }`}
+    >
       <div className="bg-[#0a2540]/95 backdrop-blur-xl border border-white/20 rounded-full px-2 py-2 shadow-float flex items-center justify-around">
         {visibleTabs.map((tab) => {
           const Icon = tab.icon

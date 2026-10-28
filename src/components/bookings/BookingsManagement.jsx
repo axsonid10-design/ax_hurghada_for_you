@@ -207,19 +207,6 @@ export function BookingsManagement({ onOpenUploadModal }) {
           <h3 className="text-base font-black text-slate-800">
             لا توجد حجوزات مسجلة
           </h3>
-          {onOpenUploadModal && (
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  soundManager.playClick()
-                  onOpenUploadModal()
-                }}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-2"
-              >
-                <span>رفع شيت إكسيل</span>
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <>

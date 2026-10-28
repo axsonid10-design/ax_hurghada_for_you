@@ -3,14 +3,18 @@ import { FileSpreadsheet, Receipt } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
 
-export function AX_FloatingActions({ onOpenUploadModal, onOpenNewExpense }) {
+export function AX_FloatingActions({ onOpenUploadModal, onOpenNewExpense, isVisible = true }) {
   const { lang } = useAXStore()
   const isRtl = lang === 'ar'
 
   return (
     <div
-      className={`fixed bottom-24 lg:bottom-6 z-40 flex items-center gap-2 transition-all duration-300 ${
+      className={`fixed bottom-24 lg:bottom-6 z-40 flex items-center gap-2 transition-all duration-300 ease-in-out ${
         isRtl ? 'left-4 lg:left-8' : 'right-4 lg:right-8'
+      } ${
+        isVisible
+          ? 'translate-y-0 opacity-100 pointer-events-auto'
+          : 'translate-y-28 opacity-0 pointer-events-none'
       }`}
     >
       <button

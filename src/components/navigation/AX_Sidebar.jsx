@@ -21,7 +21,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
-export function AX_Sidebar({ onOpenUploadModal }) {
+export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
   const { activeTab, setActiveTab, profile, logout, openConfirmModal, t } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
@@ -81,7 +81,9 @@ export function AX_Sidebar({ onOpenUploadModal }) {
     <aside
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`hidden lg:flex flex-col flex-shrink-0 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 p-3 shadow-card space-y-3 sticky top-20 self-start h-[calc(100vh-100px)] transition-all duration-300 ease-in-out z-30 ${
+      className={`hidden lg:flex flex-col flex-shrink-0 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200 p-3 shadow-card space-y-3 sticky self-start transition-all duration-300 ease-in-out z-30 ${
+        isHeaderVisible ? 'top-20 h-[calc(100vh-100px)]' : 'top-4 h-[calc(100vh-32px)]'
+      } ${
         isExpanded ? 'w-64' : 'w-[72px]'
       }`}
     >

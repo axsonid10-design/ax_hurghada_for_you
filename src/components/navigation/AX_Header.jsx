@@ -4,7 +4,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { pushManager } from '../../utils/pushManager'
 import { soundManager } from '../../utils/soundEffects'
 
-export function AX_Header() {
+export function AX_Header({ isVisible = true }) {
   const isOnline = useAXStore((state) => state.isOnline)
   const profile = useAXStore((state) => state.profile)
   const logout = useAXStore((state) => state.logout)
@@ -60,7 +60,13 @@ export function AX_Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#0f172a] text-white border-b border-slate-800 shadow-sm transition-colors">
+    <header
+      className={`sticky top-0 z-40 w-full bg-[#0f172a] text-white border-b border-slate-800 shadow-sm transition-all duration-300 ease-in-out ${
+        isVisible
+          ? 'translate-y-0 opacity-100 pointer-events-auto'
+          : '-translate-y-full opacity-0 pointer-events-none'
+      }`}
+    >
       <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-3">

@@ -24,9 +24,11 @@ import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 import { hasModuleAccess, getFirstAllowedModule } from './utils/permissionsConfig'
 import { soundManager } from './utils/soundEffects'
+import { useScrollDirection } from './hooks/useScrollDirection'
 
 export function App() {
   const { activeTab, setActiveTab, profile, setProfile, logout, lang, addExpense } = useAXStore()
+  const isChromeVisible = useScrollDirection()
   const [activeInviteToken, setActiveInviteToken] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('invite')
@@ -165,7 +167,7 @@ export function App() {
       />
 
       {/* 6. Lean Responsive Header (Zero Fluff) */}
-      <AX_Header />
+      <AX_Header isVisible={isChromeVisible} />
 
       {/* 7. PWA Install Banner */}
       <AX_InstallPwaBanner />
@@ -173,7 +175,10 @@ export function App() {
       {/* 8. Master Full Canvas Layout (Zero Empty Gutters) */}
       <div className="w-full px-3 sm:px-6 lg:px-8 py-4 flex-1 flex gap-4">
         {/* Right Desktop Sticky Sidebar */}
-        <AX_Sidebar onOpenUploadModal={() => setIsUploadModalOpen(true)} />
+        <AX_Sidebar
+          onOpenUploadModal={() => setIsUploadModalOpen(true)}
+          isHeaderVisible={isChromeVisible}
+        />
 
         {/* Main Content Area - Expands 100% Full Canvas */}
         <main className="flex-1 min-w-0 pb-20 lg:pb-4">
@@ -227,12 +232,13 @@ export function App() {
 
       {/* 9. Floating Action Buttons (FAB - Rule 6) */}
       <AX_FloatingActions
+        isVisible={isChromeVisible}
         onOpenUploadModal={() => setIsUploadModalOpen(true)}
         onOpenNewExpense={() => setIsExpenseModalOpen(true)}
       />
 
       {/* 10. Floating Capsule Mobile Navigation (lg:hidden) */}
-      <AX_MobileNavbar />
+      <AX_MobileNavbar isVisible={isChromeVisible} />
     </div>
   )
 }
