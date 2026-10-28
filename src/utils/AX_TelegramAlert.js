@@ -22,9 +22,14 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
       errStr = String(errorObj || 'Unknown').substring(0, 1000)
     }
 
+    let fullStack = errStr
+    if (context?.componentStack) {
+      fullStack += `\nComponent Stack:\n${String(context.componentStack).substring(0, 500)}`
+    }
+
     const currentHash = `${label}_${errStr.slice(0, 50)}`
     const now = Date.now()
-    if (currentHash === lastSentHash && now - lastSentTime < 20000) {
+    if (currentHash === lastSentHash && now - lastSentTime < 25000) {
       return
     }
     lastSentHash = currentHash
@@ -46,16 +51,19 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
       `⏰ الوقت: ${time}\n` +
       `📍 الصفحة: ${page}\n` +
       `🔴 التصنيف: ${label}\n\n` +
-      `${errStr}`
+      `${fullStack}`
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 4000)
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: AX_ADMIN_CHAT_ID,
         text
-      })
-    }).catch(() => {})
+      }),
+      signal: controller.signal
+    }).catch(() => {}).finally(() => clearTimeout(timeoutId))
 
     pushManager.sendNotification(
       `🚨 خطأ في النظام: ${label}`,
@@ -65,7 +73,7 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
 
     const errorRecord = {
       error_message: `[${label}] [${userStr}] ${errStr.slice(0, 250)}`,
-      stack_trace: errStr,
+      stack_trace: fullStack,
       source: `${systemName} | ${userEmail} | ${page}`
     }
     supabase.from('ax_system_errors').insert([errorRecord]).catch(() => {})

@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './index.css'
 import { AX_alertTelegram } from './utils/AX_TelegramAlert'
+import { AX_ErrorBoundary } from './components/common/AX_ErrorBoundary'
 
 if (typeof window !== 'undefined' && window.location.search) {
   const params = new URLSearchParams(window.location.search)
@@ -24,9 +25,8 @@ if (typeof window !== 'undefined' && window.location.search) {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
-    if (event.error) {
-      AX_alertTelegram('WINDOW_UNCAUGHT_ERROR', event.error)
-    }
+    const err = event.error || event.message || 'Unknown window error'
+    AX_alertTelegram('WINDOW_UNCAUGHT_ERROR', err)
   })
   window.addEventListener('unhandledrejection', (event) => {
     AX_alertTelegram('UNHANDLED_PROMISE_REJECTION', event.reason || 'Promise rejected')
@@ -45,6 +45,8 @@ registerSW({
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <AX_ErrorBoundary>
+      <App />
+    </AX_ErrorBoundary>
   </React.StrictMode>
 )
