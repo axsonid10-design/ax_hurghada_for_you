@@ -1,5 +1,19 @@
 # ذاكرة التحديثات - غردقة فور يو (HURGHADA FOR YOU)
 
+## التحديث رقم 7 [2026-10-28] - تطبيق المعيار رقم 19 لدستور AXONID (تحديثات شورت كات الآيفون وحماية النوتش)
+- ضبط استراتيجيات التخزين المؤقت في `vite.config.js`:
+  - حصر طلبات الملاحة والتصفح `request.mode === 'navigate'` باستراتيجية `NetworkFirst` مع مهلة `networkTimeoutSeconds: 3` واسم كاش مخصص `html-cache`.
+  - عزل وتفعيل استراتيجية `NetworkOnly` الصارمة لكل من `/version\.json.*/i` و `/\/(sw|registerSW)\.js.*/i`.
+- إنشاء وضبط ملف حوكمة ترويسات الاستجابة في كلاود فلير `public/_headers`:
+  - حظر وتثبيط الكاش قطعياً عبر `Cache-Control: no-cache, no-store, must-revalidate` لكافة ملفات التحكم والنسخ: `/index.html`، `/`، `/version.json`، `/sw.js`، `/registerSW.js`، `/sw-push-handler.js`، `/manifest.json`، و `/manifest.webmanifest`.
+- إضافة مستمعي أحداث العودة من الشورت كات في `index.html`:
+  - التقاط أحداث `pageshow` و `visibilitychange` وتشغيل `reg.update()` فوراً لتحديث السيرفيس وركر لحظياً عند عودة المستخدم للتطبيق.
+- تطوير وتأمين مكون `AppUpdateNotifier.jsx`:
+  - التحقق الفوري من `version.json` باستخدام بارامتر كاسر للكاش `?_t=${Date.now()}` عند أحداث `pageshow` و `visibilitychange` و `focus`.
+  - حماية مساحة العرض من التداخل مع نوتش والجزيرة التفاعلية (Dynamic Island) في الآيفون بـ `style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}`.
+  - تنفيذ عملية التحديث المزدوجة عبر إلغاء تسجيل السيرفيس وركر، مسح كافة كاشات المتصفح `caches.delete`، واستبدال المسار بـ `window.location.replace` مع كاسر الكاش `?_v=${Date.now()}`.
+- التحقق التام من خلو كافة الملفات من التعليقات البرمجية (Rule 3)، ورفع رقم الإصدار إلى `v1.0.11` واجتياز بناء الإنتاج ونشره سحابياً.
+
 ## التحديث رقم 6 [2026-10-28]
 - تصفير ومسح كافة البيانات السابقة استجابة لأمر الريس لبدء تجربة تشغيل نظيفة 100% بملف إكسيل جديد:
   - تفريغ سجل الحجوزات (`bookings: []`)، المصاريف التشغيلية (`expenses: []`)، وسجلات الاستيراد (`importedDates: {}`).

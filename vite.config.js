@@ -5,7 +5,7 @@ import fs from 'fs'
 import packageJson from './package.json'
 
 if (fs.existsSync(process.cwd()) && process.cwd() !== fs.realpathSync(process.cwd())) {
-  process.chdir(fs.realpathSync(process.cwd()));
+  process.chdir(fs.realpathSync(process.cwd()))
 }
 
 export default defineConfig({
@@ -59,7 +59,19 @@ export default defineConfig({
         importScripts: ['/sw-push-handler.js'],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.endsWith('version.json'),
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              networkTimeoutSeconds: 3,
+              cacheName: 'html-cache'
+            }
+          },
+          {
+            urlPattern: /version\.json.*/i,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /\/(sw|registerSW)\.js.*/i,
             handler: 'NetworkOnly'
           }
         ]
