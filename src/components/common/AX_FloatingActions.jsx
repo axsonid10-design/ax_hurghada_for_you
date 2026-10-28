@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { FileSpreadsheet, Receipt } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
@@ -6,6 +6,25 @@ import { useAXStore } from '../../store/useAXStore'
 export function AX_FloatingActions({ onOpenUploadModal, onOpenNewExpense, isVisible = true }) {
   const { lang } = useAXStore()
   const isRtl = lang === 'ar'
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Hide floating actions when any modal is open
+  useEffect(() => {
+    const checkModal = () => {
+      const modal =
+        document.querySelector('[data-modal="true"]') ||
+        document.querySelector('.fixed.inset-0.z-50') ||
+        document.querySelector('.fixed.inset-0.z-\\[60\\]') ||
+        document.querySelector('.fixed.inset-0.z-\\[9999\\]')
+      setIsModalOpen(Boolean(modal))
+    }
+    checkModal()
+    const observer = new MutationObserver(checkModal)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true })
+    return () => observer.disconnect()
+  }, [])
+
+  if (isModalOpen) return null
 
   return (
     <div

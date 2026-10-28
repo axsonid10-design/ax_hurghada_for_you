@@ -233,8 +233,35 @@ export function TripsCatalogView() {
         })}
       </div>
 
-      {/* Trips Cards Grid (Spacious 2 columns on tablet/desktop, 1 column on mobile) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+      {/* Trips Cards Grid or Clean Empty State */}
+      {filteredTrips.length === 0 ? (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
+          <div className="w-14 h-14 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto border border-sky-200">
+            <Tag className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-slate-800">
+            {lang === 'ar' ? 'لا توجد رحلات مسجلة' : 'No trips registered'}
+          </h3>
+          <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto">
+            {lang === 'ar'
+              ? 'يمكنك إضافة رحلة جديدة يدوياً أو رفع شيت إكسيل لتسجيل وتسعير الرحلات تلقائياً.'
+              : 'You can add a new trip manually or upload an Excel sheet to price and register trips.'}
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                setIsNewTripModalOpen(true)
+              }}
+              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4 text-sky-400" />
+              <span>{t('add_trip')}</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
         {filteredTrips.map((trip) => {
           const executor = executors.find((ex) => ex.id === trip.executor_id)
           const isPax = trip.pricing_type === 'pax'
@@ -379,6 +406,7 @@ export function TripsCatalogView() {
           )
         })}
       </div>
+      )}
 
       {/* Edit Trip Modal */}
       {editingTrip && (

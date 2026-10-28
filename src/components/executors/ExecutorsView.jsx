@@ -168,8 +168,33 @@ export function ExecutorsView() {
         })}
       </div>
 
-      {/* Executors Bento Grid (1 col on mobile, 2 cols on tablet, 3 on desktop) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+      {/* Executors Bento Grid or Clean Empty State */}
+      {filtered.length === 0 ? (
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
+          <div className="w-14 h-14 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto border border-sky-200">
+            <Truck className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-slate-800">
+            لا يوجد منفذين مسجلين
+          </h3>
+          <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto">
+            يمكنك تسجيل وإضافة المنفذين وموردي الرحلات البحرية والسفاري لمتابعة الحسابات والتوريدات.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                setIsAddOpen(true)
+              }}
+              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4 text-sky-400" />
+              <span>إضافة منفذ جديد</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
         {filtered.map((ex) => {
           const exBookings = bookings.filter((b) => b.executor_id === ex.id)
           const totalCostDue = exBookings.reduce((sum, b) => sum + (Number(b.cost_eur) || 0), 0)
@@ -311,6 +336,7 @@ export function ExecutorsView() {
           )
         })}
       </div>
+      )}
 
       {/* Record Payment Modal */}
       {paymentModal.isOpen && (

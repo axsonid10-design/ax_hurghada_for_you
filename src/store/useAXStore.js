@@ -65,22 +65,35 @@ const DEFAULT_SYSTEM_USERS = [
   }
 ]
 
+if (typeof window !== 'undefined') {
+  const CLEANUP_KEY = 'ax_h4u_clean_slate_v4'
+  if (!localStorage.getItem(CLEANUP_KEY)) {
+    localStorage.removeItem('ax_h4u_trip_definitions')
+    localStorage.removeItem('ax_h4u_executors')
+    localStorage.removeItem('ax_h4u_bookings')
+    localStorage.removeItem('ax_h4u_expenses')
+    localStorage.removeItem('ax_h4u_imported_dates')
+    localStorage.removeItem('ax_h4u_staff_invites')
+    localStorage.setItem(CLEANUP_KEY, 'true')
+  }
+}
+
 const getStoredTripDefinitions = () => {
-  if (typeof window === 'undefined') return INITIAL_TRIP_DEFINITIONS
+  if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem('ax_h4u_trip_definitions')
     if (raw) return JSON.parse(raw)
   } catch {}
-  return INITIAL_TRIP_DEFINITIONS
+  return []
 }
 
 const getStoredExecutors = () => {
-  if (typeof window === 'undefined') return INITIAL_EXECUTORS
+  if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem('ax_h4u_executors')
     if (raw) return JSON.parse(raw)
   } catch {}
-  return INITIAL_EXECUTORS
+  return []
 }
 
 const getStoredBookings = () => {
@@ -210,17 +223,20 @@ export const useAXStore = create((set, get) => ({
       localStorage.removeItem('ax_h4u_bookings')
       localStorage.removeItem('ax_h4u_expenses')
       localStorage.removeItem('ax_h4u_imported_dates')
+      localStorage.removeItem('ax_h4u_trip_definitions')
+      localStorage.removeItem('ax_h4u_executors')
     }
     clearOfflineQueue().catch(() => {})
     const masterOnly = DEFAULT_SYSTEM_USERS
-    set((state) => ({
+    set(() => ({
       bookings: [],
       expenses: [],
       importedDates: {},
+      tripDefinitions: [],
+      executors: [],
       selectedDate: getTodayIsoDate(),
       systemUsers: masterOnly,
-      staffInvites: [],
-      executors: state.executors.map((ex) => ({ ...ex, total_paid: 0, payments: [] }))
+      staffInvites: []
     }))
   },
 
