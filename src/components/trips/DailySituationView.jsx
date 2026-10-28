@@ -17,7 +17,7 @@ import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { soundManager } from '../../utils/soundEffects'
 
-export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
+export function DailySituationView({ onOpenUploadModal }) {
   const {
     bookings,
     selectedDate,
@@ -109,81 +109,67 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
 
   return (
     <div className="w-full space-y-4">
-      {/* Top Filter & Action Bar (Clean 2-tier responsive layout) */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-3">
-        {/* Tier 1: Filters & Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
-            {/* Date Picker */}
-            <div className="w-44 sm:w-48 flex-shrink-0">
-              <AX_CompanyDatePicker
-                value={selectedDate}
-                onChange={(d) => {
-                  setSelectedDate(d)
-                  setCurrentPage(1)
-                }}
-                placeholder={t('daily_date')}
-              />
-            </div>
-
-            {/* Trip Type Select */}
-            <div className="w-48 sm:w-56 flex-shrink-0">
-              <AX_SearchableSelect
-                value={filterTripType}
-                onChange={(val) => {
-                  setFilterTripType(val)
-                  setCurrentPage(1)
-                }}
-                options={[
-                  { value: 'ALL', label: `${t('all_trips')} (${uniqueTrips.length})` },
-                  ...uniqueTrips.map((tt) => ({ value: tt, label: tt }))
-                ]}
-              />
-            </div>
-
-            {/* Executor Select */}
-            <div className="w-44 sm:w-48 flex-shrink-0">
-              <AX_SearchableSelect
-                value={filterExecutor}
-                onChange={(val) => {
-                  setFilterExecutor(val)
-                  setCurrentPage(1)
-                }}
-                options={[
-                  { value: 'ALL', label: t('all_executors') },
-                  ...executors.map((ex) => ({ value: ex.id, label: ex.name }))
-                ]}
-              />
-            </div>
+      {/* Top Filter & Action Bar */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200 shadow-soft space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 items-center">
+          {/* Date Picker */}
+          <div>
+            <AX_CompanyDatePicker
+              value={selectedDate}
+              onChange={(d) => {
+                setSelectedDate(d)
+                setCurrentPage(1)
+              }}
+              placeholder={t('daily_date')}
+            />
           </div>
 
-          {/* Action Buttons: Strictly within viewport bounds */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Trip Type Select */}
+          <div>
+            <AX_SearchableSelect
+              value={filterTripType}
+              onChange={(val) => {
+                setFilterTripType(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'ALL', label: `${t('all_trips')} (${uniqueTrips.length})` },
+                ...uniqueTrips.map((tt) => ({ value: tt, label: tt }))
+              ]}
+            />
+          </div>
+
+          {/* Executor Select */}
+          <div>
+            <AX_SearchableSelect
+              value={filterExecutor}
+              onChange={(val) => {
+                setFilterExecutor(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'ALL', label: t('all_executors') },
+                ...executors.map((ex) => ({ value: ex.id, label: ex.name }))
+              ]}
+            />
+          </div>
+
+          {/* Upload Button */}
+          <div>
             <button
               onClick={() => {
                 soundManager.playClick()
                 onOpenUploadModal?.()
               }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
               <span>{t('upload_sheet')}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                soundManager.playClick()
-                onOpenNewBooking?.()
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#0f172a] hover:bg-slate-800 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#38bdf8]" />
-              <span>{t('new_booking')}</span>
             </button>
           </div>
         </div>
 
-        {/* Tier 2: Full-Width Search Input */}
+        {/* Full-Width Search Input */}
         <div className="relative w-full">
           <input
             type="text"
@@ -259,7 +245,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
           <h3 className="text-base font-black text-slate-800">
             لا توجد حجوزات مسجلة لهذا التاريخ ({selectedDate})
           </h3>
-          <div className="flex items-center justify-center gap-2 pt-2">
+          <div className="flex items-center justify-center pt-2">
             <button
               onClick={() => {
                 soundManager.playClick()
@@ -268,17 +254,7 @@ export function DailySituationView({ onOpenNewBooking, onOpenUploadModal }) {
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>رفع ملف إكسيل جديد</span>
-            </button>
-            <button
-              onClick={() => {
-                soundManager.playClick()
-                onOpenNewBooking()
-              }}
-              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5 text-sky-400" />
-              <span>حجز جديد</span>
+              <span>رفع ملف إكسيل</span>
             </button>
           </div>
         </div>

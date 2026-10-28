@@ -16,22 +16,22 @@ import { CashDrawer } from './components/cash/CashDrawer'
 import { PerformanceReports } from './components/reports/PerformanceReports'
 import { AX_StaffManager } from './components/staff/AX_StaffManager'
 import { AX_StaffOnboardingScreen } from './components/staff/AX_StaffOnboardingScreen'
-import { TripDetailsModal } from './components/trips/TripDetailsModal'
 import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
+import { QuickExpenseModal } from './components/dashboard/QuickExpenseModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
 import { AX_WelcomeOverlay } from './components/common/AX_WelcomeOverlay'
 import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 
 export function App() {
-  const { activeTab, profile, lang } = useAXStore()
+  const { activeTab, profile, lang, addExpense } = useAXStore()
   const [activeInviteToken, setActiveInviteToken] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('invite')
     }
     return null
   })
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -89,10 +89,11 @@ export function App() {
       {/* 3.1 PWA Native Install Guide Modal */}
       <AX_PwaInstallModal />
 
-      {/* 4. Booking Creation Modal */}
-      <TripDetailsModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
+      {/* 4. Quick Expense Modal */}
+      <QuickExpenseModal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+        onAddExpense={addExpense}
       />
 
       {/* 5. Excel Daily Situation Upload Pipeline Modal */}
@@ -117,19 +118,18 @@ export function App() {
           {activeTab === 'dashboard' && (
             <OperationsDashboard
               onOpenUploadModal={() => setIsUploadModalOpen(true)}
-              onOpenNewBooking={() => setIsBookingModalOpen(true)}
+              onOpenNewExpense={() => setIsExpenseModalOpen(true)}
             />
           )}
 
           {activeTab === 'daily' && (
             <DailySituationView
-              onOpenNewBooking={() => setIsBookingModalOpen(true)}
               onOpenUploadModal={() => setIsUploadModalOpen(true)}
             />
           )}
 
           {activeTab === 'bookings' && (
-            <BookingsManagement onOpenNewBooking={() => setIsBookingModalOpen(true)} />
+            <BookingsManagement />
           )}
 
           {activeTab === 'trips' && <TripsCatalogView />}
@@ -163,8 +163,8 @@ export function App() {
 
       {/* 9. Floating Action Buttons (FAB - Rule 6) */}
       <AX_FloatingActions
-        onOpenNewBooking={() => setIsBookingModalOpen(true)}
         onOpenUploadModal={() => setIsUploadModalOpen(true)}
+        onOpenNewExpense={() => setIsExpenseModalOpen(true)}
       />
 
       {/* 10. Floating Capsule Mobile Navigation (lg:hidden) */}

@@ -10,7 +10,7 @@ import { CategoryDistributionChart } from './CategoryDistributionChart'
 import { DashboardDataBreakdown } from './DashboardDataBreakdown'
 import { QuickExpenseModal } from './QuickExpenseModal'
 
-export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
+export function OperationsDashboard({ onOpenUploadModal, onOpenNewExpense }) {
   const {
     bookings = [],
     selectedDate,
@@ -148,8 +148,7 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewBooking }) {
         setDisplayCurrency={setDisplayCurrency}
         totalBookingsCount={totalBookings}
         onOpenUploadModal={onOpenUploadModal}
-        onOpenNewBooking={onOpenNewBooking}
-        onOpenNewExpense={() => setIsExpenseModalOpen(true)}
+        onOpenNewExpense={onOpenNewExpense || (() => setIsExpenseModalOpen(true))}
         rates={rates}
       />
 

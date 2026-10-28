@@ -15,7 +15,7 @@ import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
 import { soundManager } from '../../utils/soundEffects'
 
-export function BookingsManagement({ onOpenNewBooking }) {
+export function BookingsManagement() {
   const { bookings = [], deleteBooking, updateBooking, openConfirmModal, wipeAllData, t } = useAXStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -153,7 +153,7 @@ export function BookingsManagement({ onOpenNewBooking }) {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            الذمم المعلقة
+            غير مدفوع
           </button>
           <button
             onClick={() => {
@@ -167,21 +167,10 @@ export function BookingsManagement({ onOpenNewBooking }) {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            مسدد بالكامل
+            مدفوع كلي
           </button>
 
-          {onOpenNewBooking && (
-            <button
-              onClick={() => {
-                soundManager.playClick()
-                onOpenNewBooking()
-              }}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5 text-sky-200" />
-              <span>{t('new_booking')}</span>
-            </button>
-          )}
+
 
           {bookings.length > 0 && (
             <button

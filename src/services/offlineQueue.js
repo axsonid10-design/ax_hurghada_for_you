@@ -73,3 +73,17 @@ export async function removeOfflineAction(id) {
     request.onerror = () => reject(request.error)
   })
 }
+
+export async function clearOfflineQueue() {
+  const db = await openDatabase()
+  if (!db) return
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    const request = store.clear()
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}

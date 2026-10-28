@@ -75,7 +75,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-sky-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-sky-500" />
-              <span>إجمالي المبيعات</span>
+              <span>المبيعات</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -104,7 +104,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-amber-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500" />
-              <span>تكلفة الموردين</span>
+              <span>التكلفة</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
               <Ship className="w-3.5 h-3.5" />
@@ -124,7 +124,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>نسبة التكلفة</span>
+            <span>النسبة</span>
             <span className="font-mono font-black text-amber-800">{costRatio}%</span>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-rose-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-rose-500" />
-              <span>المصروفات التشغيلية</span>
+              <span>المصروفات</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
               <Receipt className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>وقود وضيافة</span>
+            <span>البنود</span>
             <span className="font-mono text-slate-700">{expensesCount} بند</span>
           </div>
         </div>
@@ -162,7 +162,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-emerald-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500" />
-              <span>صافي الأرباح</span>
+              <span>الأرباح</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
               <Coins className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>هامش الربحية</span>
+            <span>النسبة</span>
             <span className="font-mono font-black text-emerald-700">{netProfitMargin}%</span>
           </div>
         </div>
@@ -191,7 +191,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-600" />
-              <span>إجمالي النزلاء (PAX)</span>
+              <span>الأفراد</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
               <Users className="w-3.5 h-3.5" />
@@ -201,7 +201,7 @@ export function FinancialKpiCards({
           <div className="py-1.5 sm:py-2">
             <div className="whitespace-nowrap flex items-baseline gap-1 font-mono font-black text-base sm:text-2xl text-slate-900 tracking-tight">
               <span>{totalPax.toLocaleString()}</span>
-              <span className="text-xs font-sans font-bold text-slate-500">نزيل</span>
+              <span className="text-xs font-sans font-bold text-slate-500">فرد</span>
             </div>
             <div className="whitespace-nowrap flex items-baseline gap-1 text-[10px] sm:text-xs font-bold text-slate-500">
               <span>{totalAdults}ك</span>
@@ -213,7 +213,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-600 whitespace-nowrap">
-            <span>الحجوزات المسجلة</span>
+            <span>الحجوزات</span>
             <span className="font-mono font-bold text-slate-800">{totalBookings} حجز</span>
           </div>
         </div>

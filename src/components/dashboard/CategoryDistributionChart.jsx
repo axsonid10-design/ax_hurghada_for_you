@@ -127,7 +127,12 @@ export function CategoryDistributionChart({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 py-2">
+      {filteredBookings.length === 0 ? (
+        <div className="py-12 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+          لا توجد حركات مسجلة لعرض توزيع الأنشطة
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row items-center gap-4 py-2">
         <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 160 160" className="w-full h-full transform -rotate-90">
             <circle
@@ -207,6 +212,7 @@ export function CategoryDistributionChart({
           })}
         </div>
       </div>
+      )}
     </div>
   )
 }

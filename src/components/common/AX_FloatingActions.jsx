@@ -1,15 +1,15 @@
 import React from 'react'
-import { Plus, FileSpreadsheet } from 'lucide-react'
+import { FileSpreadsheet, Receipt } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
 
-export function AX_FloatingActions({ onOpenNewBooking, onOpenUploadModal }) {
-  const { lang, t } = useAXStore()
+export function AX_FloatingActions({ onOpenUploadModal, onOpenNewExpense }) {
+  const { lang } = useAXStore()
   const isRtl = lang === 'ar'
 
   return (
     <div
-      className={`fixed bottom-20 lg:bottom-6 z-30 flex items-center gap-2 transition-all duration-300 ${
+      className={`fixed bottom-24 lg:bottom-6 z-40 flex items-center gap-2 transition-all duration-300 ${
         isRtl ? 'left-4 lg:left-8' : 'right-4 lg:right-8'
       }`}
     >
@@ -18,21 +18,21 @@ export function AX_FloatingActions({ onOpenNewBooking, onOpenUploadModal }) {
           soundManager.playClick()
           onOpenUploadModal?.()
         }}
-        title={t('upload_sheet')}
-        className="w-11 h-11 bg-white hover:bg-slate-50 text-emerald-600 rounded-full shadow-lg border border-slate-200 flex items-center justify-center transition-all active:scale-95 hover:scale-105"
+        className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-float border border-emerald-400/40 transition-all active:scale-95 hover:scale-105"
       >
-        <FileSpreadsheet className="w-5 h-5" />
+        <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+        <span>{isRtl ? 'رفع شيت إكسيل' : 'Upload Excel'}</span>
       </button>
 
       <button
         onClick={() => {
           soundManager.playClick()
-          onOpenNewBooking?.()
+          onOpenNewExpense?.()
         }}
-        className="flex items-center gap-2 px-5 py-3 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-float border border-[#0284c7]/40 transition-all active:scale-95 hover:scale-105"
+        className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full text-xs font-black shadow-float border border-rose-400/40 transition-all active:scale-95 hover:scale-105"
       >
-        <Plus className="w-4 h-4 text-[#38bdf8]" />
-        <span>{t('new_booking')}</span>
+        <Receipt className="w-4 h-4 text-rose-200" />
+        <span>{isRtl ? 'تسجيل مصروف' : 'Add Expense'}</span>
       </button>
     </div>
   )

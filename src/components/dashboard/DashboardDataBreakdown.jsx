@@ -269,13 +269,16 @@ export function DashboardDataBreakdown({
         </div>
       </div>
 
-      {activeTab === 'trips' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">
-              ترتيب الرحلات حسب الأعلى إقبالاً ومبيعات
-            </span>
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 text-xs font-bold">
+      {filteredBookings.length === 0 ? (
+        <div className="py-8 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+          لا توجد حركات مسجلة لعرض بيانات التشغيل
+        </div>
+      ) : (
+        <>
+          {activeTab === 'trips' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-end">
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 text-xs font-bold">
               <button
                 onClick={() => {
                   soundManager.playClick()
@@ -346,10 +349,6 @@ export function DashboardDataBreakdown({
 
       {activeTab === 'sellers' && (
         <div className="space-y-3">
-          <span className="text-xs font-bold text-slate-500 block">
-            لوحة شرف مناديب وقنوات المبيعات الأكثر إنجازاً
-          </span>
-
           <div className="space-y-2">
             {sellersData.map((seller, idx) => {
               const pct = Math.min(100, Math.round((seller.sales / maxSellerSales) * 100))
@@ -394,10 +393,6 @@ export function DashboardDataBreakdown({
 
       {activeTab === 'executors' && (
         <div className="space-y-3">
-          <span className="text-xs font-bold text-slate-500 block">
-            مؤشر كفاءة تسوية مستحقات الموردين والجهات المنفذة (Capacity & Settlement)
-          </span>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {executorsData.map((ex) => {
               const statusColor =
@@ -447,10 +442,6 @@ export function DashboardDataBreakdown({
 
       {activeTab === 'hotels' && (
         <div className="space-y-3">
-          <span className="text-xs font-bold text-slate-500 block">
-            توزيع النزلاء ومراكز التجمع بالفنادق (Hotel Dispatch Logistics)
-          </span>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {hotelsData.slice(0, 15).map((hotel) => (
               <div
@@ -505,6 +496,8 @@ export function DashboardDataBreakdown({
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { translations } from '../i18n/translations'
+import { clearOfflineQueue } from '../services/offlineQueue'
 import {
   INITIAL_EXECUTORS,
   INITIAL_TRIP_DEFINITIONS,
@@ -85,6 +86,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('ax_h4u_staff_invites')
     }
+    clearOfflineQueue().catch(() => {})
     set((state) => ({
       bookings: [],
       expenses: [],
