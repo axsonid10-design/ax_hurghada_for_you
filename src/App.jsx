@@ -21,6 +21,7 @@ import { ExcelUploadModal } from './components/importer/ExcelUploadModal'
 import { QuickExpenseModal } from './components/dashboard/QuickExpenseModal'
 import { AX_FloatingActions } from './components/common/AX_FloatingActions'
 import { AX_WelcomeOverlay } from './components/common/AX_WelcomeOverlay'
+import { AX_MasterControlModal } from './components/admin/AX_MasterControlModal'
 import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 import { hasModuleAccess, getFirstAllowedModule } from './utils/permissionsConfig'
@@ -29,8 +30,33 @@ import { useScrollDirection } from './hooks/useScrollDirection'
 import { initRealtimeSync } from './services/realtimeSync'
 
 export function App() {
-  const { activeTab, setActiveTab, profile, setProfile, logout, lang, addExpense } = useAXStore()
+  const {
+    activeTab,
+    setActiveTab,
+    profile,
+    setProfile,
+    logout,
+    lang,
+    addExpense,
+    isMasterModalOpen,
+    closeMasterModal,
+    openPushModal
+  } = useAXStore()
   const isChromeVisible = useScrollDirection()
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) return
+    if (Notification.permission === 'default') {
+      const dismissed = sessionStorage.getItem('ax_push_session_dismissed')
+      if (!dismissed) {
+        const timer = setTimeout(() => {
+          openPushModal()
+        }, 1200)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [profile?.id, openPushModal])
 
   // Real-time Cloud Synchronization
   useEffect(() => {
@@ -161,6 +187,9 @@ export function App() {
 
       {/* 3.1 PWA Native Install Guide Modal */}
       <AX_PwaInstallModal />
+
+      {/* 3.2 Master Control & Errors Console */}
+      <AX_MasterControlModal isOpen={isMasterModalOpen} onClose={closeMasterModal} />
 
       {/* 4. Quick Expense Modal */}
       <QuickExpenseModal

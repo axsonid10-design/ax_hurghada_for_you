@@ -1,4 +1,5 @@
 import { supabase } from '../services/supabaseClient'
+import { pushManager } from './pushManager'
 
 const AX_ADMIN_CHAT_ID = '837246270'
 const TELEGRAM_BOT_TOKEN = '8959762689:AAFxDRv1Q7h7UDAy8tirQTqCf3ar5t9QpyI'
@@ -23,7 +24,7 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
 
     const currentHash = `${label}_${errStr.slice(0, 50)}`
     const now = Date.now()
-    if (currentHash === lastSentHash && now - lastSentTime < 30000) {
+    if (currentHash === lastSentHash && now - lastSentTime < 20000) {
       return
     }
     lastSentHash = currentHash
@@ -40,42 +41,42 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
       }
     } catch {}
 
-    const text = `🚨 *خطأ بالنظام* [${systemName}]\n` +
-      `👤 *المستخدم:* ${userStr}\n` +
-      `⏰ *الوقت:* ${time}\n` +
-      `📍 *الصفحة:* ${page}\n` +
-      `🔴 *التصنيف:* ${label}\n\n` +
-      `\`\`\`\n${errStr}\n\`\`\``
+    const text = `🚨 خطأ بالنظام [${systemName}]\n` +
+      `👤 المستخدم: ${userStr}\n` +
+      `⏰ الوقت: ${time}\n` +
+      `📍 الصفحة: ${page}\n` +
+      `🔴 التصنيف: ${label}\n\n` +
+      `${errStr}`
 
-    // 1. Send Instant Telegram Alert
     fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: AX_ADMIN_CHAT_ID,
-        text,
-        parse_mode: 'Markdown'
+        text
       })
     }).catch(() => {})
 
-    // 2. Log to Supabase ax_system_errors table
+    pushManager.sendNotification(
+      `🚨 خطأ في النظام: ${label}`,
+      `${userStr} • ${page}\n${errStr.slice(0, 120)}`,
+      { tag: 'system-error-alert' }
+    ).catch(() => {})
+
     const errorRecord = {
-      user_name: userStr,
-      user_email: userEmail,
-      page,
-      error_label: label,
-      error_details: errStr,
-      created_at: new Date().toISOString()
+      error_message: `[${label}] [${userStr}] ${errStr.slice(0, 250)}`,
+      stack_trace: errStr,
+      source: `${systemName} | ${userEmail} | ${page}`
     }
     supabase.from('ax_system_errors').insert([errorRecord]).catch(() => {})
   } catch (err) {
-    console.error('[AX_TELEGRAM_WATCHDOG] Failed to report error:', err)
+    console.error('[AX_WATCHDOG] Failed to report error:', err)
   }
 }
 
 export async function AX_purgeSystemErrors() {
   try {
-    await supabase.from('ax_system_errors').delete().neq('id', 0)
+    await supabase.from('ax_system_errors').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     return true
   } catch (e) {
     console.error('Failed to purge errors:', e)

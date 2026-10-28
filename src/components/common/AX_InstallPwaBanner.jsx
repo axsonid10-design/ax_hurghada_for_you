@@ -16,8 +16,7 @@ export function AX_InstallPwaBanner() {
       return
     }
 
-    const dismissCount = parseInt(localStorage.getItem('ax_pwa_dismiss_count') || '0', 10)
-    if (dismissCount >= 2) {
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ax_pwa_session_dismissed')) {
       setShowBanner(false)
       return
     }
@@ -65,8 +64,9 @@ export function AX_InstallPwaBanner() {
 
   const handleDismiss = () => {
     soundManager.playClick()
-    const count = parseInt(localStorage.getItem('ax_pwa_dismiss_count') || '0', 10)
-    localStorage.setItem('ax_pwa_dismiss_count', String(count + 1))
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('ax_pwa_session_dismissed', 'true')
+    }
     setShowBanner(false)
   }
 

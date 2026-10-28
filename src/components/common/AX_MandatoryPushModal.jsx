@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Bell, ShieldCheck, X } from 'lucide-react'
+import React from 'react'
+import { ShieldCheck, X } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { pushManager } from '../../utils/pushManager'
 import { useAXStore } from '../../store/useAXStore'
@@ -10,8 +10,9 @@ export function AX_MandatoryPushModal() {
 
   const handleClose = () => {
     soundManager.playClick()
-    const currentCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
-    localStorage.setItem('ax_push_dismiss_count', String(currentCount + 1))
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('ax_push_session_dismissed', 'true')
+    }
     closePushModal()
   }
 

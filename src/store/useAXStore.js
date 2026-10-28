@@ -448,10 +448,13 @@ export const useAXStore = create((set, get) => ({
 
   isPushModalOpen: false,
   isPwaInstallModalOpen: false,
+  isMasterModalOpen: false,
   openPushModal: () => set({ isPushModalOpen: true }),
   closePushModal: () => set({ isPushModalOpen: false }),
   openPwaInstallModal: () => set({ isPwaInstallModalOpen: true }),
   closePwaInstallModal: () => set({ isPwaInstallModalOpen: false }),
+  openMasterModal: () => set({ isMasterModalOpen: true }),
+  closeMasterModal: () => set({ isMasterModalOpen: false }),
 
   // Trip Definitions Actions
   addTripDefinition: (def) => {

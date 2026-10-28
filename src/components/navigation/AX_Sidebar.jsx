@@ -22,14 +22,25 @@ import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
 export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
-  const { activeTab, setActiveTab, profile, logout, openConfirmModal, tripDefinitions = [], t } = useAXStore()
+  const {
+    activeTab,
+    setActiveTab,
+    profile,
+    logout,
+    openConfirmModal,
+    openMasterModal,
+    tripDefinitions = [],
+    t
+  } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   const isExpanded = isPinned || isHovered
 
-  const isMaster = profile?.is_master || profile?.role === 'Super Admin' || profile?.email === 'axsonid@gmail.com'
+  const isMaster =
+    profile?.email?.toLowerCase() === 'axsonid@gmail.com' ||
+    profile?.email?.toLowerCase() === 'axonid@gmail.com'
 
   const unpricedTripsCount = useMemo(() => {
     return tripDefinitions.filter(
@@ -223,6 +234,24 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
       </div>
 
       <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+        {isMaster && (
+          <button
+            onClick={() => {
+              soundManager.playClick()
+              openMasterModal()
+            }}
+            className={`flex items-center gap-2 p-2 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 transition-all ${
+              !isExpanded ? 'justify-center p-1.5' : ''
+            }`}
+            title="غرفة تحكم AXONID"
+          >
+            <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            {isExpanded && (
+              <span className="text-xs font-black truncate">غرفة تحكم AXONID</span>
+            )}
+          </button>
+        )}
+
         <div
           className={`flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-100 ${
             !isExpanded ? 'justify-center p-1' : ''

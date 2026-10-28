@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Wifi, WifiOff, Bell, Download, LogOut, User, Globe } from 'lucide-react'
+import { Wifi, WifiOff, Bell, Download, LogOut, User, Globe, ShieldCheck } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { pushManager } from '../../utils/pushManager'
 import { soundManager } from '../../utils/soundEffects'
@@ -14,8 +14,13 @@ export function AX_Header({ isVisible = true }) {
   const openConfirmModal = useAXStore((state) => state.openConfirmModal)
   const openPushModal = useAXStore((state) => state.openPushModal)
   const openPwaInstallModal = useAXStore((state) => state.openPwaInstallModal)
+  const openMasterModal = useAXStore((state) => state.openMasterModal)
   const [pushStatus, setPushStatus] = useState('default')
   const [isStandalone, setIsStandalone] = useState(false)
+
+  const isMaster =
+    profile?.email?.toLowerCase() === 'axonid@gmail.com' ||
+    profile?.email?.toLowerCase() === 'axsonid@gmail.com'
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -134,6 +139,21 @@ export function AX_Header({ isVisible = true }) {
               <WifiOff className="w-3.5 h-3.5" />
               <span className="hidden md:inline">{t('offline')}</span>
             </div>
+          )}
+
+          {/* Master Control Button for AXONID only */}
+          {isMaster && (
+            <button
+              onClick={() => {
+                soundManager.playClick()
+                openMasterModal()
+              }}
+              title="غرفة تحكم AXONID ورادار الأخطاء"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-black transition-all active:scale-95 border border-amber-500/40 shadow-sm"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">AXONID</span>
+            </button>
           )}
 
           {/* User Capsule & Logout */}

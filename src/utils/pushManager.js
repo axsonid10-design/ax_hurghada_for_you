@@ -20,19 +20,17 @@ export const pushManager = {
     }
   },
 
-  async sendTestNotification() {
-    soundManager.playSuccess()
-
-    const title = 'غردقة فور يو — تم تفعيل الإشعارات بنجاح 🎉'
+  async sendNotification(title, body, extraOptions = {}) {
+    if (!this.isSupported() || Notification.permission !== 'granted') return false
     const options = {
-      body: 'المنظومة متصلة وجاهزة لاستقبال إشعارات الحجوزات والرحلات والتحصيلات على مدار 24 ساعة.',
+      body: body || '',
       icon: '/logo-circle.png',
       badge: '/favicon-32x32.png',
       dir: 'rtl',
       lang: 'ar-EG',
-      vibrate: [250, 100, 250, 100, 250],
-      tag: 'h4u-welcome-notification',
-      renotify: true
+      vibrate: [300, 100, 300, 100, 300],
+      renotify: true,
+      ...extraOptions
     }
 
     if ('serviceWorker' in navigator) {
@@ -42,20 +40,23 @@ export const pushManager = {
           await reg.showNotification(title, options)
           return true
         }
-      } catch (err) {
-        console.warn('[PushManager] ServiceWorker notification fallback:', err)
-      }
+      } catch (err) {}
     }
 
-    if (this.isSupported() && Notification.permission === 'granted') {
-      try {
-        new Notification(title, options)
-        return true
-      } catch (err) {
-        console.warn('[PushManager] Standard notification error:', err)
-      }
-    }
+    try {
+      new Notification(title, options)
+      return true
+    } catch (err) {}
 
     return false
+  },
+
+  async sendTestNotification() {
+    soundManager.playSuccess()
+    return this.sendNotification(
+      'غردقة فور يو — تم تفعيل الإشعارات بنجاح 🎉',
+      'المنظومة متصلة وجاهزة لاستقبال إشعارات الحجوزات والرحلات والتحصيلات على مدار 24 ساعة.',
+      { tag: 'h4u-welcome-notification' }
+    )
   }
 }
