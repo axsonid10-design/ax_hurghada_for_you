@@ -7,6 +7,7 @@
     "dev": "vite",
     "bump": "node scripts/bump-version.js",
     "build": "node scripts/bump-version.js && vite build",
+    "cf:bind": "node scripts/ax_cloudflare_bind_domain.js",
     "preview": "vite preview"
   },
   "dependencies": {
