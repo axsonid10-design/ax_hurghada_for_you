@@ -9,7 +9,8 @@ import {
   Hotel,
   Truck,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  FileSpreadsheet
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
@@ -264,27 +265,18 @@ export function DailySituationView({ onOpenUploadModal }) {
         </div>
       </div>
 
-      {/* Empty State Banner if no bookings exist for this date */}
+      {/* Empty State Banner if no bookings exist for this date (Rule 2610: سيب بس العائم في الصفحة) */}
       {filteredBookings.length === 0 ? (
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+          <div className="w-14 h-14 rounded-full bg-slate-100 text-[#0284c7] flex items-center justify-center mx-auto border border-slate-200">
             <FileSpreadsheet className="w-7 h-7" />
           </div>
           <h3 className="text-base font-black text-slate-800">
             لا توجد حجوزات مسجلة لهذا التاريخ ({selectedDate})
           </h3>
-          <div className="flex items-center justify-center pt-2">
-            <button
-              onClick={() => {
-                soundManager.playClick()
-                onOpenUploadModal()
-              }}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>رفع ملف إكسيل</span>
-            </button>
-          </div>
+          <p className="text-xs text-slate-500 font-bold max-w-sm mx-auto">
+            استخدم الزر العائم بأسفل الشاشة لرفع شيت الإكسيل وإدراج الرحلات اليومية.
+          </p>
         </div>
       ) : (
         <>

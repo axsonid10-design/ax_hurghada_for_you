@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Download, X } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
+import { useAXStore } from '../../store/useAXStore'
 
 export function AX_InstallPwaBanner() {
+  const openPwaInstallModal = useAXStore((state) => state.openPwaInstallModal)
   const [showBanner, setShowBanner] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
 
@@ -20,46 +22,44 @@ export function AX_InstallPwaBanner() {
       return
     }
 
+    setShowBanner(true)
     if (window.__deferredPwaPrompt) {
       setDeferredPrompt(window.__deferredPwaPrompt)
-      setShowBanner(true)
     }
 
     const handler = () => {
-      const count = parseInt(localStorage.getItem('ax_pwa_dismiss_count') || '0', 10)
-      if (count < 2 && window.__deferredPwaPrompt) {
+      if (window.__deferredPwaPrompt) {
         setDeferredPrompt(window.__deferredPwaPrompt)
-        setShowBanner(true)
       }
     }
 
     window.addEventListener('ax-pwa-ready', handler)
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const onPrompt = (e) => {
       e.preventDefault()
       window.__deferredPwaPrompt = e
       setDeferredPrompt(e)
-      const count = parseInt(localStorage.getItem('ax_pwa_dismiss_count') || '0', 10)
-      if (count < 2) {
-        setShowBanner(true)
-      }
-    })
+    }
+    window.addEventListener('beforeinstallprompt', onPrompt)
 
     return () => {
       window.removeEventListener('ax-pwa-ready', handler)
+      window.removeEventListener('beforeinstallprompt', onPrompt)
     }
   }, [])
 
   const handleInstall = async () => {
     soundManager.playClick()
     const promptEvent = deferredPrompt || window.__deferredPwaPrompt
-    if (!promptEvent) return
-
-    promptEvent.prompt()
-    const choiceResult = await promptEvent.userChoice
-    if (choiceResult.outcome === 'accepted') {
-      soundManager.playSuccess()
-      setShowBanner(false)
-      window.__deferredPwaPrompt = null
+    if (promptEvent) {
+      promptEvent.prompt()
+      const choiceResult = await promptEvent.userChoice
+      if (choiceResult.outcome === 'accepted') {
+        soundManager.playSuccess()
+        setShowBanner(false)
+        window.__deferredPwaPrompt = null
+      }
+    } else {
+      openPwaInstallModal()
     }
   }
 

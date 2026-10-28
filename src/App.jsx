@@ -132,6 +132,8 @@ export function App() {
     return (
       <div className="min-h-screen font-tajawal antialiased">
         <AX_ConfirmModal />
+        <AX_PwaInstallModal />
+        <AX_InstallPwaBanner />
         <AX_LoginScreen />
       </div>
     )
