@@ -1,15 +1,14 @@
 import React from 'react'
 import {
-  Euro,
+  TrendingUp,
   Ship,
   Receipt,
-  TrendingUp,
   Coins,
-  Sparkles,
-  ArrowUpRight,
-  ShieldCheck,
+  Users,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Percent,
+  Wallet
 } from 'lucide-react'
 
 export function FinancialKpiCards({
@@ -20,165 +19,206 @@ export function FinancialKpiCards({
   netProfitMargin,
   totalRestEur,
   totalRestEgp,
+  totalRestUsd,
+  totalRestGbp,
   totalPax,
+  totalAdults,
+  totalChildren,
+  totalInfants,
   totalBookings,
   expensesCount,
+  displayCurrency = 'EUR',
   rates
 }) {
+  const egpRate = rates?.EGP || 53.25
+  const isEgp = displayCurrency === 'EGP'
+
+  const formatAmount = (eurVal) => {
+    if (isEgp) {
+      const egpVal = Math.round(eurVal * egpRate)
+      return `${egpVal.toLocaleString()} ج.م`
+    }
+    return `€${Math.round(eurVal).toLocaleString()}`
+  }
+
+  const formatSecondary = (eurVal) => {
+    if (isEgp) {
+      return `≈ €${Math.round(eurVal).toLocaleString()}`
+    }
+    return `≈ ${Math.round(eurVal * egpRate).toLocaleString()} ج.م`
+  }
+
   const costRatio = totalSalesEur > 0 ? Math.round((totalCostEur / totalSalesEur) * 100) : 0
   const collectedEur = Math.max(0, totalSalesEur - totalRestEur)
-  const egpRate = rates.EGP || 53.25
+  const collectionRate = totalSalesEur > 0 ? Math.round((collectedEur / totalSalesEur) * 100) : 100
+  const avgTicketEur = totalBookings > 0 ? Math.round(totalSalesEur / totalBookings) : 0
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-      {/* 1. Gross Sales */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a2540] to-[#133e66] text-white p-4.5 border border-sky-400/30 shadow-lg shadow-slate-900/10 flex flex-col justify-between">
-        <div className="flex items-center justify-between text-xs font-bold text-sky-200">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-400" />
-            <span>إجمالي المبيعات</span>
-          </span>
-          <div className="p-1.5 rounded-full bg-white/10 text-sky-300">
-            <Euro className="w-4 h-4" />
+    <div className="w-full space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="rounded-3xl bg-white p-4.5 border border-sky-200/90 shadow-soft flex flex-col justify-between hover:border-sky-400 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold text-sky-800">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-sky-500" />
+              <span>إجمالي المبيعات</span>
+            </span>
+            <div className="p-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="py-2 space-y-0.5">
+            <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900">
+              {formatAmount(totalSalesEur)}
+            </div>
+            <div className="text-xs font-mono font-bold text-sky-700/80">
+              {formatSecondary(totalSalesEur)}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span>{totalBookings} حجز مسجل</span>
+            <span className="font-mono text-slate-700">متوسط: {formatAmount(avgTicketEur)}</span>
           </div>
         </div>
 
-        <div className="py-2 space-y-0.5">
-          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-white">
-            €{totalSalesEur.toLocaleString()}
+        <div className="rounded-3xl bg-white p-4.5 border border-amber-200/90 shadow-soft flex flex-col justify-between hover:border-amber-400 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold text-amber-800">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>تكاليف الموردين واليخوت</span>
+            </span>
+            <div className="p-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              <Ship className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-xs font-mono font-bold text-sky-300">
-            ≈ {Math.round(totalSalesEur * egpRate).toLocaleString()} ج.م
-          </div>
-        </div>
 
-        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] font-bold text-slate-300">
-          <span>{totalPax} فرد (نزيل)</span>
-          <span className="bg-white/10 px-2 py-0.5 rounded-full font-mono text-[10px]">
-            {totalBookings} حجز
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Vessel & Executor Costs */}
-      <div className="rounded-3xl bg-white p-4.5 border border-amber-200/90 shadow-soft flex flex-col justify-between hover:border-amber-400 transition-colors">
-        <div className="flex items-center justify-between text-xs font-bold text-amber-800">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>تكاليف الموردين واليخوت</span>
-          </span>
-          <div className="p-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <Ship className="w-4 h-4" />
+          <div className="py-2 space-y-0.5">
+            <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900">
+              {formatAmount(totalCostEur)}
+            </div>
+            <div className="text-xs font-mono font-bold text-amber-700/80">
+              {formatSecondary(totalCostEur)}
+            </div>
           </div>
-        </div>
 
-        <div className="py-2 space-y-0.5">
-          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-900">
-            €{totalCostEur.toLocaleString()}
-          </div>
-          <div className="text-xs font-mono font-bold text-amber-700/80">
-            ≈ {Math.round(totalCostEur * egpRate).toLocaleString()} ج.م
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 space-y-1">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span>نسبة التكلفة من المبيعات</span>
-            <span className="font-mono text-amber-800">{costRatio}%</span>
+            <span className="font-mono font-black text-amber-800">{costRatio}%</span>
           </div>
-          <div className="w-full bg-amber-100 rounded-full h-1.5 overflow-hidden">
-            <div
-              className="bg-amber-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, costRatio)}%` }}
-            />
+        </div>
+
+        <div className="rounded-3xl bg-white p-4.5 border border-rose-200/90 shadow-soft flex flex-col justify-between hover:border-rose-400 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold text-rose-800">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>المصروفات التشغيلية</span>
+            </span>
+            <div className="p-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+              <Receipt className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="py-2 space-y-0.5">
+            <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900">
+              {formatAmount(totalExpensesEur)}
+            </div>
+            <div className="text-xs font-mono font-bold text-rose-700/80">
+              {formatSecondary(totalExpensesEur)}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span>وقود، عمالة وإكراميات</span>
+            <span className="font-mono text-slate-700">{expensesCount} بند</span>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-4.5 border border-emerald-300 shadow-soft flex flex-col justify-between hover:border-emerald-500 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>صافي الربح الفعلي</span>
+            </span>
+            <div className="p-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Coins className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="py-2 space-y-0.5">
+            <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${netProfitEur >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+              {formatAmount(netProfitEur)}
+            </div>
+            <div className="text-xs font-mono font-bold text-emerald-800/80">
+              {formatSecondary(netProfitEur)}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span>هامش الربحية الصافي</span>
+            <span className="font-mono font-black text-emerald-700">{netProfitMargin}%</span>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-4.5 border border-slate-200 shadow-soft flex flex-col justify-between hover:border-slate-400 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-600" />
+              <span>إجمالي النزلاء (PAX)</span>
+            </span>
+            <div className="p-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="py-2 space-y-0.5">
+            <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900">
+              {totalPax.toLocaleString()}
+            </div>
+            <div className="text-xs font-bold text-slate-500">
+              نزيل في هذا النطاق
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-600">
+            <span>{totalAdults} بالغ</span>
+            <span>•</span>
+            <span>{totalChildren} طفل</span>
+            <span>•</span>
+            <span>{totalInfants} رضيع</span>
           </div>
         </div>
       </div>
 
-      {/* 3. Operating Expenses */}
-      <div className="rounded-3xl bg-white p-4.5 border border-rose-200/90 shadow-soft flex flex-col justify-between hover:border-rose-400 transition-colors">
-        <div className="flex items-center justify-between text-xs font-bold text-rose-800">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span>المصاريف التشغيلية</span>
-          </span>
-          <div className="p-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-            <Receipt className="w-4 h-4" />
+      <div className="rounded-2xl bg-white border border-slate-200/90 shadow-soft p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Wallet className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+              <span>موقف التحصيل والخزينة</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-bold">
+                نسبة التحصيل: {collectionRate}%
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 font-bold flex items-center gap-2 mt-0.5">
+              <span>المحصل: <span className="font-mono text-emerald-700 font-black">{formatAmount(collectedEur)}</span></span>
+              <span>•</span>
+              <span>المتبقي: <span className="font-mono text-amber-700 font-black">{formatAmount(totalRestEur)}</span></span>
+            </div>
           </div>
         </div>
 
-        <div className="py-2 space-y-0.5">
-          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-900">
-            €{Math.round(totalExpensesEur).toLocaleString()}
-          </div>
-          <div className="text-xs font-mono font-bold text-rose-700/80">
-            ≈ {Math.round(totalExpensesEur * egpRate).toLocaleString()} ج.م
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
-          <span>وقود، إكراميات، إعاشة</span>
-          <span className="bg-rose-50 text-rose-700 border border-rose-200/60 px-2 py-0.5 rounded-full font-mono text-[10px]">
-            {expensesCount} بند
-          </span>
-        </div>
-      </div>
-
-      {/* 4. True Net Profit (The Crown Jewel Card) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#021f18] via-[#05372b] to-[#0a2540] text-white p-4.5 border-2 border-emerald-400/60 shadow-xl shadow-emerald-950/40 flex flex-col justify-between sm:col-span-2 lg:col-span-1">
-        <div className="absolute -right-8 -top-8 w-28 h-28 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex items-center justify-between text-xs font-bold text-emerald-200">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-black text-white">صافي الربح الفعلي</span>
-          </span>
-          <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full font-mono font-black text-[10px]">
-            {netProfitMargin}% هامش
-          </span>
-        </div>
-
-        <div className="relative z-10 py-2 space-y-0.5">
-          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-300">
-            +€{Math.round(netProfitEur).toLocaleString()}
-          </div>
-          <div className="text-xs font-mono font-bold text-emerald-200/80">
-            ≈ +{Math.round(netProfitEur * egpRate).toLocaleString()} ج.م
-          </div>
-        </div>
-
-        <div className="relative z-10 pt-2 border-t border-white/10 text-[10px] font-mono text-emerald-200/70 flex items-center justify-between">
-          <span>بعد الموردين والمصاريف</span>
-          <span className="text-emerald-300 font-bold">100% دقيق</span>
-        </div>
-      </div>
-
-      {/* 5. Receivables & Collection */}
-      <div className="rounded-3xl bg-white p-4.5 border border-slate-200 shadow-soft flex flex-col justify-between">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-500" />
-            <span>التحصيل والمتبقي</span>
-          </span>
-          <div className="p-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            <Coins className="w-4 h-4" />
-          </div>
-        </div>
-
-        <div className="py-2 space-y-0.5">
-          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600">
-            €{totalRestEur.toLocaleString()}
-          </div>
-          <div className="text-xs font-mono font-bold text-slate-500">
-            {totalRestEgp > 0 ? `+ ${totalRestEgp.toLocaleString()} ج.م` : 'متبقي لدى النزلاء'}
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold">
-          <span className="text-emerald-700">محصل: €{collectedEur.toLocaleString()}</span>
-          <span className="text-rose-600 font-mono text-[10px]">
-            {totalSalesEur > 0 ? `${Math.round((totalRestEur / totalSalesEur) * 100)}% آجل` : '0%'}
-          </span>
+        <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+          <span className="text-slate-500">المتبقي بالعملات:</span>
+          {totalRestEur > 0 && <span className="font-mono font-black text-sky-700">€{totalRestEur.toLocaleString()}</span>}
+          {totalRestEgp > 0 && <span className="font-mono font-black text-emerald-700">{totalRestEgp.toLocaleString()} ج.م</span>}
+          {totalRestUsd > 0 && <span className="font-mono font-black text-blue-700">${totalRestUsd.toLocaleString()}</span>}
+          {totalRestGbp > 0 && <span className="font-mono font-black text-purple-700">£{totalRestGbp.toLocaleString()}</span>}
+          {totalRestEur === 0 && totalRestEgp === 0 && totalRestUsd === 0 && totalRestGbp === 0 && (
+            <span className="text-emerald-700 font-black text-[11px]">كافة الحجوزات مسددة بالكامل</span>
+          )}
         </div>
       </div>
     </div>
