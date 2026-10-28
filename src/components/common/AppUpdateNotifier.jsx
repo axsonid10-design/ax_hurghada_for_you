@@ -71,20 +71,22 @@ export function AppUpdateNotifier() {
   if (!updateAvailable) return null
 
   return (
-    <div
-      className="fixed top-0 left-1/2 -translate-x-1/2 z-50 animate-bounce max-w-[95vw] px-2"
-      style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
-    >
-      <div className="bg-[#0a2540] text-white px-5 py-2.5 rounded-full shadow-float border border-[#0284c7] flex items-center gap-3">
-        <RefreshCw className="w-4 h-4 text-[#38bdf8] animate-spin" />
-        <span className="text-xs sm:text-sm font-bold">
-          تحديث جديد متوفر ({newVersion})
-        </span>
+    <div className="w-full bg-[#0a2540] text-white border-b border-[#0284c7]/40 shadow-sm animate-fadeIn">
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-[#38bdf8] flex items-center justify-center flex-shrink-0">
+            <RefreshCw className="w-4 h-4 text-[#38bdf8] animate-spin" />
+          </div>
+          <span className="text-xs sm:text-sm font-bold text-slate-100">
+            تحديث جديد متوفر للمنظومة {newVersion ? `(${newVersion})` : ''}
+          </span>
+        </div>
         <button
           onClick={handleUpdate}
-          className="px-4 py-1 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
+          className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95"
         >
-          تحديث المنظومة الآن
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>تحديث الآن</span>
         </button>
       </div>
     </div>

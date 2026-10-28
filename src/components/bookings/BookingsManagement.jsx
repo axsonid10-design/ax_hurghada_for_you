@@ -22,7 +22,8 @@ export function BookingsManagement({ onOpenUploadModal }) {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 20
 
-  const filtered = bookings.filter((b) => {
+  const filtered = (bookings || []).filter((b) => {
+    if (!b) return false
     const guestName = b.guest_name || b.name || ''
     const matchesSearch =
       guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -32,7 +33,11 @@ export function BookingsManagement({ onOpenUploadModal }) {
       String(b.sr || '').includes(searchTerm) ||
       String(b.room || '').includes(searchTerm)
 
-    const hasRest = (b.rest_eur > 0 || b.rest_egp > 0 || b.rest_usd > 0 || b.rest_gbp > 0)
+    const restEur = Number(b.rest_eur) || 0
+    const restEgp = Number(b.rest_egp) || 0
+    const restUsd = Number(b.rest_usd) || 0
+    const restGbp = Number(b.rest_gbp) || 0
+    const hasRest = (restEur > 0 || restEgp > 0 || restUsd > 0 || restGbp > 0)
     let matchesStatus = true
     if (statusFilter === 'paid') matchesStatus = !hasRest
     if (statusFilter === 'unpaid') matchesStatus = hasRest
@@ -48,14 +53,20 @@ export function BookingsManagement({ onOpenUploadModal }) {
   const totalCollectedEur = Math.max(0, totalSalesEur - totalRestEur)
 
   const getPaymentBadge = (b) => {
-    const hasRest = (b.rest_eur > 0 || b.rest_egp > 0 || b.rest_usd > 0 || b.rest_gbp > 0)
+    if (!b) return { text: 'غير مدفوع', className: 'bg-rose-50 text-rose-700 border border-rose-200' }
+    const restEur = Number(b.rest_eur) || 0
+    const restEgp = Number(b.rest_egp) || 0
+    const restUsd = Number(b.rest_usd) || 0
+    const restGbp = Number(b.rest_gbp) || 0
+    const hasRest = (restEur > 0 || restEgp > 0 || restUsd > 0 || restGbp > 0)
     if (!hasRest) {
       return {
         text: 'مدفوع كلي',
         className: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
       }
     }
-    if (b.rest_eur < (b.sell_eur || 0) && b.rest_eur > 0) {
+    const sellEur = Number(b.sell_eur) || 0
+    if (restEur < sellEur && restEur > 0) {
       return {
         text: 'مدفوع جزئي',
         className: 'bg-amber-50 text-amber-800 border border-amber-200'

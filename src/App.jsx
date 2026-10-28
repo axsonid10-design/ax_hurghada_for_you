@@ -141,9 +141,6 @@ export function App() {
         />
       )}
 
-      {/* 1. Quad-Lock PWA Auto Update Notifier */}
-      <AppUpdateNotifier />
-
       {/* 2. Mandatory 24/7 Web Push Modal */}
       <AX_MandatoryPushModal />
 
@@ -168,6 +165,9 @@ export function App() {
 
       {/* 6. Lean Responsive Header (Zero Fluff) */}
       <AX_Header isVisible={isChromeVisible} />
+
+      {/* App Update Ribbon Strip */}
+      <AppUpdateNotifier />
 
       {/* 7. PWA Install Banner */}
       <AX_InstallPwaBanner />
