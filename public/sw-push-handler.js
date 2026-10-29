@@ -1,3 +1,10 @@
+function toAbsolute(url, fallback) {
+  const target = url || fallback || ''
+  if (!target) return ''
+  if (target.startsWith('http://') || target.startsWith('https://')) return target
+  return self.location.origin + (target.startsWith('/') ? '' : '/') + target
+}
+
 self.addEventListener('push', function (event) {
   let payload = {
     title: 'غردقة فور يو — تنبيه تشغيلي',
@@ -17,11 +24,12 @@ self.addEventListener('push', function (event) {
   }
 
   const notificationOptions = {
-    body: payload.body || 'تنبيه تشغيلي جديد',
-    icon: payload.icon || '/pwa-192x192.png',
-    badge: payload.badge || '/favicon-32x32.png',
+    body: payload.body || payload.message || 'تنبيه تشغيلي جديد',
+    icon: toAbsolute(payload.icon, '/pwa-192x192.png'),
+    badge: toAbsolute(payload.badge, '/favicon-32x32.png'),
+    image: payload.image ? toAbsolute(payload.image) : undefined,
     vibrate: [300, 150, 300, 150, 300],
-    data: payload.data || { url: payload.link || '/' },
+    data: payload.data || { url: payload.link || payload.url || '/' },
     dir: 'rtl',
     lang: 'ar-EG',
     requireInteraction: true,
@@ -51,6 +59,9 @@ self.addEventListener('notificationclick', function (event) {
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i]
         if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client && targetUrl) {
+            client.navigate(targetUrl)
+          }
           return client.focus()
         }
       }

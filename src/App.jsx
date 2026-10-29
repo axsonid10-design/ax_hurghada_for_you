@@ -47,15 +47,18 @@ export function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!('Notification' in window)) return
-    if (Notification.permission === 'default') {
-      const dismissed = sessionStorage.getItem('ax_push_session_dismissed')
-      if (!dismissed) {
-        const timer = setTimeout(() => {
-          openPushModal()
-        }, 1200)
-        return () => clearTimeout(timer)
-      }
-    }
+    if (Notification.permission === 'granted') return
+
+    const dismissCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
+    if (dismissCount >= 2) return
+
+    const dismissed = sessionStorage.getItem('ax_push_session_dismissed')
+    if (dismissed) return
+
+    const timer = setTimeout(() => {
+      openPushModal()
+    }, 1200)
+    return () => clearTimeout(timer)
   }, [profile?.id, openPushModal])
 
   // Real-time Cloud Synchronization
