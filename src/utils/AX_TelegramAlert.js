@@ -22,6 +22,15 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
       errStr = String(errorObj || 'Unknown').substring(0, 1000)
     }
 
+    // Ignore benign browser/PWA lifecycle events
+    if (
+      errStr.includes('Failed to update a ServiceWorker') ||
+      errStr.includes('The object is in an invalid state') ||
+      errStr.includes('ResizeObserver loop')
+    ) {
+      return
+    }
+
     let fullStack = errStr
     if (context?.componentStack) {
       fullStack += `\nComponent Stack:\n${String(context.componentStack).substring(0, 500)}`
@@ -76,7 +85,11 @@ export async function AX_alertTelegram(label, errorObj, context = {}) {
       stack_trace: fullStack,
       source: `${systemName} | ${userEmail} | ${page}`
     }
-    supabase.from('ax_system_errors').insert([errorRecord]).catch(() => {})
+    try {
+      await supabase.from('ax_system_errors').insert([errorRecord])
+    } catch (e) {
+      console.warn('[AX_WATCHDOG] Supabase insert error:', e)
+    }
   } catch (err) {
     console.error('[AX_WATCHDOG] Failed to report error:', err)
   }
