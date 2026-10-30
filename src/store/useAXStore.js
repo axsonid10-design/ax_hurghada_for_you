@@ -600,7 +600,7 @@ export const useAXStore = create((set, get) => ({
     const { executors, bookings } = get()
     let bookingsChanged = false
     const updatedBookings = bookings.map((b) => {
-      const bTrip = (b.trip || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      const bTrip = (b.trip_type || b.trip || '').toLowerCase().trim().replace(/\s+/g, ' ')
       if (bTrip === targetSheet) {
         bookingsChanged = true
         const fin = computeBookingFinancials(b, newDefs, executors)
@@ -629,8 +629,9 @@ export const useAXStore = create((set, get) => ({
     )
     const missing = []
     bookings.forEach((b) => {
-      const rawName = (b.trip || '').trim()
+      const rawName = (b.trip_type || b.trip || '').trim()
       const cleanKey = rawName.toLowerCase().replace(/\s+/g, ' ')
+      if (cleanKey.includes('cash pickup') || cleanKey.includes('تحصيل')) return
       if (cleanKey && !existingKeys.has(cleanKey)) {
         existingKeys.add(cleanKey)
         const safeId = 'trip_orphan_' + Math.abs(cleanKey.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0))
@@ -887,7 +888,25 @@ export const useAXStore = create((set, get) => ({
           time: `EDITED:${nowIso}`
         }
         const fin = computeBookingFinancials(merged, tripDefinitions, executors)
-        updatedBooking = { ...merged, ...fin }
+        const extraCost = Number(merged.extra_cost_eur) || 0
+        const effectiveSell = updatedFields.sell_eur !== undefined
+          ? Number(updatedFields.sell_eur)
+          : (Number(fin.sell_eur) || Number(b.sell_eur) || 0)
+        const effectiveCost = updatedFields.cost_eur !== undefined
+          ? Number(updatedFields.cost_eur)
+          : ((Number(fin.cost_eur) || Number(b.cost_eur) || 0) + extraCost)
+        const effectiveProfit = updatedFields.profit_eur !== undefined
+          ? Number(updatedFields.profit_eur)
+          : (effectiveSell - effectiveCost)
+
+        updatedBooking = {
+          ...merged,
+          ...fin,
+          sell_eur: effectiveSell,
+          cost_eur: effectiveCost,
+          profit_eur: effectiveProfit,
+          extra_cost_eur: extraCost
+        }
         return updatedBooking
       }
       return b

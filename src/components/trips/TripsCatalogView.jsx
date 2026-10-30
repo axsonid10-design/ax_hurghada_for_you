@@ -235,56 +235,97 @@ export function TripsCatalogView() {
         </div>
       </div>
 
-      {/* ⚠️ Unpriced Trips Alarm Ribbon */}
+      {/* ⚠️ Dedicated Unpriced Trips Section (قسم الرحلات غير المسعرة الإلزامي) */}
       {unpricedTrips.length > 0 && (
-        <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-fadeIn">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm animate-pulse">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white uppercase tracking-wider">
-                  تنبيه تسعير
-                </span>
-                <h3 className="text-xs sm:text-sm font-black text-rose-950">
-                  يوجد ({unpricedTrips.length}) رحلات مسجلة بدون تسعير!
-                </h3>
+        <section className="bg-amber-50/70 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-soft space-y-4 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center flex-shrink-0 shadow-sm animate-pulse">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-              <p className="text-[11px] text-rose-800 font-bold mt-0.5">
-                تكلفة وأرباح هذه الرحلات غير محتسبة في الحجوزات والتقارير.
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-black text-amber-950">
+                    قسم الرحلات غير المسعرة
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-300">
+                    {unpricedTrips.length} رحلة بحاجة لتسعير
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800 font-bold mt-0.5">
+                  هذه الرحلات مستوردة من الحجوزات والشيت بدون تسعير. قم بتحديد سعر التكلفة والبيع لحساب الأرباح بدقة.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playClick()
-                setActiveCategory('unpriced')
-              }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 ${
-                activeCategory === 'unpriced'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-100'
-              }`}
-            >
-              فلترة غير المسعر ({unpricedTrips.length})
-            </button>
             <button
               type="button"
               onClick={() => {
                 soundManager.playClick()
                 setEditingTrip(unpricedTrips[0])
               }}
-              className="px-4 py-1.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 self-start sm:self-auto"
             >
               <span>تسعير أول رحلة الآن</span>
               <span className="font-mono text-sky-300">←</span>
             </button>
           </div>
-        </div>
+
+          {/* Unpriced Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {unpricedTrips.map((trip) => {
+              const executor = executors.find((ex) => ex.id === trip.executor_id)
+              return (
+                <div
+                  key={trip.id}
+                  className="bg-white border-2 border-amber-300 rounded-2xl p-4 shadow-xs hover:shadow-md transition-all space-y-3 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="text-sm font-black text-slate-800 line-clamp-1" title={trip.display_name}>
+                        {trip.display_name}
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex-shrink-0">
+                        ⚠️ غير مسعرة
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-bold mt-1">
+                      المنفذ: <span className="text-slate-700 font-black">{executor?.name || 'مارينا'}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between text-xs font-mono">
+                    <div>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">التكلفة:</span>
+                      <span className="font-black text-amber-700">0.00 €</span>
+                    </div>
+                    <div className="text-slate-300">•</div>
+                    <div>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">البيع:</span>
+                      <span className="font-black text-slate-800">0.00 €</span>
+                    </div>
+                    <div className="text-slate-300">•</div>
+                    <div>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">الربح:</span>
+                      <span className="font-black text-emerald-600">0.00 €</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playClick()
+                      setEditingTrip(trip)
+                    }}
+                    className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-[#0a2540] rounded-full text-xs font-black shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    <Coins className="w-3.5 h-3.5 text-[#0a2540]" />
+                    <span>تسعير الرحلة الآن</span>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       )}
 
       {/* Category Tabs Bar (Soothing colors & clean active states) */}

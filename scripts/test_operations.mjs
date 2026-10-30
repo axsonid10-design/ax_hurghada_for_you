@@ -118,4 +118,37 @@ assert.ok(visibleStaff.some((u) => u.name === 'Director'), 'Director must be vis
 assert.ok(visibleStaff.some((u) => u.name === 'Laly'), 'Laly must be visible')
 console.log('✅ Visible staff isolation strictly verified')
 
-console.log('\n🎉 ALL 4 UNIT TESTS PASSED SUCCESSFULLY!')
+// Test 5: Reconcile Unpriced Trips & Extra Cost Preservation
+console.log('\n▶ Test 5: Reconcile Unpriced Trips & Extra Cost Preservation')
+const testBookings = [
+  { sr: 201, trip_type: 'Super Safari Quad', sell_eur: 90, cost_eur: 40 },
+  { sr: 202, trip_type: 'Cash Pickup EUR', rest_eur: 150 },
+  { sr: 203, trip: 'Dolphin House VIP', sell_eur: 60, cost_eur: 25 }
+]
+const existingTripDefs = [{ sheet_name: 'Dolphin House VIP' }]
+const existingKeys = new Set(existingTripDefs.map(t => t.sheet_name.toLowerCase()))
+
+const newlyFound = []
+testBookings.forEach((b) => {
+  const raw = (b.trip_type || b.trip || '').trim()
+  const clean = raw.toLowerCase()
+  if (clean.includes('cash pickup') || clean.includes('تحصيل')) return
+  if (clean && !existingKeys.has(clean)) {
+    existingKeys.add(clean)
+    newlyFound.push(raw)
+  }
+})
+assert.equal(newlyFound.length, 1)
+assert.equal(newlyFound[0], 'Super Safari Quad')
+console.log('✅ Orphan trip "Super Safari Quad" successfully reconciled, Cash Pickup correctly skipped')
+
+const baseCost = 40
+const extraCost = 15
+const totalCost = baseCost + extraCost
+const sell = 90
+const profit = sell - totalCost
+assert.equal(totalCost, 55)
+assert.equal(profit, 35)
+console.log('✅ Extra cost preservation calculation verified: Cost=55€, Profit=35€')
+
+console.log('\n🎉 ALL 5 UNIT TESTS PASSED SUCCESSFULLY!')

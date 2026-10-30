@@ -308,7 +308,11 @@ export function DailySituationView({ onOpenUploadModal }) {
           return (
             <div
               key={b.sr}
-              className="bg-white rounded-3xl p-4 border border-slate-200 shadow-soft space-y-3"
+              onClick={() => {
+                soundManager.playClick()
+                setEditingBooking(b)
+              }}
+              className="bg-white rounded-3xl p-4 border border-slate-200 shadow-soft space-y-3 cursor-pointer hover:border-sky-300 active:scale-[0.99] transition-all"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -367,7 +371,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-1 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
                 <div className="text-xs">
                   <span className="text-slate-400 ml-1">المتبقي:</span>
                   <span className="font-black font-mono text-rose-600 text-sm">
@@ -382,21 +386,28 @@ export function DailySituationView({ onOpenUploadModal }) {
 
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
                       soundManager.playClick()
                       setEditingBooking(b)
                     }}
-                    className="px-3 py-1 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-slate-200"
+                    className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-sky-200 shadow-xs"
                   >
                     <Edit3 className="w-3 h-3 text-sky-600" />
                     <span>تعديل</span>
                   </button>
                   {badge.text !== t('status_paid') && (
                     <button
-                      onClick={() => handleMarkPaid(b.sr)}
-                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleMarkPaid(b.sr)
+                      }}
+                      className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-xs transition-all active:scale-95 flex items-center gap-1"
                     >
-                      {t('collect')}
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{t('collect')}</span>
                     </button>
                   )}
                 </div>
@@ -408,10 +419,11 @@ export function DailySituationView({ onOpenUploadModal }) {
 
       {/* Desktop Single-Line Table with SMOOTH HORIZONTAL SCROLL (Rule 16 + Scroll fix) */}
       <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-soft overflow-x-auto overflow-y-hidden w-full max-w-full">
-        <table className="w-full text-start border-collapse min-w-[980px]">
+        <table className="w-full text-start border-collapse min-w-[1050px]">
           <thead>
             <tr className="bg-[#0f172a] text-white text-xs font-bold h-11">
               <th className="px-3 font-mono text-start">{t('th_sr')}</th>
+              <th className="px-3 text-start">التاريخ</th>
               <th className="px-3 text-start">{t('th_guest')}</th>
               <th className="px-3 text-start">{t('th_hotel_room')}</th>
               <th className="px-3 text-start">{t('th_trip')}</th>
@@ -420,6 +432,7 @@ export function DailySituationView({ onOpenUploadModal }) {
               <th className="px-3 text-center font-mono">{t('th_sell')}</th>
               <th className="px-3 text-center font-mono">{t('th_cost')}</th>
               <th className="px-3 text-center font-mono">{t('th_profit')}</th>
+              <th className="px-3 text-center font-mono">المتبقي</th>
               <th className="px-3 text-center">{t('th_payment_status')}</th>
               <th className="px-3 text-center">{t('th_actions')}</th>
             </tr>
@@ -430,9 +443,22 @@ export function DailySituationView({ onOpenUploadModal }) {
               const badge = getPaymentBadge(b)
 
               return (
-                <tr key={b.sr} className="h-11 hover:bg-slate-50/80 transition-colors whitespace-nowrap">
+                <tr
+                  key={b.sr}
+                  onClick={() => {
+                    soundManager.playClick()
+                    setEditingBooking(b)
+                  }}
+                  className="h-12 hover:bg-sky-50/70 transition-colors whitespace-nowrap cursor-pointer"
+                  title="اضغط لتعديل بيانات الحجز"
+                >
                   <td className="px-3 font-mono font-bold text-[#0284c7]">
                     #{b.sr}
+                  </td>
+                  <td className="px-3">
+                    <span className="font-mono text-slate-600 font-bold bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] whitespace-nowrap">
+                      📅 {b.date}
+                    </span>
                   </td>
                   <td className="px-3 font-black text-[#0a2540] max-w-[150px] truncate" title={b.guest_name}>
                     {b.guest_name}
@@ -442,11 +468,8 @@ export function DailySituationView({ onOpenUploadModal }) {
                   </td>
                   <td className="px-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800">
                         {b.trip_type}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                        📅 {b.date}
                       </span>
                       {b.is_edited && (
                         <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
@@ -470,20 +493,29 @@ export function DailySituationView({ onOpenUploadModal }) {
                   <td className="px-3 text-center font-mono font-black text-emerald-600">
                     €{b.profit_eur}
                   </td>
+                  <td className="px-3 text-center font-mono font-black">
+                    {b.rest_eur > 0 ? (
+                      <span className="text-rose-600 font-bold">€{b.rest_eur}</span>
+                    ) : (
+                      <span className="text-slate-400 text-[11px]">0.00 €</span>
+                    )}
+                  </td>
                   <td className="px-3 text-center">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.className}`}>
                       {badge.text === t('status_paid') && <CheckCircle2 className="w-3 h-3" />}
                       {badge.text}
                     </span>
                   </td>
-                  <td className="px-3 text-center">
+                  <td className="px-3 text-center" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-1.5">
                       <button
-                        onClick={() => {
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
                           soundManager.playClick()
                           setEditingBooking(b)
                         }}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-slate-200"
+                        className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-xs"
                         title="تعديل بيانات الحجز والأفراد"
                       >
                         <Edit3 className="w-3 h-3 text-sky-600" />
@@ -491,13 +523,18 @@ export function DailySituationView({ onOpenUploadModal }) {
                       </button>
                       {badge.text !== t('status_paid') ? (
                         <button
-                          onClick={() => handleMarkPaid(b.sr)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleMarkPaid(b.sr)
+                          }}
+                          className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-xs transition-all active:scale-95 flex items-center gap-1"
                         >
-                          {t('collect')}
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>{t('collect')}</span>
                         </button>
                       ) : (
-                        <span className="text-slate-300 text-xs">—</span>
+                        <span className="text-slate-300 text-xs px-2">—</span>
                       )}
                     </div>
                   </td>
