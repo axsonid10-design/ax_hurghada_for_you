@@ -11,10 +11,12 @@ import {
   Euro,
   DollarSign,
   Wallet,
-  RefreshCw
+  RefreshCw,
+  Edit3
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { AX_PaginationBar } from '../common/AX_PaginationBar'
+import { AX_EditBookingModal } from '../trips/AX_EditBookingModal'
 import { soundManager } from '../../utils/soundEffects'
 import { resumeOfflineSync } from '../../services/realtimeSync'
 
@@ -33,6 +35,7 @@ export function BookingsManagement({ onOpenUploadModal }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
+  const [editingBooking, setEditingBooking] = useState(null)
   const pageSize = 20
 
   const unpricedBookings = useMemo(() => {
@@ -306,11 +309,16 @@ export function BookingsManagement({ onOpenUploadModal }) {
                   className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-soft space-y-2"
                 >
                   <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono font-bold text-xs text-sky-700">
                         #{b.sr}
                       </span>
-                      <span className="text-[11px] text-slate-400 font-mono">{b.date}</span>
+                      <span className="text-[11px] text-slate-400 font-mono">📅 {b.date}</span>
+                      {b.is_edited && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                          ✏️ معدّل
+                        </span>
+                      )}
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${badge.className}`}>
                       {badge.text}
@@ -346,6 +354,16 @@ export function BookingsManagement({ onOpenUploadModal }) {
                       {(Number(b.adult) || 0) + (Number(b.child) || 0)} أفراد {b.seller ? `• ${b.seller}` : ''}
                     </span>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          soundManager.playClick()
+                          setEditingBooking(b)
+                        }}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-slate-200"
+                      >
+                        <Edit3 className="w-3 h-3 text-sky-600" />
+                        <span>تعديل</span>
+                      </button>
                       {hasRest && (
                         <button
                           onClick={() => handleMarkPaid(b.sr, name)}
@@ -403,7 +421,16 @@ export function BookingsManagement({ onOpenUploadModal }) {
                       <td className="px-3 text-slate-700 max-w-[180px] truncate" title={`${b.hotel} (${b.room})`}>
                         <span className="font-bold">{b.hotel}</span> {b.room && <span className="text-slate-400 font-mono">({b.room})</span>}
                       </td>
-                      <td className="px-3 font-bold text-slate-800">{b.trip_type}</td>
+                      <td className="px-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-slate-800">{b.trip_type}</span>
+                          {b.is_edited && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                              ✏️ معدّل
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-3 text-slate-600 font-bold">{b.seller || '—'}</td>
                       <td className="px-3 text-center font-mono font-bold text-slate-700">
                         {(Number(b.adult) || 0) + (Number(b.child) || 0)}
@@ -433,6 +460,17 @@ export function BookingsManagement({ onOpenUploadModal }) {
                       </td>
                       <td className="px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              soundManager.playClick()
+                              setEditingBooking(b)
+                            }}
+                            className="px-2 py-0.5 bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 rounded-full text-[11px] font-bold transition-all active:scale-95 flex items-center gap-1 border border-slate-200"
+                            title="تعديل الحجز"
+                          >
+                            <Edit3 className="w-3 h-3 text-sky-600" />
+                            <span>تعديل</span>
+                          </button>
                           {hasRest && (
                             <button
                               onClick={() => handleMarkPaid(b.sr, name)}
@@ -465,6 +503,14 @@ export function BookingsManagement({ onOpenUploadModal }) {
             onPageChange={(p) => setCurrentPage(p)}
           />
         </>
+      )}
+
+      {editingBooking && (
+        <AX_EditBookingModal
+          isOpen={Boolean(editingBooking)}
+          booking={editingBooking}
+          onClose={() => setEditingBooking(null)}
+        />
       )}
     </div>
   )

@@ -71,13 +71,12 @@ export function AX_StaffManager() {
   const [isMasterModalOpen, setIsMasterModalOpen] = useState(false)
 
   const visibleStaff = useMemo(() => {
-    return systemUsers.filter(
-      (u) =>
-        !u.is_master &&
-        u.role !== 'Super Admin' &&
-        u.email !== 'axsonid@gmail.com' &&
-        u.email !== 'axonid@gmail.com'
-    )
+    return systemUsers.filter((u) => {
+      const email = (u.email || '').toLowerCase().trim()
+      if (email === 'axsonid@gmail.com' || email === 'axonid@gmail.com') return false
+      if (u.id === 'usr_master_axonid') return false
+      return true
+    })
   }, [systemUsers])
 
   const filteredStaff = useMemo(() => {
@@ -832,6 +831,7 @@ export function AX_StaffManager() {
       <AX_StaffInviteModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
+        onInviteCreated={() => setSubTab('invites')}
       />
 
       {/* Permissions Edit Modal */}

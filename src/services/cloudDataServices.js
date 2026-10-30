@@ -61,11 +61,12 @@ export async function cloudDeleteExecutor(id) {
 
 export async function cloudSaveBooking(booking) {
   try {
+    const isEdited = Boolean(booking.is_edited || (booking.time && booking.time.includes('EDITED')))
     const payload = {
       id: booking.id || `bk_${booking.sr}_${booking.date}`,
       sr: String(booking.sr),
       date: booking.date,
-      time: booking.time || '',
+      time: isEdited ? (booking.time?.startsWith('EDITED:') ? booking.time : `EDITED:${new Date().toISOString()}`) : (booking.time || ''),
       seller: booking.seller || '',
       channel: booking.channel || '',
       trip_type: booking.trip_type || '',

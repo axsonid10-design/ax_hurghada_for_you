@@ -13,7 +13,7 @@ import { useAXStore } from '../../store/useAXStore'
 
 import { cloudSaveSettings } from '../../services/realtimeSync'
 
-export function AX_StaffInviteModal({ isOpen, onClose }) {
+export function AX_StaffInviteModal({ isOpen, onClose, onInviteCreated }) {
   if (!isOpen) return null
 
   const { lang, addStaffInvite } = useAXStore()
@@ -64,6 +64,7 @@ export function AX_StaffInviteModal({ isOpen, onClose }) {
     }
 
     addStaffInvite?.(newInvite)
+    onInviteCreated?.(newInvite)
 
     // Sync to Supabase ax_h4u_settings for multi-device access
     try {

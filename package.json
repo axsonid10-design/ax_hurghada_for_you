@@ -1,13 +1,13 @@
 {
   "name": "hurghada_for_you",
   "private": true,
-  "version": "4.6.1",
+  "version": "4.6.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "bump": "node scripts/bump-version.js",
     "build": "node scripts/bump-version.js && vite build",
-    "deploy": "node scripts/bump-version.js && vite build && npx wrangler pages deploy dist --project-name=ax-hurghada-for-you --commit-dirty=true",
+    "deploy": "node scripts/bump-version.js && vite build && node scripts/deploy.js",
     "cf:bind": "node scripts/ax_cloudflare_bind_domain.js",
     "preview": "vite preview"
   },

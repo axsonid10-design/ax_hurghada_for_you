@@ -60,6 +60,7 @@ export async function fetchCloudData() {
     if (bookingsRes.data && Array.isArray(bookingsRes.data)) {
       updates.bookings = bookingsRes.data.map((b) => ({
         ...b,
+        is_edited: Boolean(b.time && b.time.includes('EDITED')),
         rest_eur: Number(b.rest_eur) || 0,
         rest_egp: Number(b.rest_egp) || 0,
         rest_usd: Number(b.rest_usd) || 0,
@@ -113,10 +114,25 @@ export async function fetchCloudData() {
             localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(s.value))
           }
         }
+        if (s.key === 'staff_invites' && Array.isArray(s.value)) {
+          updates.staffInvites = s.value
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(s.value))
+          }
+        }
+        if (s.key === 'system_users' && Array.isArray(s.value) && s.value.length > 0) {
+          updates.systemUsers = s.value
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ax_h4u_system_users', JSON.stringify(s.value))
+          }
+        }
       })
     }
 
     useAXStore.setState(updates)
+    if (typeof useAXStore.getState().reconcileUnpricedTrips === 'function') {
+      useAXStore.getState().reconcileUnpricedTrips()
+    }
   } catch (err) {
     console.error('fetchCloudData error:', err)
   }
@@ -193,7 +209,9 @@ export function initRealtimeSync() {
           }
         } else if (payload.eventType === 'UPDATE') {
           const b = payload.new
-          const next = current.map((x) => (x.id === b.id || x.sr === b.sr ? { ...x, ...b } : x))
+          const isEdited = Boolean(b.time && b.time.includes('EDITED'))
+          const formatted = { ...b, is_edited: isEdited }
+          const next = current.map((x) => (x.id === b.id || x.sr === b.sr ? { ...x, ...formatted } : x))
           useAXStore.setState({ bookings: next })
           localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
         } else if (payload.eventType === 'DELETE') {

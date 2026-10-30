@@ -82,11 +82,11 @@ const DEFAULT_SYSTEM_USERS = [
     id: 'usr_ops_director',
     name: 'مدير العمليات السياحية',
     email: 'director@hurghada.com',
-    phone: '01100000000',
-    code: 'OPS-01',
+    phone: '01123456780',
+    code: 'DIR-01',
     role: 'مدير عام',
     status: 'active',
-    is_master: true,
+    is_master: false,
     permissions: {
       dashboard: true,
       daily: true,
@@ -98,6 +98,94 @@ const DEFAULT_SYSTEM_USERS = [
       staff: true,
       can_edit_prices: true,
       can_delete_bookings: true
+    }
+  },
+  {
+    id: 'usr_seller_laly',
+    name: 'Laly (مندوب مبيعات)',
+    email: 'laly@hurghada.com',
+    phone: '01011223344',
+    code: 'SEL-02',
+    role: 'مندوب مبيعات',
+    status: 'active',
+    is_master: false,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: false,
+      executors: false,
+      cash: true,
+      reports: false,
+      staff: false,
+      can_edit_prices: false,
+      can_delete_bookings: false
+    }
+  },
+  {
+    id: 'usr_seller_meghane',
+    name: 'Meghane (مندوب مبيعات)',
+    email: 'meghane@hurghada.com',
+    phone: '01055667788',
+    code: 'SEL-03',
+    role: 'مندوب مبيعات',
+    status: 'active',
+    is_master: false,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: false,
+      executors: false,
+      cash: true,
+      reports: false,
+      staff: false,
+      can_edit_prices: false,
+      can_delete_bookings: false
+    }
+  },
+  {
+    id: 'usr_seller_laure',
+    name: 'Laure (مندوب مبيعات)',
+    email: 'laure@hurghada.com',
+    phone: '01099887766',
+    code: 'SEL-04',
+    role: 'مندوب مبيعات',
+    status: 'active',
+    is_master: false,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: false,
+      executors: false,
+      cash: true,
+      reports: false,
+      staff: false,
+      can_edit_prices: false,
+      can_delete_bookings: false
+    }
+  },
+  {
+    id: 'usr_ops_karim',
+    name: 'كريم (مشرف مارينا ورحلات)',
+    email: 'karim@hurghada.com',
+    phone: '01234567890',
+    code: 'OPS-05',
+    role: 'مشرف عمليات',
+    status: 'active',
+    is_master: false,
+    permissions: {
+      dashboard: true,
+      daily: true,
+      bookings: true,
+      trips: true,
+      executors: true,
+      cash: false,
+      reports: false,
+      staff: false,
+      can_edit_prices: false,
+      can_delete_bookings: false
     }
   }
 ]
@@ -198,7 +286,14 @@ const getStoredSystemUsers = () => {
   if (typeof window === 'undefined') return DEFAULT_SYSTEM_USERS
   try {
     const raw = localStorage.getItem('ax_h4u_system_users')
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const existingIds = new Set(parsed.map((u) => u.id || u.email))
+        const missing = DEFAULT_SYSTEM_USERS.filter((u) => !existingIds.has(u.id) && !existingIds.has(u.email))
+        return [...parsed, ...missing]
+      }
+    }
   } catch {}
   return DEFAULT_SYSTEM_USERS
 }
@@ -344,6 +439,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(next))
     }
+    cloudSaveSettings('staff_invites', next)
     set({ staffInvites: next })
   },
 
@@ -353,6 +449,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(next))
     }
+    cloudSaveSettings('staff_invites', next)
     set({ staffInvites: next })
   },
 
@@ -371,6 +468,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
     }
+    cloudSaveSettings('system_users', next)
     set({ systemUsers: next })
   },
 
@@ -380,6 +478,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
     }
+    cloudSaveSettings('system_users', next)
     set({ systemUsers: next })
   },
 
@@ -389,6 +488,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
     }
+    cloudSaveSettings('system_users', next)
     set({ systemUsers: next })
   },
 
@@ -400,6 +500,7 @@ export const useAXStore = create((set, get) => ({
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_system_users', JSON.stringify(next))
     }
+    cloudSaveSettings('system_users', next)
     set({ systemUsers: next })
   },
 
@@ -484,18 +585,78 @@ export const useAXStore = create((set, get) => ({
 
   updateTripDefinition: (id, updatedFields) => {
     const existing = get().tripDefinitions.find((t) => t.id === id)
+    const updatedDef = existing ? { ...existing, ...updatedFields } : updatedFields
     if (existing) {
-      cloudSaveTrip({ ...existing, ...updatedFields })
+      cloudSaveTrip(updatedDef)
     }
-    set((state) => {
-      const newDefs = state.tripDefinitions.map((td) =>
-        td.id === id ? { ...td, ...updatedFields } : td
-      )
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
+    const newDefs = get().tripDefinitions.map((td) =>
+      td.id === id ? updatedDef : td
+    )
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(newDefs))
+    }
+
+    const targetSheet = (updatedDef.sheet_name || updatedDef.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+    const { executors, bookings } = get()
+    let bookingsChanged = false
+    const updatedBookings = bookings.map((b) => {
+      const bTrip = (b.trip || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      if (bTrip === targetSheet) {
+        bookingsChanged = true
+        const fin = computeBookingFinancials(b, newDefs, executors)
+        const recalculated = { ...b, ...fin }
+        cloudSaveBooking(recalculated)
+        return recalculated
       }
-      return { tripDefinitions: newDefs }
+      return b
     })
+
+    if (bookingsChanged && typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(updatedBookings))
+    }
+
+    set({
+      tripDefinitions: newDefs,
+      ...(bookingsChanged ? { bookings: updatedBookings } : {})
+    })
+  },
+
+  reconcileUnpricedTrips: () => {
+    const { bookings, tripDefinitions } = get()
+    if (!bookings || bookings.length === 0) return
+    const existingKeys = new Set(
+      tripDefinitions.map((t) => (t.sheet_name || t.display_name || '').toLowerCase().trim().replace(/\s+/g, ' '))
+    )
+    const missing = []
+    bookings.forEach((b) => {
+      const rawName = (b.trip || '').trim()
+      const cleanKey = rawName.toLowerCase().replace(/\s+/g, ' ')
+      if (cleanKey && !existingKeys.has(cleanKey)) {
+        existingKeys.add(cleanKey)
+        const safeId = 'trip_orphan_' + Math.abs(cleanKey.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0))
+        missing.push({
+          id: safeId,
+          display_name: rawName,
+          sheet_name: rawName,
+          category: 'بحرية',
+          adult_cost: 0,
+          child_cost: 0,
+          adult_sell: 0,
+          child_sell: 0,
+          currency: 'EUR',
+          active: true,
+          is_unpriced: true
+        })
+      }
+    })
+    if (missing.length > 0) {
+      missing.forEach((d) => cloudSaveTrip(d))
+      const merged = [...tripDefinitions, ...missing]
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(merged))
+      }
+      set({ tripDefinitions: merged })
+    }
   },
 
   batchAddTripDefinitions: (defs) => {
@@ -716,9 +877,15 @@ export const useAXStore = create((set, get) => ({
   updateBooking: (sr, updatedFields) => {
     const { tripDefinitions, executors, bookings } = get()
     let updatedBooking = null
+    const nowIso = new Date().toISOString()
     const next = bookings.map((b) => {
       if (b.sr === sr) {
-        const merged = { ...b, ...updatedFields }
+        const merged = {
+          ...b,
+          ...updatedFields,
+          is_edited: true,
+          time: `EDITED:${nowIso}`
+        }
         const fin = computeBookingFinancials(merged, tripDefinitions, executors)
         updatedBooking = { ...merged, ...fin }
         return updatedBooking
@@ -745,12 +912,46 @@ export const useAXStore = create((set, get) => ({
     })
   },
 
-  // Excel Batch Import Engine
   importExcelBatch: ({ date, filename, rawBookings, overwrite = false }) => {
     const { tripDefinitions, executors, bookings, importedDates } = get()
 
+    let currentDefs = [...tripDefinitions]
+    let defsAdded = false
+    const defKeys = new Set(
+      currentDefs.map((td) => (td.sheet_name || td.display_name || '').toLowerCase().trim().replace(/\s+/g, ' '))
+    )
+
+    rawBookings.forEach((b) => {
+      const tName = (b.trip || '').trim()
+      const tKey = tName.toLowerCase().replace(/\s+/g, ' ')
+      if (tKey && !defKeys.has(tKey)) {
+        defKeys.add(tKey)
+        defsAdded = true
+        const safeId = 'trip_auto_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+        const unpricedDef = {
+          id: safeId,
+          display_name: tName,
+          sheet_name: tName,
+          category: 'بحرية',
+          adult_cost: 0,
+          child_cost: 0,
+          adult_sell: 0,
+          child_sell: 0,
+          currency: 'EUR',
+          active: true,
+          is_unpriced: true
+        }
+        currentDefs.push(unpricedDef)
+        cloudSaveTrip(unpricedDef)
+      }
+    })
+
+    if (defsAdded && typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_trip_definitions', JSON.stringify(currentDefs))
+    }
+
     const calculated = rawBookings.map((b) => {
-      const fin = computeBookingFinancials(b, tripDefinitions, executors)
+      const fin = computeBookingFinancials(b, currentDefs, executors)
       return {
         ...b,
         date,
@@ -787,7 +988,8 @@ export const useAXStore = create((set, get) => ({
     set({
       bookings: nextBookings,
       selectedDate: date,
-      importedDates: nextImportedDates
+      importedDates: nextImportedDates,
+      ...(defsAdded ? { tripDefinitions: currentDefs } : {})
     })
   }
 }))

@@ -24,6 +24,7 @@ import { AX_UnpricedTripsAlert } from './AX_UnpricedTripsAlert'
 
 export function ExcelUploadModal({ isOpen, onClose }) {
   const {
+    bookings,
     importedDates,
     tripDefinitions,
     executors,
@@ -120,10 +121,12 @@ export function ExcelUploadModal({ isOpen, onClose }) {
       const result = await parseExcelDailySituation(buffer)
       setParsedData(result)
 
-      if (importedDates[result.date]) {
+      const existingDayBookings = (bookings || []).filter((b) => b.date === result.date)
+      const prevCount = importedDates[result.date]?.count || existingDayBookings.length
+      if (prevCount > 0) {
         setDuplicateWarning({
           date: result.date,
-          prevCount: importedDates[result.date].count,
+          prevCount,
           newCount: result.totalRows
         })
       } else {
@@ -218,17 +221,35 @@ export function ExcelUploadModal({ isOpen, onClose }) {
       return b
     })
 
-    const defsToUpdate = Object.entries(sessionAssignments).map(([tripName, assign]) => {
+    const allUniqueTripNames = Array.from(
+      new Set(parsedData.bookings.map((b) => (b.trip_type || '').trim()).filter(Boolean))
+    )
+    const allDefsToEnsure = allUniqueTripNames.map((tripName) => {
       const existingDef = findTripDef(tripName)
+      const assign = Object.entries(sessionAssignments).find(
+        ([name]) => name.toLowerCase().trim().replace(/\s+/g, ' ') === tripName.toLowerCase().trim().replace(/\s+/g, ' ')
+      )?.[1]
+
+      if (existingDef) {
+        return assign ? { ...existingDef, executor_id: assign.executorId } : existingDef
+      }
       return {
-        ...(existingDef || { id: 'td_' + Date.now() + Math.random().toString(36).substr(2, 4) }),
+        id: 'td_' + Date.now() + Math.random().toString(36).substr(2, 4),
         sheet_name: tripName,
-        display_name: existingDef?.display_name || tripName,
-        executor_id: assign.executorId
+        display_name: tripName,
+        category: 'بحرية',
+        adult_cost: 0,
+        child_cost: 0,
+        adult_sell: 0,
+        child_sell: 0,
+        currency: 'EUR',
+        active: true,
+        is_unpriced: true,
+        executor_id: assign?.executorId || ''
       }
     })
-    if (defsToUpdate.length > 0) {
-      batchAddTripDefinitions(defsToUpdate)
+    if (allDefsToEnsure.length > 0) {
+      batchAddTripDefinitions(allDefsToEnsure)
     }
 
     importExcelBatch({
