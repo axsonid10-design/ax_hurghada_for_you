@@ -121,13 +121,44 @@ export async function fetchCloudData() {
             localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(s.value))
           }
         }
-        if (s.key === 'system_users' && Array.isArray(s.value) && s.value.length > 0) {
-          updates.systemUsers = s.value
+        if (s.key === 'system_users' && Array.isArray(s.value)) {
+          const MOCK_EMAILS = new Set(['director@hurghada.com', 'laly@hurghada.com', 'meghane@hurghada.com', 'laure@hurghada.com', 'karim@hurghada.com'])
+          const cleanUsers = s.value.filter((u) => !MOCK_EMAILS.has((u.email || '').toLowerCase().trim()) && !u.id?.startsWith('usr_ops_') && !u.id?.startsWith('usr_seller_'))
+          updates.systemUsers = cleanUsers
           if (typeof localStorage !== 'undefined') {
-            localStorage.setItem('ax_h4u_system_users', JSON.stringify(s.value))
+            localStorage.setItem('ax_h4u_system_users', JSON.stringify(cleanUsers))
           }
         }
       })
+    }
+
+    if (updates.staffInvites && updates.systemUsers) {
+      const existingEmails = new Set(updates.systemUsers.map((u) => (u.email || '').toLowerCase().trim()))
+      const reconciled = [...updates.systemUsers]
+      updates.staffInvites.forEach((inv) => {
+        if (inv.status === 'claimed' && inv.claimedBy) {
+          const email = inv.claimedBy.toLowerCase().trim()
+          if (!existingEmails.has(email)) {
+            existingEmails.add(email)
+            const name = inv.claimedName || email.split('@')[0]
+            reconciled.push({
+              id: 'usr_' + (inv.token || Date.now()),
+              name,
+              email,
+              phone: inv.claimedPhone || '',
+              code: inv.role === 'مدير عام' ? 'MGR-44' : 'EMP-' + Math.floor(10 + Math.random() * 90),
+              role: inv.role || 'مدير عام',
+              status: 'active',
+              is_master: false,
+              permissions: inv.permissions || {}
+            })
+          }
+        }
+      })
+      updates.systemUsers = reconciled
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_system_users', JSON.stringify(reconciled))
+      }
     }
 
     useAXStore.setState(updates)
@@ -257,6 +288,18 @@ export function initRealtimeSync() {
         if (payload.new?.key === 'executor_categories' && Array.isArray(payload.new?.value)) {
           useAXStore.setState({ executorCategories: payload.new.value })
           localStorage.setItem('ax_h4u_executor_categories', JSON.stringify(payload.new.value))
+        }
+        if (payload.new?.key === 'system_users' && Array.isArray(payload.new?.value)) {
+          const MOCK_EMAILS = new Set(['director@hurghada.com', 'laly@hurghada.com', 'meghane@hurghada.com', 'laure@hurghada.com', 'karim@hurghada.com'])
+          const cleanUsers = payload.new.value.filter((u) => !MOCK_EMAILS.has((u.email || '').toLowerCase().trim()) && !u.id?.startsWith('usr_ops_') && !u.id?.startsWith('usr_seller_'))
+          useAXStore.setState({ systemUsers: cleanUsers })
+          localStorage.setItem('ax_h4u_system_users', JSON.stringify(cleanUsers))
+        }
+        if (payload.new?.key === 'staff_invites' && Array.isArray(payload.new?.value)) {
+          useAXStore.setState({ staffInvites: payload.new.value })
+          localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(payload.new.value))
+          // Automatically trigger cloud fetch to reconcile users
+          fetchCloudData()
         }
       }
     )

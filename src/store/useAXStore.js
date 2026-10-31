@@ -55,6 +55,22 @@ const getStoredTab = () => {
   }
 }
 
+const MOCK_USER_EMAILS = new Set([
+  'director@hurghada.com',
+  'laly@hurghada.com',
+  'meghane@hurghada.com',
+  'laure@hurghada.com',
+  'karim@hurghada.com'
+])
+
+const MOCK_USER_IDS = new Set([
+  'usr_ops_director',
+  'usr_seller_laly',
+  'usr_seller_meghane',
+  'usr_seller_laure',
+  'usr_ops_karim'
+])
+
 const DEFAULT_SYSTEM_USERS = [
   {
     id: 'usr_master_axonid',
@@ -76,116 +92,6 @@ const DEFAULT_SYSTEM_USERS = [
       staff: true,
       can_edit_prices: true,
       can_delete_bookings: true
-    }
-  },
-  {
-    id: 'usr_ops_director',
-    name: 'مدير العمليات السياحية',
-    email: 'director@hurghada.com',
-    phone: '01123456780',
-    code: 'DIR-01',
-    role: 'مدير عام',
-    status: 'active',
-    is_master: false,
-    permissions: {
-      dashboard: true,
-      daily: true,
-      bookings: true,
-      trips: true,
-      executors: true,
-      cash: true,
-      reports: true,
-      staff: true,
-      can_edit_prices: true,
-      can_delete_bookings: true
-    }
-  },
-  {
-    id: 'usr_seller_laly',
-    name: 'Laly (مندوب مبيعات)',
-    email: 'laly@hurghada.com',
-    phone: '01011223344',
-    code: 'SEL-02',
-    role: 'مندوب مبيعات',
-    status: 'active',
-    is_master: false,
-    permissions: {
-      dashboard: true,
-      daily: true,
-      bookings: true,
-      trips: false,
-      executors: false,
-      cash: true,
-      reports: false,
-      staff: false,
-      can_edit_prices: false,
-      can_delete_bookings: false
-    }
-  },
-  {
-    id: 'usr_seller_meghane',
-    name: 'Meghane (مندوب مبيعات)',
-    email: 'meghane@hurghada.com',
-    phone: '01055667788',
-    code: 'SEL-03',
-    role: 'مندوب مبيعات',
-    status: 'active',
-    is_master: false,
-    permissions: {
-      dashboard: true,
-      daily: true,
-      bookings: true,
-      trips: false,
-      executors: false,
-      cash: true,
-      reports: false,
-      staff: false,
-      can_edit_prices: false,
-      can_delete_bookings: false
-    }
-  },
-  {
-    id: 'usr_seller_laure',
-    name: 'Laure (مندوب مبيعات)',
-    email: 'laure@hurghada.com',
-    phone: '01099887766',
-    code: 'SEL-04',
-    role: 'مندوب مبيعات',
-    status: 'active',
-    is_master: false,
-    permissions: {
-      dashboard: true,
-      daily: true,
-      bookings: true,
-      trips: false,
-      executors: false,
-      cash: true,
-      reports: false,
-      staff: false,
-      can_edit_prices: false,
-      can_delete_bookings: false
-    }
-  },
-  {
-    id: 'usr_ops_karim',
-    name: 'كريم (مشرف مارينا ورحلات)',
-    email: 'karim@hurghada.com',
-    phone: '01234567890',
-    code: 'OPS-05',
-    role: 'مشرف عمليات',
-    status: 'active',
-    is_master: false,
-    permissions: {
-      dashboard: true,
-      daily: true,
-      bookings: true,
-      trips: true,
-      executors: true,
-      cash: false,
-      reports: false,
-      staff: false,
-      can_edit_prices: false,
-      can_delete_bookings: false
     }
   }
 ]
@@ -301,18 +207,67 @@ const getStoredImportedDates = () => {
   return {}
 }
 
+export const reconcileClaimedInvites = (users = [], invites = []) => {
+  const existingEmails = new Set(users.map((u) => (u.email || '').toLowerCase().trim()))
+  const reconciled = [...users]
+  invites.forEach((inv) => {
+    if (inv.status === 'claimed' && inv.claimedBy) {
+      const email = inv.claimedBy.toLowerCase().trim()
+      if (!existingEmails.has(email)) {
+        existingEmails.add(email)
+        const name = inv.claimedName || email.split('@')[0]
+        reconciled.push({
+          id: 'usr_' + (inv.token || Date.now()),
+          name,
+          email,
+          phone: inv.claimedPhone || '',
+          code: inv.role === 'مدير عام' ? 'MGR-44' : 'EMP-' + Math.floor(10 + Math.random() * 90),
+          role: inv.role || 'مدير عام',
+          status: 'active',
+          is_master: false,
+          permissions: inv.permissions || {
+            dashboard: true,
+            daily: true,
+            bookings: true,
+            trips: true,
+            executors: true,
+            cash: true,
+            reports: true,
+            staff: true,
+            can_edit_prices: true,
+            can_delete_bookings: true
+          }
+        })
+      }
+    }
+  })
+  return reconciled
+}
+
 const getStoredSystemUsers = () => {
   if (typeof window === 'undefined') return DEFAULT_SYSTEM_USERS
   try {
+    const rawInvites = localStorage.getItem('ax_h4u_staff_invites')
+    const storedInvites = rawInvites ? JSON.parse(rawInvites) : []
+
     const raw = localStorage.getItem('ax_h4u_system_users')
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const existingIds = new Set(parsed.map((u) => u.id || u.email))
-        const missing = DEFAULT_SYSTEM_USERS.filter((u) => !existingIds.has(u.id) && !existingIds.has(u.email))
-        return [...parsed, ...missing]
+        const cleanUsers = parsed.filter(
+          (u) => !MOCK_USER_EMAILS.has((u.email || '').toLowerCase().trim()) && !MOCK_USER_IDS.has(u.id)
+        )
+        const reconciled = reconcileClaimedInvites(cleanUsers, storedInvites)
+        if (!reconciled.some((u) => u.email?.toLowerCase() === 'axsonid@gmail.com' || u.id === 'usr_master_axonid')) {
+          reconciled.push(DEFAULT_SYSTEM_USERS[0])
+        }
+        localStorage.setItem('ax_h4u_system_users', JSON.stringify(reconciled))
+        return reconciled
       }
     }
+
+    const initial = reconcileClaimedInvites([...DEFAULT_SYSTEM_USERS], storedInvites)
+    return initial
   } catch {}
   return DEFAULT_SYSTEM_USERS
 }

@@ -98,24 +98,21 @@ console.log('✅ Duplicate day detection strictly prohibits unintentional duplic
 
 // Test 4: Staff Visibility & Isolation Logic
 console.log('\n▶ Test 4: Staff Visibility & Master Isolation')
-const mockUsers = [
+const realSystemUsers = [
   { id: 'usr_master_axonid', email: 'axsonid@gmail.com', name: 'Master AXONID', is_master: true },
-  { id: 'usr_ops_director', email: 'director@hurghada.com', name: 'Director', is_master: false },
-  { id: 'usr_seller_laly', email: 'laly@hurghada.com', name: 'Laly', role: 'مندوب مبيعات' },
-  { id: 'usr_seller_meghane', email: 'meghane@hurghada.com', name: 'Meghane', role: 'مندوب مبيعات' }
+  { id: 'usr_1793368804792', email: 'yasrhsynabrahm444@gmail.com', name: 'ياسر حسين ابراهيم', role: 'مدير عام', is_master: false }
 ]
 
-const visibleStaff = mockUsers.filter((u) => {
+const visibleStaff = realSystemUsers.filter((u) => {
   const email = (u.email || '').toLowerCase().trim()
   if (email === 'axsonid@gmail.com' || email === 'axonid@gmail.com') return false
   if (u.id === 'usr_master_axonid') return false
   return true
 })
 
-assert.equal(visibleStaff.length, 3, 'Must have 3 visible staff members')
+assert.equal(visibleStaff.length, 1, 'Must have 1 real visible staff member')
 assert.ok(!visibleStaff.some((u) => u.email === 'axsonid@gmail.com'), 'Master must be hidden from normal staff view')
-assert.ok(visibleStaff.some((u) => u.name === 'Director'), 'Director must be visible')
-assert.ok(visibleStaff.some((u) => u.name === 'Laly'), 'Laly must be visible')
+assert.ok(visibleStaff.some((u) => u.email === 'yasrhsynabrahm444@gmail.com'), 'Real staff Yasser must be visible')
 console.log('✅ Visible staff isolation strictly verified')
 
 // Test 5: Reconcile Unpriced Trips & Extra Cost Preservation

@@ -95,7 +95,7 @@ export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
     verifyInvite()
   }, [inviteToken])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitError('')
 
@@ -135,26 +135,71 @@ export function AX_StaffOnboardingScreen({ inviteToken, onComplete }) {
       is_master: false
     }
 
-    addSystemUser(newUser)
-
     try {
-      const rawInvites = localStorage.getItem('ax_h4u_staff_invites')
-      const storedInvites = rawInvites ? JSON.parse(rawInvites) : []
-      const updated = storedInvites.map((i) =>
-        i.token === inviteToken ? { ...i, status: 'claimed', claimedBy: cleanEmail, claimedAt: new Date().toISOString() } : i
+      // 1. Fetch and merge latest system_users directly from Supabase
+      const { data: usersRes } = await supabase
+        .from('ax_h4u_settings')
+        .select('*')
+        .eq('key', 'system_users')
+        .maybeSingle()
+
+      const currentUsers = Array.isArray(usersRes?.value) ? usersRes.value : []
+      const mergedUsers = [
+        newUser,
+        ...currentUsers.filter((u) => u.email?.toLowerCase() !== cleanEmail && u.id !== newUserId)
+      ]
+
+      await supabase.from('ax_h4u_settings').upsert({
+        key: 'system_users',
+        value: mergedUsers,
+        updated_at: new Date().toISOString()
+      })
+
+      // 2. Fetch and update staff_invites directly in Supabase
+      const { data: invitesRes } = await supabase
+        .from('ax_h4u_settings')
+        .select('*')
+        .eq('key', 'staff_invites')
+        .maybeSingle()
+
+      const currentInvites = Array.isArray(invitesRes?.value) ? invitesRes.value : []
+      const updatedInvites = currentInvites.map((i) =>
+        i.token === inviteToken
+          ? {
+              ...i,
+              status: 'claimed',
+              claimedBy: cleanEmail,
+              claimedName: fullName.trim(),
+              claimedPhone: phone.trim(),
+              claimedAt: new Date().toISOString()
+            }
+          : i
       )
-      localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(updated))
-      cloudSaveSettings('staff_invites', updated)
-    } catch {
-    }
 
-    localStorage.setItem('ax_h4u_auth_user', JSON.stringify(newUser))
-    setProfile(newUser)
+      await supabase.from('ax_h4u_settings').upsert({
+        key: 'staff_invites',
+        value: updatedInvites,
+        updated_at: new Date().toISOString()
+      })
 
-    window.history.replaceState({}, '', '/')
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_system_users', JSON.stringify(mergedUsers))
+        localStorage.setItem('ax_h4u_staff_invites', JSON.stringify(updatedInvites))
+        localStorage.setItem('ax_h4u_auth_user', JSON.stringify(newUser))
+      }
 
-    if (onComplete) {
-      onComplete(newUser)
+      addSystemUser(newUser)
+      setProfile(newUser)
+    } catch (err) {
+      console.error('Onboarding cloud save error:', err)
+      addSystemUser(newUser)
+      setProfile(newUser)
+    } finally {
+      setIsSubmitting(false)
+      window.history.replaceState({}, '', '/')
+      if (onComplete) {
+        onComplete(newUser)
+      }
     }
   }
 
