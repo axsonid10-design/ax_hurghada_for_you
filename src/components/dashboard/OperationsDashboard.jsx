@@ -8,6 +8,7 @@ import { FinancialTrendChart } from './FinancialTrendChart'
 import { CategoryDistributionChart } from './CategoryDistributionChart'
 import { DashboardDataBreakdown } from './DashboardDataBreakdown'
 import { QuickExpenseModal } from './QuickExpenseModal'
+import { PrintPnlStatementModal } from '../expenses/PrintPnlStatementModal'
 
 export function OperationsDashboard({ onOpenUploadModal, onOpenNewExpense }) {
   const {
@@ -27,6 +28,7 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewExpense }) {
   const [displayCurrency, setDisplayCurrency] = useState('EUR')
   const [rates, setRates] = useState(exchangeRates.getRates())
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false)
+  const [isPrintPnlOpen, setIsPrintPnlOpen] = useState(false)
 
   useEffect(() => {
     exchangeRates.fetchLiveRates().then((liveRates) => {

@@ -1,6 +1,7 @@
 import React from 'react'
 import { ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
+import { useAXStore } from '../../store/useAXStore'
 
 export function AX_PaginationBar({
   currentPage,
@@ -9,6 +10,9 @@ export function AX_PaginationBar({
   pageSize,
   onPageChange
 }) {
+  const { t, lang } = useAXStore()
+  const isRtl = lang === 'ar'
+
   if (totalPages <= 1) return null
 
   const handlePage = (newPage) => {
@@ -20,36 +24,41 @@ export function AX_PaginationBar({
   const startIdx = (currentPage - 1) * pageSize + 1
   const endIdx = Math.min(currentPage * pageSize, totalItems)
 
+  const PrevIcon = isRtl ? ChevronRight : ChevronLeft
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight
+  const FirstIcon = isRtl ? ChevronsRight : ChevronsLeft
+  const LastIcon = isRtl ? ChevronsLeft : ChevronsRight
+
   return (
     <div className="w-full bg-white rounded-full border border-slate-200 px-4 py-2 shadow-soft flex items-center justify-between gap-3 text-xs">
-      <div className="font-bold text-slate-500 flex items-center gap-2">
-        <span>عرض</span>
+      <div className="font-bold text-slate-500 flex items-center gap-1.5 flex-wrap">
+        <span>{t('pagination_showing')}</span>
         <span className="font-mono text-[#0a2540] font-black">{startIdx} - {endIdx}</span>
-        <span>من إجمالي</span>
+        <span>{t('pagination_of')}</span>
         <span className="font-mono text-[#0284c7] font-black">{totalItems}</span>
-        <span>سجل</span>
+        <span>{t('pagination_records')}</span>
       </div>
 
       <div className="flex items-center gap-1">
         <button
           onClick={() => handlePage(1)}
           disabled={currentPage === 1}
-          title="الصفحة الأولى"
-          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          title={t('pagination_first')}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
         >
-          <ChevronsRight className="w-4 h-4" />
+          <FirstIcon className="w-4 h-4" />
         </button>
 
         <button
           onClick={() => handlePage(currentPage - 1)}
           disabled={currentPage === 1}
-          title="السابق"
-          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          title={t('pagination_prev')}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
         >
-          <ChevronRight className="w-4 h-4" />
+          <PrevIcon className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-[#0a2540] font-mono font-black text-xs">
+        <div className="flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-[#0a2540] font-mono font-black text-xs">
           <span>{currentPage}</span>
           <span className="mx-1 text-slate-400">/</span>
           <span>{totalPages}</span>
@@ -58,19 +67,19 @@ export function AX_PaginationBar({
         <button
           onClick={() => handlePage(currentPage + 1)}
           disabled={currentPage === totalPages}
-          title="التالي"
-          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          title={t('pagination_next')}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <NextIcon className="w-4 h-4" />
         </button>
 
         <button
           onClick={() => handlePage(totalPages)}
           disabled={currentPage === totalPages}
-          title="الصفحة الأخيرة"
-          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          title={t('pagination_last')}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
         >
-          <ChevronsLeft className="w-4 h-4" />
+          <LastIcon className="w-4 h-4" />
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import {
   Phone,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   CreditCard,
   X,
   Anchor,
@@ -28,7 +29,7 @@ import { ManageCategoriesModal } from '../common/ManageCategoriesModal'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 
 export function ExecutorsView() {
-  const { t, lang, executors, bookings, tripDefinitions, executorCategories, recordExecutorPayment } = useAXStore()
+  const { t, lang, executors, bookings, tripDefinitions, executorCategories, recordExecutorPayment, updateBooking } = useAXStore()
   const isRtl = lang === 'ar'
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
@@ -43,6 +44,14 @@ export function ExecutorsView() {
     currency: 'EUR',
     notes: ''
   })
+
+  const unassignedBookings = useMemo(() => {
+    return (bookings || []).filter((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      return !b.executor_id
+    })
+  }, [bookings])
 
   const categories = [
     { id: 'all', label: isRtl ? 'جميع الأقسام' : 'All Activities' },
@@ -139,7 +148,35 @@ export function ExecutorsView() {
         </div>
       </div>
 
-      {/* Category Tabs for Executors */}
+      {unassignedBookings.length > 0 && (
+        <div className="bg-rose-50 border border-rose-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-rose-950 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-rose-200 text-rose-800 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-black text-xs sm:text-sm block">
+                {t('unassigned_exec_alert', { count: unassignedBookings.length })}
+              </span>
+              <span className="text-[11px] text-rose-800 block mt-0.5">
+                {t('unassigned_exec_desc')}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              soundManager.playClick()
+              setActiveCategory('unassigned')
+            }}
+            className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <span>{t('filter_unassigned_only')}</span>
+            <span className="text-rose-200">←</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.id
@@ -150,7 +187,7 @@ export function ExecutorsView() {
                 soundManager.playClick()
                 setActiveCategory(cat.id)
               }}
-              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex-shrink-0 border ${
+              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex-shrink-0 border cursor-pointer ${
                 isActive
                   ? 'bg-[#0a2540] text-white border-[#0a2540] shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -160,19 +197,108 @@ export function ExecutorsView() {
             </button>
           )
         })}
+
+        <button
+          onClick={() => {
+            soundManager.playClick()
+            setActiveCategory('unassigned')
+          }}
+          className={`px-4 py-1.5 rounded-full text-xs font-black transition-all flex-shrink-0 border cursor-pointer ${
+            activeCategory === 'unassigned'
+              ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+              : unassignedBookings.length > 0
+                ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>{t('filter_unassigned_only')}</span>
+          {unassignedBookings.length > 0 && (
+            <span className="ms-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-600 text-white">
+              {unassignedBookings.length}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Executors Bento Grid or Clean Empty State */}
-      {filtered.length === 0 ? (
+      {activeCategory === 'unassigned' ? (
+        unassignedBookings.length === 0 ? (
+          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-black text-slate-800">
+              {isRtl ? 'جميع الحجوزات مسندة لمنفذين بنجاح' : 'All bookings have assigned executors'}
+            </h3>
+            <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto">
+              {isRtl ? 'لا توجد أي حجوزات معلقة بدون منفذ مسند في الوقت الحالي.' : 'There are currently no pending bookings without an assigned executor.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3 flex items-center justify-between text-xs font-bold text-rose-900">
+              <span className="font-black">
+                {isRtl ? `حجوزات بدون منفذ مسند (${unassignedBookings.length})` : `Unassigned Bookings (${unassignedBookings.length})`}
+              </span>
+              <span className="text-rose-700 text-[11px]">
+                {isRtl ? 'اختر المنفذ من القائمة لكل حجز لإسناده وحساب تكلفته فوراً' : 'Select an executor for each booking to assign and compute cost'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {unassignedBookings.map((b) => (
+                <div key={b.sr} className="bg-white p-4 rounded-2xl border border-rose-200 shadow-soft space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="font-mono font-bold text-xs text-sky-700">#{b.sr}</span>
+                    <span className="text-[11px] text-slate-500 font-mono">📅 {b.date}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                      ⚠️ {t('unassigned_exec_badge')}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-black text-xs text-slate-900">{b.guest_name || b.name || t('guest_unnamed')}</div>
+                    <div className="text-[11px] text-slate-500 font-bold mt-0.5">
+                      {b.hotel} {b.room ? `(${b.room})` : ''} • <span className="text-slate-800">{b.trip_type}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 font-bold mt-1">
+                      {(Number(b.adult) || 0) + (Number(b.child) || 0)} {t('pax_count_label')} • €{b.sell_eur || 0}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-600 block">
+                      {isRtl ? 'إسناد منفذ للرحلة:' : 'Assign Executor:'}
+                    </label>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const newExecId = e.target.value
+                        if (!newExecId) return
+                        soundManager.playSuccess()
+                        updateBooking(b.sr, { executor_id: newExecId })
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-slate-50 cursor-pointer"
+                    >
+                      <option value="">{isRtl ? '— اختر منفذاً —' : '— Select Executor —'}</option>
+                      {executors.map((ex) => (
+                        <option key={ex.id} value={ex.id}>
+                          {ex.name} ({ex.category || 'عام'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ) : filtered.length === 0 ? (
         <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-soft text-center space-y-3">
           <div className="w-14 h-14 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto border border-sky-200">
             <Truck className="w-7 h-7" />
           </div>
           <h3 className="text-base font-black text-slate-800">
-            لا يوجد منفذين مسجلين
+            {t('no_executors_registered')}
           </h3>
           <p className="text-xs text-slate-400 font-bold max-w-sm mx-auto">
-            يمكنك تسجيل وإضافة المنفذين وموردي الرحلات البحرية والسفاري لمتابعة الحسابات والتوريدات.
+            {isRtl ? 'يمكنك تسجيل وإضافة المنفذين وموردي الرحلات البحرية والسفاري لمتابعة الحسابات والتوريدات.' : 'Add and manage sea & safari trip executors and supplier accounts.'}
           </p>
           <div className="pt-2">
             <button
@@ -180,10 +306,10 @@ export function ExecutorsView() {
                 soundManager.playClick()
                 setIsAddOpen(true)
               }}
-              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-1.5"
+              className="px-5 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 inline-flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-sky-400" />
-              <span>إضافة منفذ جديد</span>
+              <span>{t('new_executor')}</span>
             </button>
           </div>
         </div>

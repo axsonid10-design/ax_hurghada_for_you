@@ -14,6 +14,7 @@ import { BookingsManagement } from './components/bookings/BookingsManagement'
 import { TripsCatalogView } from './components/trips/TripsCatalogView'
 import { ExecutorsView } from './components/executors/ExecutorsView'
 import { CashDrawer } from './components/cash/CashDrawer'
+import { ExpensesManagement } from './components/expenses/ExpensesManagement'
 import { PerformanceReports } from './components/reports/PerformanceReports'
 import { AX_StaffManager } from './components/staff/AX_StaffManager'
 import { AX_StaffOnboardingScreen } from './components/staff/AX_StaffOnboardingScreen'
@@ -257,6 +258,8 @@ export function App() {
           {activeTab === 'executors' && <ExecutorsView />}
 
           {activeTab === 'cash' && <CashDrawer />}
+
+          {activeTab === 'expenses' && <ExpensesManagement />}
 
           {activeTab === 'reports' && <PerformanceReports />}
 

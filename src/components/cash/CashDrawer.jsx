@@ -17,7 +17,8 @@ import { exchangeRates } from '../../utils/exchangeRates'
 import { soundManager } from '../../utils/soundEffects'
 
 export function CashDrawer() {
-  const { bookings, tripDefinitions, updateBooking, openConfirmModal } = useAXStore()
+  const { bookings, tripDefinitions, updateBooking, openConfirmModal, lang, t } = useAXStore()
+  const isRtl = lang === 'ar'
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTabFilter, setActiveTabFilter] = useState('ALL') // 'ALL' | 'PICKUP' | 'PENDING'
   const [rates, setRates] = useState(exchangeRates.getRates())
@@ -103,14 +104,14 @@ export function CashDrawer() {
         (td.sheet_name || '').toLowerCase().trim() === clean ||
         (td.display_name || '').toLowerCase().trim() === clean
     )
-    return found?.display_name || rawName || 'تحصيل رحلة'
+    return found?.display_name || rawName || (isRtl ? 'تحصيل رحلة' : 'Trip Collection')
   }
 
   const handleCollect = (b) => {
     openConfirmModal({
-      title: 'تأكيد التحصيل النقدي',
-      message: `هل تم استلام كامل المبالغ المستحقة للنزيل ${b.guest_name || ''} (SR: ${b.sr})؟`,
-      confirmText: 'تأكيد التحصيل',
+      title: t('cash_confirm_title'),
+      message: t('cash_confirm_msg', { guest: b.guest_name || (isRtl ? 'غير محدد' : 'Guest'), sr: b.sr }),
+      confirmText: t('cash_confirm_btn'),
       type: 'info',
       onConfirm: () => {
         soundManager.playSuccess()
@@ -133,23 +134,23 @@ export function CashDrawer() {
           <div>
             <h2 className="text-base font-black text-white flex items-center gap-2">
               <Building2 className="w-5 h-5 text-sky-400" />
-              <span>الخزينة المجمعة ومتابعة التحصيلات</span>
+              <span>{t('cash_master_title')}</span>
             </h2>
             <div className="text-[11px] text-slate-400 mt-0.5">
-              تحويل لحظي لكافة العملات الأجنبية والمحلية بأسعار الصرف المباشرة
+              {t('cash_master_subtitle')}
             </div>
           </div>
 
           {/* Real-time FX Ticker Pill */}
           <div className="flex items-center gap-2 bg-slate-800/80 px-3.5 py-1.5 rounded-full border border-slate-700 text-xs font-mono">
-            <span className="text-slate-400 text-[10px] font-sans">أسعار الصرف اللحظية:</span>
-            <span className="text-emerald-400 font-bold">1€ = {(rates.EGP || 53.25).toFixed(2)} ج.م</span>
+            <span className="text-slate-400 text-[10px] font-sans">{t('cash_fx_live')}</span>
+            <span className="text-emerald-400 font-bold">1€ = {(rates.EGP || 53.25).toFixed(2)} {isRtl ? 'ج.م' : 'EGP'}</span>
             <span className="text-slate-500">•</span>
-            <span className="text-amber-400 font-bold">1$ = {((rates.EGP || 53.25) / (rates.USD || 1.08)).toFixed(2)} ج.م</span>
+            <span className="text-amber-400 font-bold">1$ = {((rates.EGP || 53.25) / (rates.USD || 1.08)).toFixed(2)} {isRtl ? 'ج.م' : 'EGP'}</span>
             <button
               onClick={handleManualRefreshRates}
-              title="تحديث أسعار الصرف الآن"
-              className="p-1 hover:bg-slate-700 rounded-full transition-colors text-slate-300"
+              title={t('cash_fx_refresh')}
+              className="p-1 hover:bg-slate-700 rounded-full transition-colors text-slate-300 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isUpdatingRates ? 'animate-spin text-sky-400' : ''}`} />
             </button>
@@ -160,12 +161,12 @@ export function CashDrawer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/70 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-400">إجمالي الخزينة الموحد باليورو</div>
+              <div className="text-xs font-bold text-slate-400">{t('cash_total_eur')}</div>
               <div className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
                 €{consolidatedEur.toLocaleString()}
               </div>
               <div className="text-[10px] text-emerald-400 mt-1 font-bold">
-                شامل تحويل الجنيه والدولار والإسترليني لليورو
+                {t('cash_total_eur_desc')}
               </div>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
@@ -175,12 +176,12 @@ export function CashDrawer() {
 
           <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/70 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-400">إجمالي الخزينة الموحد بالجنيه المصري</div>
+              <div className="text-xs font-bold text-slate-400">{t('cash_total_egp')}</div>
               <div className="text-2xl sm:text-3xl font-black text-[#38bdf8] font-mono mt-1">
-                {consolidatedEgp.toLocaleString()} <span className="text-sm font-sans font-normal text-slate-300">ج.م</span>
+                {consolidatedEgp.toLocaleString()} <span className="text-sm font-sans font-normal text-slate-300">{isRtl ? 'ج.م' : 'EGP'}</span>
               </div>
               <div className="text-[10px] text-sky-400 mt-1 font-bold">
-                المعادل الإجمالي بالجنيه المصري بسعر البنك اللحظي
+                {t('cash_total_egp_desc')}
               </div>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-black">
@@ -195,52 +196,52 @@ export function CashDrawer() {
         {totalEur > 0 && (
           <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-1">
             <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-              <span>اليورو الأوروبي (EUR)</span>
+              <span>{t('cash_eur')}</span>
               <Euro className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-2xl font-black text-[#0a2540] font-mono">
               €{totalEur.toLocaleString()}
             </div>
-            <div className="text-[11px] text-emerald-600 font-bold">العملة الأساسية للرحلات</div>
+            <div className="text-[11px] text-emerald-600 font-bold">{t('cash_eur_desc')}</div>
           </div>
         )}
 
         {totalEgp > 0 && (
           <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-1">
             <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-              <span>الجنيه المصري (EGP)</span>
+              <span>{t('cash_egp')}</span>
               <Coins className="w-4 h-4 text-[#0284c7]" />
             </div>
             <div className="text-2xl font-black text-[#0a2540] font-mono">
-              {totalEgp.toLocaleString()} <span className="text-xs font-sans">ج.م</span>
+              {totalEgp.toLocaleString()} <span className="text-xs font-sans">{isRtl ? 'ج.م' : 'EGP'}</span>
             </div>
-            <div className="text-[11px] text-slate-400">التحصيل المحلي الميداني</div>
+            <div className="text-[11px] text-slate-400">{t('cash_egp_desc')}</div>
           </div>
         )}
 
         {totalUsd > 0 && (
           <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-1">
             <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-              <span>الدولار الأمريكي (USD)</span>
+              <span>{t('cash_usd')}</span>
               <DollarSign className="w-4 h-4 text-amber-600" />
             </div>
             <div className="text-2xl font-black text-[#0a2540] font-mono">
               ${totalUsd.toLocaleString()}
             </div>
-            <div className="text-[11px] text-slate-400">حجوزات أجنبية بالدولار</div>
+            <div className="text-[11px] text-slate-400">{t('cash_usd_desc')}</div>
           </div>
         )}
 
         {totalGbp > 0 && (
           <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-soft space-y-1">
             <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-              <span>الجنيه الإسترليني (GBP)</span>
+              <span>{t('cash_gbp')}</span>
               <Banknote className="w-4 h-4 text-indigo-600" />
             </div>
             <div className="text-2xl font-black text-[#0a2540] font-mono">
               £{totalGbp.toLocaleString()}
             </div>
-            <div className="text-[11px] text-slate-400">نزلاء إنجلترا</div>
+            <div className="text-[11px] text-slate-400">{t('cash_gbp_desc')}</div>
           </div>
         )}
       </div>
@@ -261,7 +262,7 @@ export function CashDrawer() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              جميع الحركات ({cashList.length})
+              {t('cash_all')} ({cashList.length})
             </button>
             <button
               onClick={() => {
@@ -275,7 +276,7 @@ export function CashDrawer() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              حركات Cash Pickup
+              {t('cash_pickup_tab')}
             </button>
             <button
               onClick={() => {
@@ -289,12 +290,12 @@ export function CashDrawer() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              متبقي بالعملات
+              {t('cash_pending_tab')}
             </button>
           </div>
 
           <span className="text-xs font-bold text-slate-500 font-mono">
-            {cashList.length} حركة مسجلة
+            {cashList.length} {t('cash_record_count')}
           </span>
         </div>
 
@@ -314,15 +315,15 @@ export function CashDrawer() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-black text-slate-800">{cp.guest_name || 'غير محدد'}</div>
+                    <div className="font-black text-slate-800">{cp.guest_name || (isRtl ? 'غير محدد' : 'Unknown')}</div>
                     <div className="text-[11px] text-slate-500">
-                      {cp.hotel || '-'} • غرفة {cp.room || '-'}
+                      {cp.hotel || '-'} • {isRtl ? 'غرفة' : 'Room'} {cp.room || '-'}
                     </div>
                   </div>
 
                   <div className="text-left font-black font-mono text-emerald-600 text-sm">
                     {cp.rest_eur > 0 && `€${cp.rest_eur}`}
-                    {cp.rest_egp > 0 && ` ${cp.rest_egp} ج.م`}
+                    {cp.rest_egp > 0 && ` ${cp.rest_egp} ${isRtl ? 'ج.م' : 'EGP'}`}
                     {cp.rest_usd > 0 && ` $${cp.rest_usd}`}
                     {cp.rest_gbp > 0 && ` £${cp.rest_gbp}`}
                     {cp.rest_eur === 0 && cp.rest_egp === 0 && cp.rest_usd === 0 && cp.rest_gbp === 0 && '€0'}
@@ -331,14 +332,14 @@ export function CashDrawer() {
 
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] text-slate-400 font-bold">
-                    المندوب: {cp.seller || 'مباشر'}
+                    {isRtl ? 'المندوب:' : 'Seller:'} {cp.seller || (isRtl ? 'مباشر' : 'Direct')}
                   </span>
                   {(cp.rest_eur > 0 || cp.rest_egp > 0 || cp.rest_usd > 0 || cp.rest_gbp > 0) && (
                     <button
                       onClick={() => handleCollect(cp)}
-                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
                     >
-                      تحصيل
+                      {t('collect')}
                     </button>
                   )}
                 </div>
@@ -353,15 +354,15 @@ export function CashDrawer() {
             <thead>
               <tr className="bg-[#0a2540] text-white text-xs font-bold h-11">
                 <th className="px-3 font-mono text-start">SR</th>
-                <th className="px-3 text-start">النزيل</th>
-                <th className="px-3 text-start">الفندق (الغرفة)</th>
-                <th className="px-3 text-start">المندوب</th>
-                <th className="px-3 text-start">الرحلة (بالعربي)</th>
-                <th className="px-3 text-center font-mono">المتبقي (€)</th>
-                <th className="px-3 text-center font-mono">المتبقي (ج.م)</th>
-                <th className="px-3 text-center font-mono">دولار ($)</th>
-                <th className="px-3 text-center">حالة السداد</th>
-                <th className="px-3 text-center">الإجراء</th>
+                <th className="px-3 text-start">{isRtl ? 'النزيل' : 'Guest'}</th>
+                <th className="px-3 text-start">{isRtl ? 'الفندق (الغرفة)' : 'Hotel (Room)'}</th>
+                <th className="px-3 text-start">{isRtl ? 'المندوب' : 'Seller'}</th>
+                <th className="px-3 text-start">{isRtl ? 'الرحلة' : 'Trip'}</th>
+                <th className="px-3 text-center font-mono">{isRtl ? 'المتبقي (€)' : 'Rest (€)'}</th>
+                <th className="px-3 text-center font-mono">{isRtl ? 'المتبقي (ج.م)' : 'Rest (EGP)'}</th>
+                <th className="px-3 text-center font-mono">{isRtl ? 'دولار ($)' : 'USD ($)'}</th>
+                <th className="px-3 text-center">{t('th_payment_status')}</th>
+                <th className="px-3 text-center">{t('th_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium">
@@ -378,13 +379,13 @@ export function CashDrawer() {
                   <tr key={cp.sr} className="h-11 hover:bg-slate-50 transition-colors whitespace-nowrap">
                     <td className="px-3 font-mono font-bold text-[#0284c7]">#{cp.sr}</td>
                     <td className="px-3 font-black text-[#0a2540] max-w-[160px] truncate" title={cp.guest_name}>
-                      {cp.guest_name || 'غير محدد'}
+                      {cp.guest_name || (isRtl ? 'غير محدد' : 'Unknown')}
                     </td>
                     <td className="px-3 text-slate-700 max-w-[180px] truncate" title={`${cp.hotel} (${cp.room})`}>
                       <span className="font-bold">{cp.hotel || '-'}</span>{' '}
                       <span className="text-slate-400 font-mono">({cp.room || '-'})</span>
                     </td>
-                    <td className="px-3 text-slate-600 font-bold">{cp.seller || 'مباشر'}</td>
+                    <td className="px-3 text-slate-600 font-bold">{cp.seller || (isRtl ? 'مباشر' : 'Direct')}</td>
                     <td className="px-3">
                       <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-sky-50 text-sky-800 border border-sky-100">
                         {arabicTrip}
@@ -394,7 +395,7 @@ export function CashDrawer() {
                       €{cp.rest_eur || 0}
                     </td>
                     <td className="px-3 text-center font-mono font-bold text-[#0284c7]">
-                      {cp.rest_egp || 0} ج.م
+                      {cp.rest_egp || 0} {isRtl ? 'ج.م' : 'EGP'}
                     </td>
                     <td className="px-3 text-center font-mono font-bold text-amber-600">
                       ${cp.rest_usd || 0}
@@ -407,16 +408,16 @@ export function CashDrawer() {
                             : 'bg-amber-100 text-amber-800'
                         }`}
                       >
-                        {isPaid ? 'مدفوع كلي' : 'غير مدفوع'}
+                        {isPaid ? t('status_paid') : t('status_unpaid')}
                       </span>
                     </td>
                     <td className="px-3 text-center">
                       {!isPaid ? (
                         <button
                           onClick={() => handleCollect(cp)}
-                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95"
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
                         >
-                          تحصيل
+                          {t('collect')}
                         </button>
                       ) : (
                         <span className="text-slate-300">—</span>

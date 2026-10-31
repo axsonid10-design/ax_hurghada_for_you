@@ -3,10 +3,12 @@ import {
   Calendar,
   ArrowLeftRight,
   TrendingUp,
-  SlidersHorizontal
+  SlidersHorizontal,
+  BarChart3
 } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
+import { useAXStore } from '../../store/useAXStore'
 
 export function DashboardFilterBar({
   filterMode,
@@ -21,14 +23,18 @@ export function DashboardFilterBar({
   totalBookingsCount,
   onOpenUploadModal,
   onOpenNewExpense,
+  onOpenPnlReport,
   rates
 }) {
+  const { t, lang } = useAXStore()
+  const isRtl = lang === 'ar'
+
   const periodButtons = [
-    { id: 'today', label: 'اليوم' },
-    { id: 'week', label: 'أسبوع' },
-    { id: 'month', label: 'شهر' },
-    { id: 'all', label: 'الكل' },
-    { id: 'custom', label: 'مخصص' }
+    { id: 'today', label: t('filter_today') },
+    { id: 'week', label: t('filter_week') },
+    { id: 'month', label: t('filter_month') },
+    { id: 'all', label: t('filter_all') },
+    { id: 'custom', label: t('filter_custom') }
   ]
 
   const egpRate = rates?.EGP || 53.25
@@ -39,14 +45,14 @@ export function DashboardFilterBar({
         {/* Left/Right branding and rate */}
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-            لوحة المتابعة
+            {t('dashboard_title')}
           </h1>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
             <ArrowLeftRight className="w-3.5 h-3.5 text-slate-500" />
-            <span>1€ = {egpRate} ج.م</span>
+            <span>1€ = {egpRate} {t('curr_egp_pill')}</span>
           </span>
           <span className="text-xs font-mono font-bold text-slate-400">
-            ({totalBookingsCount} حجز)
+            ({totalBookingsCount} {t('bookings_count')})
           </span>
         </div>
 
@@ -87,7 +93,7 @@ export function DashboardFilterBar({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              € يورو
+              {t('curr_eur_pill')}
             </button>
             <button
               onClick={() => {
@@ -100,9 +106,23 @@ export function DashboardFilterBar({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              ج.م
+              {t('curr_egp_pill')}
             </button>
           </div>
+
+          {onOpenPnlReport && (
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playClick()
+                onOpenPnlReport()
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-emerald-200" />
+              <span>{t('pnl_report_btn')}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -111,22 +131,22 @@ export function DashboardFilterBar({
         <div className="bg-slate-50 rounded-2xl border border-slate-200 px-4 py-2 flex items-center gap-2 flex-wrap animate-fadeIn">
           <span className="text-xs font-bold text-slate-600 flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-sky-600" />
-            <span>من:</span>
+            <span>{t('from_label')}</span>
           </span>
           <div className="w-36">
             <AX_CompanyDatePicker
               value={customFrom}
               onChange={(d) => setCustomFrom(d)}
-              placeholder="من تاريخ"
+              placeholder={t('from_date')}
             />
           </div>
 
-          <span className="text-xs font-bold text-slate-600">إلى:</span>
+          <span className="text-xs font-bold text-slate-600">{t('to_label')}</span>
           <div className="w-36">
             <AX_CompanyDatePicker
               value={customTo}
               onChange={(d) => setCustomTo(d)}
-              placeholder="إلى تاريخ"
+              placeholder={t('to_date')}
             />
           </div>
         </div>

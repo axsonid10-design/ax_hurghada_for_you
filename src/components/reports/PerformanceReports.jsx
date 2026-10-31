@@ -805,9 +805,9 @@ export function PerformanceReports() {
                     onChange={(e) => setNewExp({ ...newExp, currency: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   >
-                    <option value="EUR">يورو (€)</option>
-                    <option value="EGP">جنيه مصري (L.E)</option>
-                    <option value="USD">دولار ($)</option>
+                    <option value="EUR">{isRtl ? 'يورو (€)' : 'EUR (€)'}</option>
+                    <option value="EGP">{isRtl ? 'جنيه مصري (L.E)' : 'EGP (L.E)'}</option>
+                    <option value="USD">{isRtl ? 'دولار ($)' : 'USD ($)'}</option>
                   </select>
                 </div>
               </div>
@@ -819,12 +819,12 @@ export function PerformanceReports() {
                   onChange={(e) => setNewExp({ ...newExp, category: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                 >
-                  <option value="وقود وبترول">وقود وبترول</option>
-                  <option value="إكراميات عمالة ومارينا">إكراميات عمالة ومارينا</option>
-                  <option value="ضيافة ومشروبات">ضيافة ومشروبات</option>
-                  <option value="صيانة دورية">صيانة دورية</option>
-                  <option value="رسوم مارينا وتصاريح">رسوم مارينا وتصاريح</option>
-                  <option value="أخرى">أخرى</option>
+                  <option value="وقود وبترول">{isRtl ? 'وقود وبترول' : 'Fuel & Oil'}</option>
+                  <option value="إكراميات عمالة ومارينا">{isRtl ? 'إكراميات عمالة ومارينا' : 'Tips & Marina'}</option>
+                  <option value="ضيافة ومشروبات">{isRtl ? 'ضيافة ومشروبات' : 'Hospitality & Drinks'}</option>
+                  <option value="صيانة دورية">{isRtl ? 'صيانة دورية' : 'Regular Maintenance'}</option>
+                  <option value="رسوم مارينا وتصاريح">{isRtl ? 'رسوم مارينا وتصاريح' : 'Permits & Marina Fees'}</option>
+                  <option value="أخرى">{isRtl ? 'أخرى' : 'Other'}</option>
                 </select>
               </div>
 

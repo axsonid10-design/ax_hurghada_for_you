@@ -1,28 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { PieChart, Anchor, Waves, Flame, Car } from 'lucide-react'
-
-const CATEGORY_META = {
-  islands: {
-    label: 'الجزر واليخوت',
-    color: '#0284c7',
-    icon: Anchor
-  },
-  safari: {
-    label: 'سفاري وصحراء',
-    color: '#f59e0b',
-    icon: Flame
-  },
-  aqua: {
-    label: 'غوص ورياضات مائية',
-    color: '#10b981',
-    icon: Waves
-  },
-  transfers: {
-    label: 'تحصيل وانتقالات',
-    color: '#8b5cf6',
-    icon: Car
-  }
-}
+import { useAXStore } from '../../store/useAXStore'
 
 export function CategoryDistributionChart({
   filteredBookings = [],
@@ -30,17 +8,43 @@ export function CategoryDistributionChart({
   displayCurrency = 'EUR',
   rates
 }) {
+  const { t, lang } = useAXStore()
+  const isRtl = lang === 'ar'
   const [hoveredKey, setHoveredKey] = useState(null)
 
   const egpRate = rates?.EGP || 53.25
   const isEgp = displayCurrency === 'EGP'
+  const egpSymbol = isRtl ? 'ج.م' : 'EGP'
 
   const formatAmount = (eurVal) => {
     if (isEgp) {
-      return `${Math.round(eurVal * egpRate).toLocaleString()} ج.م`
+      return `${Math.round(eurVal * egpRate).toLocaleString()} ${egpSymbol}`
     }
     return `€${Math.round(eurVal).toLocaleString()}`
   }
+
+  const categoryMeta = useMemo(() => ({
+    islands: {
+      label: isRtl ? 'الجزر واليخوت' : 'Islands & Yachts',
+      color: '#0284c7',
+      icon: Anchor
+    },
+    safari: {
+      label: isRtl ? 'سفاري وصحراء' : 'Desert Safari',
+      color: '#f59e0b',
+      icon: Flame
+    },
+    aqua: {
+      label: isRtl ? 'غوص ورياضات مائية' : 'Diving & Aqua',
+      color: '#10b981',
+      icon: Waves
+    },
+    transfers: {
+      label: isRtl ? 'تحصيل وانتقالات' : 'Transfers & Pickups',
+      color: '#8b5cf6',
+      icon: Car
+    }
+  }), [isRtl])
 
   const categoryStats = useMemo(() => {
     const map = {
@@ -61,157 +65,154 @@ export function CategoryDistributionChart({
       )
 
       if (def?.category) {
-        catKey = def.category === 'sea' ? 'islands' : def.category
+        const cat = def.category.toLowerCase()
+        if (cat.includes('سفاري') || cat.includes('safari')) catKey = 'safari'
+        else if (cat.includes('غوص') || cat.includes('aqua') || cat.includes('diving')) catKey = 'aqua'
+        else if (cat.includes('تحصيل') || cat.includes('انتقال') || cat.includes('transfer')) catKey = 'transfers'
       } else {
-        if (tripName.includes('safari') || tripName.includes('باجي') || tripName.includes('سفاري')) {
-          catKey = 'safari'
-        } else if (tripName.includes('diving') || tripName.includes('غوص') || tripName.includes('dolphin') || tripName.includes('submarine') || tripName.includes('parasail')) {
-          catKey = 'aqua'
-        } else if (tripName.includes('pickup') || tripName.includes('transfer') || tripName.includes('horse') || tripName.includes('spa') || tripName.includes('تحصيل')) {
-          catKey = 'transfers'
-        }
+        if (tripName.includes('safari') || tripName.includes('سفاري') || tripName.includes('quad') || tripName.includes('buggy')) catKey = 'safari'
+        else if (tripName.includes('diving') || tripName.includes('غوص') || tripName.includes('dolphin') || tripName.includes('دلافين') || tripName.includes('snk') || tripName.includes('aqua')) catKey = 'aqua'
+        else if (tripName.includes('pickup') || tripName.includes('تحصيل') || tripName.includes('transfer')) catKey = 'transfers'
       }
 
-      if (!map[catKey]) {
-        map[catKey] = { key: catKey, count: 0, pax: 0, sales: 0, profit: 0 }
-      }
-
-      const adults = Number(b.adult) || 0
-      const children = Number(b.child) || 0
+      const adult = Number(b.adult) || 0
+      const child = Number(b.child) || 0
       map[catKey].count += 1
-      map[catKey].pax += adults + children
+      map[catKey].pax += adult + child
       map[catKey].sales += Number(b.sell_eur) || 0
       map[catKey].profit += Number(b.profit_eur) || 0
     })
 
-    const totalSales = Object.values(map).reduce((sum, c) => sum + c.sales, 0) || 1
-    const totalPax = Object.values(map).reduce((sum, c) => sum + c.pax, 0) || 1
+    const totalSales = Object.values(map).reduce((s, c) => s + c.sales, 0) || 1
+    const totalPax = Object.values(map).reduce((s, c) => s + c.pax, 0) || 1
 
-    let accumulatedPct = 0
-    return Object.values(map).map((item) => {
-      const pct = Math.max(0, item.sales / totalSales)
-      const startPct = accumulatedPct
-      accumulatedPct += pct
+    let runningPct = 0
+    return Object.values(map).map((cat) => {
+      const salesPct = Math.round((cat.sales / totalSales) * 100)
+      const paxPct = Math.round((cat.pax / totalPax) * 100)
+      const pct = cat.sales / totalSales
+      const startPct = runningPct
+      runningPct += pct
       return {
-        ...item,
-        meta: CATEGORY_META[item.key] || CATEGORY_META.islands,
-        salesPct: Math.round(pct * 100),
-        paxPct: Math.round((item.pax / totalPax) * 100),
+        ...cat,
+        salesPct,
+        paxPct,
+        pct,
         startPct,
-        pct
+        meta: categoryMeta[cat.key]
       }
     })
-  }, [filteredBookings, tripDefinitions])
+  }, [filteredBookings, tripDefinitions, categoryMeta])
 
-  const totalFilteredSales = categoryStats.reduce((s, c) => s + c.sales, 0)
-  const totalFilteredPax = categoryStats.reduce((s, c) => s + c.pax, 0)
+  const totalFilteredSales = filteredBookings.reduce((s, b) => s + (Number(b.sell_eur) || 0), 0)
+  const totalFilteredPax = filteredBookings.reduce((s, b) => s + (Number(b.adult) || 0) + (Number(b.child) || 0), 0)
 
-  const radius = 64
+  const radius = 60
   const circumference = 2 * Math.PI * radius
 
   return (
     <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-soft space-y-4 flex flex-col justify-between">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100">
+          <div className="p-2 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100">
             <PieChart className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-black text-slate-900">
-            توزيع الأنشطة
+            {t('category_dist_title')}
           </h3>
         </div>
 
         <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
-          <span>الإجمالي:</span>
+          <span>{isRtl ? 'الإجمالي:' : 'Total:'}</span>
           <span className="font-black text-slate-900">{formatAmount(totalFilteredSales)}</span>
         </div>
       </div>
 
       {filteredBookings.length === 0 ? (
         <div className="py-12 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-          لا توجد حركات مسجلة لعرض توزيع الأنشطة
+          {t('no_category_data')}
         </div>
       ) : (
         <div className="flex flex-col sm:flex-row items-center gap-4 py-2">
-        <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
-          <svg viewBox="0 0 160 160" className="w-full h-full transform -rotate-90">
-            <circle
-              cx="80"
-              cy="80"
-              r={radius}
-              fill="transparent"
-              stroke="#f1f5f9"
-              strokeWidth="20"
-            />
-            {categoryStats.map((cat) => {
-              const dashLength = cat.pct * circumference
-              const strokeOffset = (1 - cat.startPct) * circumference
-              const isHovered = hoveredKey === cat.key
+          <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 160 160" className="w-full h-full transform -rotate-90">
+              <circle
+                cx="80"
+                cy="80"
+                r={radius}
+                fill="transparent"
+                stroke="#f1f5f9"
+                strokeWidth="20"
+              />
+              {categoryStats.map((cat) => {
+                const dashLength = cat.pct * circumference
+                const strokeOffset = (1 - cat.startPct) * circumference
+                const isHovered = hoveredKey === cat.key
 
+                return (
+                  <circle
+                    key={cat.key}
+                    cx="80"
+                    cy="80"
+                    r={radius}
+                    fill="transparent"
+                    stroke={cat.meta.color}
+                    strokeWidth={isHovered ? 24 : 20}
+                    strokeDasharray={`${dashLength} ${circumference - dashLength}`}
+                    strokeDashoffset={strokeOffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-300 cursor-pointer"
+                    onMouseEnter={() => setHoveredKey(cat.key)}
+                    onMouseLeave={() => setHoveredKey(null)}
+                  />
+                )
+              })}
+            </svg>
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+              <span className="text-[10px] font-bold text-slate-400">{isRtl ? 'إجمالي النزلاء' : 'Total Guests'}</span>
+              <span className="text-xl font-mono font-black text-slate-900">{totalFilteredPax}</span>
+              <span className="text-[10px] font-mono font-bold text-sky-700">{formatAmount(totalFilteredSales)}</span>
+            </div>
+          </div>
+
+          <div className="flex-1 w-full space-y-2">
+            {categoryStats.map((cat) => {
+              const Icon = cat.meta.icon
+              const isHovered = hoveredKey === cat.key
               return (
-                <circle
+                <div
                   key={cat.key}
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  fill="transparent"
-                  stroke={cat.meta.color}
-                  strokeWidth={isHovered ? 24 : 20}
-                  strokeDasharray={`${dashLength} ${circumference - dashLength}`}
-                  strokeDashoffset={strokeOffset}
-                  strokeLinecap="round"
-                  className="transition-all duration-300 cursor-pointer"
                   onMouseEnter={() => setHoveredKey(cat.key)}
                   onMouseLeave={() => setHoveredKey(null)}
-                />
+                  className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                    isHovered ? 'bg-sky-50/50 border-sky-300 shadow-xs' : 'bg-slate-50/60 border-slate-100 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.meta.color }} />
+                      <span className="font-black text-slate-900">{cat.meta.label}</span>
+                      <span className="text-[10px] font-bold text-slate-400 font-mono">({cat.pax} {t('pax_count')})</span>
+                    </div>
+
+                    <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-black text-slate-900">
+                      <span>{formatAmount(cat.sales)}</span>
+                      <span className="text-[10px] font-bold text-slate-400">({cat.salesPct}%)</span>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(4, cat.salesPct)}%`, backgroundColor: cat.meta.color }}
+                    />
+                  </div>
+                </div>
               )
             })}
-          </svg>
-
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-[10px] font-bold text-slate-400">إجمالي النزلاء</span>
-            <span className="text-xl font-mono font-black text-slate-900">{totalFilteredPax}</span>
-            <span className="text-[10px] font-mono font-bold text-sky-700">{formatAmount(totalFilteredSales)}</span>
           </div>
         </div>
-
-        <div className="flex-1 w-full space-y-2">
-          {categoryStats.map((cat) => {
-            const Icon = cat.meta.icon
-            const isHovered = hoveredKey === cat.key
-            return (
-              <div
-                key={cat.key}
-                onMouseEnter={() => setHoveredKey(cat.key)}
-                onMouseLeave={() => setHoveredKey(null)}
-                className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
-                  isHovered ? 'bg-sky-50/50 border-sky-300 shadow-xs' : 'bg-slate-50/60 border-slate-100 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.meta.color }} />
-                    <span className="font-black text-slate-900">{cat.meta.label}</span>
-                    <span className="text-[10px] font-bold text-slate-400 font-mono">({cat.pax} فرد)</span>
-                  </div>
-
-                  <div className="whitespace-nowrap flex items-baseline gap-1 text-xs font-mono font-black text-slate-900">
-                    <span>{formatAmount(cat.sales)}</span>
-                    <span className="text-[10px] font-bold text-slate-400">({cat.salesPct}%)</span>
-                  </div>
-                </div>
-
-                <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.max(4, cat.salesPct)}%`, backgroundColor: cat.meta.color }}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
       )}
     </div>
   )

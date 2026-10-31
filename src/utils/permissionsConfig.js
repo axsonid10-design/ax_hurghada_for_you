@@ -5,6 +5,7 @@ import {
   Tag,
   Truck,
   Banknote,
+  Receipt,
   BarChart3
 } from 'lucide-react'
 
@@ -52,6 +53,13 @@ export const STAFF_MODULES = [
     description: 'رصد الخزينة بـ 4 عملات ومتابعة التحصيل'
   },
   {
+    id: 'expenses',
+    label: 'المصروفات والعهدة',
+    labelEn: 'Expenses & Custody',
+    icon: Receipt,
+    description: 'المصروفات الثابتة والتشغيلية وإدارة العهد والنثريات'
+  },
+  {
     id: 'reports',
     label: 'تقارير الأداء والأرباح',
     labelEn: 'Performance Reports',
@@ -72,6 +80,7 @@ export const AVAILABLE_ROLES = {
       trips: true,
       executors: true,
       cash: true,
+      expenses: true,
       reports: true,
       staff: true,
       can_edit_prices: true,
@@ -139,7 +148,7 @@ export function hasModuleAccess(user, moduleId) {
 }
 
 export function getFirstAllowedModule(user) {
-  const orderedModules = ['dashboard', 'daily', 'bookings', 'trips', 'executors', 'cash', 'reports']
+  const orderedModules = ['dashboard', 'daily', 'bookings', 'trips', 'executors', 'cash', 'expenses', 'reports']
   for (const modId of orderedModules) {
     if (hasModuleAccess(user, modId)) {
       return modId

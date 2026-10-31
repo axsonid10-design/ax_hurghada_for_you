@@ -60,7 +60,7 @@ export function computeBookingFinancials(booking, tripDefs = [], executors = [])
       sell_eur: sellPrice,
       profit_eur: Math.max(0, sellPrice - exCost),
       collected_eur: 0,
-      executor_id: assignedExecutorId || 'exec_marina',
+      executor_id: assignedExecutorId || null,
       pricing_type: executor?.pricing_type || 'pax',
       currency: 'EUR'
     }
@@ -114,7 +114,7 @@ export function computeBookingFinancials(booking, tripDefs = [], executors = [])
     sell_eur: totalSell,
     profit_eur: profitEur,
     collected_eur: collectedEur,
-    executor_id: assignedExecutorId || tripDef.executor_id || 'exec_marina',
+    executor_id: assignedExecutorId || tripDef.executor_id || null,
     pricing_type: tripDef.pricing_type,
     currency: tripDef.currency || 'EUR'
   }

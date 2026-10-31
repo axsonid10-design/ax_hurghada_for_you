@@ -5,6 +5,7 @@ import {
   Users,
   Banknote,
   BarChart3,
+  Receipt,
   Search,
   Pin,
   CalendarCheck,
@@ -30,6 +31,9 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
     openConfirmModal,
     openMasterModal,
     tripDefinitions = [],
+    bookings = [],
+    executors = [],
+    selectedDate,
     t
   } = useAXStore()
   const [isPinned, setIsPinned] = useState(true)
@@ -48,13 +52,42 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
     ).length
   }, [tripDefinitions])
 
+  const unassignedExecutorsCount = useMemo(() => {
+    return bookings.filter((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      return !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+    }).length
+  }, [bookings, executors])
+
+  const unassignedDailyCount = useMemo(() => {
+    return bookings.filter((b) => {
+      if (b.date !== selectedDate) return false
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      return !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+    }).length
+  }, [bookings, executors, selectedDate])
+
   const menuSections = [
     {
       title: t('nav_operations'),
       items: [
         { id: 'dashboard', label: t('tab_dashboard'), icon: LayoutDashboard },
-        { id: 'daily', label: t('tab_daily'), icon: Ship },
-        { id: 'bookings', label: t('tab_bookings'), icon: CalendarCheck }
+        {
+          id: 'daily',
+          label: t('tab_daily'),
+          icon: Ship,
+          badge: unassignedDailyCount > 0 ? `${unassignedDailyCount} ${t('unassigned_exec_badge')}` : null,
+          isAlert: unassignedDailyCount > 0
+        },
+        {
+          id: 'bookings',
+          label: t('tab_bookings'),
+          icon: CalendarCheck,
+          badge: unassignedExecutorsCount > 0 ? `${unassignedExecutorsCount} ${t('unassigned_exec_badge')}` : null,
+          isAlert: unassignedExecutorsCount > 0
+        }
       ]
     },
     {
@@ -64,16 +97,23 @@ export function AX_Sidebar({ onOpenUploadModal, isHeaderVisible = true }) {
           id: 'trips',
           label: t('tab_trips'),
           icon: Tag,
-          badge: unpricedTripsCount > 0 ? `${unpricedTripsCount} غير مسعر` : null,
+          badge: unpricedTripsCount > 0 ? `${unpricedTripsCount} ${t('unpriced_trips_badge')}` : null,
           isAlert: unpricedTripsCount > 0
         },
-        { id: 'executors', label: t('tab_executors'), icon: Truck }
+        {
+          id: 'executors',
+          label: t('tab_executors'),
+          icon: Truck,
+          badge: unassignedExecutorsCount > 0 ? `${unassignedExecutorsCount} ${t('unassigned_exec_badge')}` : null,
+          isAlert: unassignedExecutorsCount > 0
+        }
       ]
     },
     {
       title: t('nav_finances'),
       items: [
         { id: 'cash', label: t('tab_cash'), icon: Banknote },
+        { id: 'expenses', label: t('tab_expenses'), icon: Receipt },
         { id: 'reports', label: t('tab_reports'), icon: BarChart3 }
       ]
     },

@@ -346,7 +346,7 @@ export function TripsCatalogView() {
             }`}
           >
             <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-            <span>غير مسعرة</span>
+            <span>{lang === 'ar' ? 'غير مسعرة' : 'Unpriced'}</span>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                 activeCategory === 'unpriced' ? 'bg-white/20 text-white' : 'bg-rose-200 text-rose-800'
@@ -489,13 +489,13 @@ export function TripsCatalogView() {
                         <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 animate-pulse" />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span>⚠️ رحلة غير مسعرة</span>
+                            <span>⚠️ {lang === 'ar' ? 'رحلة غير مسعرة' : 'Unpriced Trip'}</span>
                             <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 text-[10px] font-mono font-bold">
                               0.00 €
                             </span>
                           </div>
                           <p className="text-[10px] text-amber-800 font-bold mt-0.5">
-                            سعر التكلفة: 0.00 € • سعر البيع: 0.00 €
+                            {lang === 'ar' ? 'سعر التكلفة: 0.00 € • سعر البيع: 0.00 €' : 'Cost: €0.00 • Sell: €0.00'}
                           </p>
                         </div>
                       </div>
@@ -504,10 +504,10 @@ export function TripsCatalogView() {
                           soundManager.playClick()
                           setEditingTrip(trip)
                         }}
-                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0 flex items-center justify-center gap-1.5"
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-amber-200" />
-                        <span>تسعير الآن</span>
+                        <span>{lang === 'ar' ? 'تسعير الآن' : 'Price Now'}</span>
                       </button>
                     </div>
                   ) : (
@@ -560,7 +560,7 @@ export function TripsCatalogView() {
               {/* Card Footer: Currency & Edit Action */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-400">
-                  العملة: {trip.currency || 'EUR'}
+                  {lang === 'ar' ? 'العملة:' : 'Currency:'} {trip.currency || 'EUR'}
                 </span>
                 <button
                   onClick={() => {

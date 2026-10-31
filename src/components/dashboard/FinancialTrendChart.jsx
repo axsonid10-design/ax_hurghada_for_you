@@ -1,16 +1,20 @@
 import React, { useState, useMemo } from 'react'
 import { Activity } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
+import { useAXStore } from '../../store/useAXStore'
 
 export function FinancialTrendChart({ dailyTrends = [], displayCurrency = 'EUR', rates }) {
+  const { t, lang } = useAXStore()
+  const isRtl = lang === 'ar'
   const [hoveredIndex, setHoveredIndex] = useState(null)
 
   const egpRate = rates?.EGP || 53.25
   const isEgp = displayCurrency === 'EGP'
+  const egpSymbol = isRtl ? 'ج.م' : 'EGP'
 
   const formatAmount = (eurVal) => {
     if (isEgp) {
-      return `${Math.round(eurVal * egpRate).toLocaleString()} ج.م`
+      return `${Math.round(eurVal * egpRate).toLocaleString()} ${egpSymbol}`
     }
     return `€${Math.round(eurVal).toLocaleString()}`
   }
@@ -68,15 +72,15 @@ export function FinancialTrendChart({ dailyTrends = [], displayCurrency = 'EUR',
 
   const salesArea = useMemo(() => {
     if (points.length === 0) return ''
-    const base = height - padY
-    return `${salesLine} L ${points[points.length - 1].x} ${base} L ${points[0].x} ${base} Z`
-  }, [salesLine, points, height, padY])
+    const line = getSmoothPath(points, 'y1')
+    return `${line} L ${points[points.length - 1].x} ${height - padY} L ${points[0].x} ${height - padY} Z`
+  }, [points, height, padY])
 
   const profitArea = useMemo(() => {
     if (points.length === 0) return ''
-    const base = height - padY
-    return `${profitLine} L ${points[points.length - 1].x} ${base} L ${points[0].x} ${base} Z`
-  }, [profitLine, points, height, padY])
+    const line = getSmoothPath(points, 'y2')
+    return `${line} L ${points[points.length - 1].x} ${height - padY} L ${points[0].x} ${height - padY} Z`
+  }, [points, height, padY])
 
   return (
     <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-soft space-y-4 flex flex-col justify-between">
@@ -86,52 +90,52 @@ export function FinancialTrendChart({ dailyTrends = [], displayCurrency = 'EUR',
             <Activity className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-black text-slate-900">
-            المبيعات والأرباح اليومية
+            {t('financial_trend_title')}
           </h3>
         </div>
 
         <div className="flex items-center gap-3 text-xs font-bold">
           <span className="flex items-center gap-1.5 text-slate-600">
             <span className="w-2.5 h-2.5 rounded-full bg-sky-600" />
-            <span>المبيعات</span>
+            <span>{t('sales_title')}</span>
           </span>
           <span className="flex items-center gap-1.5 text-slate-600">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>الأرباح</span>
+            <span>{t('net_profit_title')}</span>
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-100">
-          <span className="text-[10px] text-slate-500 font-bold block">مبيعات الفترة</span>
+          <span className="text-[10px] text-slate-500 font-bold block">{isRtl ? 'مبيعات الفترة' : 'Period Sales'}</span>
           <span className="text-xs sm:text-sm font-black font-mono text-slate-900">
             {formatAmount(totalPeriodSales)}
           </span>
         </div>
         <div className="bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-100">
-          <span className="text-[10px] text-slate-500 font-bold block">صافي أرباح الفترة</span>
+          <span className="text-[10px] text-slate-500 font-bold block">{isRtl ? 'صافي أرباح الفترة' : 'Period Profit'}</span>
           <span className="text-xs sm:text-sm font-black font-mono text-emerald-700">
             {formatAmount(totalPeriodProfit)}
           </span>
         </div>
         <div className="bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-100">
-          <span className="text-[10px] text-slate-500 font-bold block">متوسط المبيعات</span>
+          <span className="text-[10px] text-slate-500 font-bold block">{isRtl ? 'متوسط المبيعات' : 'Avg Daily'}</span>
           <span className="text-xs sm:text-sm font-black font-mono text-sky-700">
             {formatAmount(avgDailySales)}
           </span>
         </div>
         <div className="bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-100">
-          <span className="text-[10px] text-slate-500 font-bold block">إجمالي النزلاء</span>
+          <span className="text-[10px] text-slate-500 font-bold block">{isRtl ? 'إجمالي النزلاء' : 'Total Guests'}</span>
           <span className="text-xs sm:text-sm font-black font-mono text-slate-900">
-            {totalPeriodPax} فرد
+            {totalPeriodPax} {t('pax_count')}
           </span>
         </div>
       </div>
 
       {dailyTrends.length === 0 ? (
         <div className="py-12 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-          لا توجد حركات مسجلة لعرض المنحنى البياني
+          {t('no_trend_data')}
         </div>
       ) : (
         <div className="relative pt-2">
@@ -148,15 +152,15 @@ export function FinancialTrendChart({ dailyTrends = [], displayCurrency = 'EUR',
               </div>
               <div className="space-y-0.5 min-w-[110px]">
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-400">مبيعات:</span>
+                  <span className="text-slate-400">{t('sales_title')}:</span>
                   <span className="font-mono text-white">{formatAmount(points[hoveredIndex].sales)}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-400">تكلفة:</span>
+                  <span className="text-slate-400">{t('cost_title')}:</span>
                   <span className="font-mono text-amber-400">{formatAmount(points[hoveredIndex].cost)}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-400">صافي:</span>
+                  <span className="text-slate-400">{t('net_profit_title')}:</span>
                   <span className="font-mono text-emerald-400">{formatAmount(points[hoveredIndex].profit)}</span>
                 </div>
               </div>
@@ -188,9 +192,7 @@ export function FinancialTrendChart({ dailyTrends = [], displayCurrency = 'EUR',
             {points.map((p, idx) => (
               <g key={p.date} onMouseEnter={() => setHoveredIndex(idx)} onMouseLeave={() => setHoveredIndex(null)} className="cursor-pointer">
                 <circle cx={p.x} cy={p.y1} r={hoveredIndex === idx ? 5 : 3.5} fill="#0284c7" stroke="#ffffff" strokeWidth="2" />
-                <text x={p.x} y={height - 6} textAnchor="middle" fontSize="10" fontFamily="monospace" fill="#64748b" fontWeight="bold">
-                  {p.date.slice(5)}
-                </text>
+                <circle cx={p.x} cy={p.y2} r={hoveredIndex === idx ? 4.5 : 3} fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
               </g>
             ))}
           </svg>

@@ -6,6 +6,7 @@ import {
   Tag,
   Truck,
   Banknote,
+  Receipt,
   BarChart3,
   Users
 } from 'lucide-react'
@@ -14,7 +15,17 @@ import { soundManager } from '../../utils/soundEffects'
 import { hasModuleAccess } from '../../utils/permissionsConfig'
 
 export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnSelectTab, isVisible = true }) {
-  const { activeTab: storeActiveTab, setActiveTab: storeSetActiveTab, profile, tripDefinitions = [], t } = useAXStore()
+  const {
+    activeTab: storeActiveTab,
+    setActiveTab: storeSetActiveTab,
+    profile,
+    tripDefinitions = [],
+    bookings = [],
+    executors = [],
+    selectedDate,
+    lang,
+    t
+  } = useAXStore()
   const activeTab = propActiveTab || storeActiveTab
   const onSelectTab = propOnSelectTab || storeSetActiveTab
 
@@ -24,6 +35,19 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
   const unpricedTripsCount = (tripDefinitions || []).filter(
     (td) => Number(td.adult_cost) === 0 && Number(td.adult_sell) === 0 && td.sheet_name !== 'Cash Pickup'
   ).length
+
+  const unassignedExecutorsCount = (bookings || []).filter((b) => {
+    const cleanType = (b.trip_type || '').toLowerCase().trim()
+    if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+    return !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+  }).length
+
+  const unassignedDailyCount = (bookings || []).filter((b) => {
+    if (b.date !== selectedDate) return false
+    const cleanType = (b.trip_type || '').toLowerCase().trim()
+    if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+    return !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+  }).length
 
   // Law 1: Modal Collision Avoidance (Automatic Dismiss on Modal Open)
   useEffect(() => {
@@ -49,6 +73,7 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
     { id: 'trips', label: t('tab_trips'), icon: Tag },
     { id: 'executors', label: t('tab_executors'), icon: Truck },
     { id: 'cash', label: t('tab_cash'), icon: Banknote },
+    { id: 'expenses', label: t('tab_expenses'), icon: Receipt },
     { id: 'reports', label: t('tab_reports'), icon: BarChart3 },
     { id: 'staff', label: t('tab_staff'), icon: Users }
   ].filter((t) => hasModuleAccess(profile, t.id))
@@ -81,7 +106,7 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
       }`}
     >
       <nav
-        dir="rtl"
+        dir={lang === 'ar' ? 'rtl' : 'ltr'}
         className="pointer-events-auto max-w-[calc(100vw-1rem)] bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-full py-1.5 px-2 flex items-center gap-1 overflow-x-auto shadow-2xl scrollbar-none overscroll-x-contain touch-pan-x"
       >
         {allTabs.map((tab) => {
@@ -105,11 +130,35 @@ export function AX_MobileNavbar({ activeTab: propActiveTab, onSelectTab: propOnS
                 {tab.id === 'trips' && unpricedTripsCount > 0 && (
                   <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                 )}
+                {tab.id === 'executors' && unassignedExecutorsCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                )}
+                {tab.id === 'bookings' && unassignedExecutorsCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                )}
+                {tab.id === 'daily' && unassignedDailyCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                )}
               </div>
               <span className="text-[10px] leading-tight select-none">{tab.label}</span>
               {tab.id === 'trips' && unpricedTripsCount > 0 && (
                 <span className="text-[8px] font-black text-rose-500 leading-none">
                   ({unpricedTripsCount})
+                </span>
+              )}
+              {tab.id === 'executors' && unassignedExecutorsCount > 0 && (
+                <span className="text-[8px] font-black text-rose-500 leading-none">
+                  ({unassignedExecutorsCount})
+                </span>
+              )}
+              {tab.id === 'bookings' && unassignedExecutorsCount > 0 && (
+                <span className="text-[8px] font-black text-rose-500 leading-none">
+                  ({unassignedExecutorsCount})
+                </span>
+              )}
+              {tab.id === 'daily' && unassignedDailyCount > 0 && (
+                <span className="text-[8px] font-black text-rose-500 leading-none">
+                  ({unassignedDailyCount})
                 </span>
               )}
             </button>

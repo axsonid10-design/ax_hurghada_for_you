@@ -58,9 +58,23 @@ export function DailySituationView({ onOpenUploadModal }) {
     })
   }, [dailyBookings, tripDefinitions])
 
+  const unassignedDailyBookings = useMemo(() => {
+    return dailyBookings.filter((b) => {
+      const cleanType = (b.trip_type || '').toLowerCase().trim()
+      if (cleanType.includes('cash pickup') || cleanType.includes('تحصيل')) return false
+      return !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+    })
+  }, [dailyBookings, executors])
+
   const filteredBookings = dailyBookings.filter((b) => {
     const matchesTrip = filterTripType === 'ALL' || b.trip_type === filterTripType
-    const matchesExec = filterExecutor === 'ALL' || b.executor_id === filterExecutor
+    const isUnassigned = !b.executor_id || !executors.some((ex) => ex.id === b.executor_id)
+    const matchesExec =
+      filterExecutor === 'ALL'
+        ? true
+        : filterExecutor === 'UNASSIGNED'
+        ? isUnassigned
+        : b.executor_id === filterExecutor
     const matchesSearch =
       (b.guest_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.hotel || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,9 +127,9 @@ export function DailySituationView({ onOpenUploadModal }) {
 
   const handleMarkPaid = (sr) => {
     openConfirmModal({
-      title: 'تأكيد تحصيل المبلغ',
-      message: `هل تم استلام كامل المبلغ المتبقي للحجز رقم ${sr}؟`,
-      confirmText: 'تأكيد التحصيل',
+      title: t('confirm_collect_title'),
+      message: t('confirm_collect_msg', { sr }),
+      confirmText: t('action_collect'),
       type: 'info',
       onConfirm: () => {
         updateBooking(sr, {
@@ -186,6 +200,9 @@ export function DailySituationView({ onOpenUploadModal }) {
               }}
               options={[
                 { value: 'ALL', label: t('all_executors') },
+                ...(unassignedDailyBookings.length > 0
+                  ? [{ value: 'UNASSIGNED', label: `⚠️ ${t('filter_unassigned_only')} (${unassignedDailyBookings.length})` }]
+                  : []),
                 ...executors.map((ex) => ({ value: ex.id, label: ex.name }))
               ]}
             />
@@ -239,6 +256,37 @@ export function DailySituationView({ onOpenUploadModal }) {
         </div>
       )}
 
+      {/* ⚠️ Unassigned Executor Alert Banner */}
+      {unassignedDailyBookings.length > 0 && (
+        <div className="bg-rose-50 border border-rose-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-rose-950 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-rose-200 text-rose-800 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <AlertTriangle className="w-4 h-4 text-rose-700" />
+            </div>
+            <div>
+              <span className="font-black text-xs sm:text-sm block">
+                {t('unassigned_exec_alert').replace('{count}', unassignedDailyBookings.length)}
+              </span>
+              <span className="text-[11px] text-rose-800 block mt-0.5">
+                {t('unassigned_exec_desc')}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              soundManager.playClick()
+              setFilterExecutor('UNASSIGNED')
+              setCurrentPage(1)
+            }}
+            className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <span>{t('filter_unassigned_only')} ({unassignedDailyBookings.length})</span>
+            <span className="text-rose-200">←</span>
+          </button>
+        </div>
+      )}
+
       {/* Bento Stats Banner - Responsive */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
         <div className="bg-white p-3.5 rounded-3xl border border-slate-200 shadow-soft flex items-center gap-3">
@@ -248,7 +296,7 @@ export function DailySituationView({ onOpenUploadModal }) {
           <div>
             <div className="text-[11px] font-bold text-slate-400">{t('total_pax')}</div>
             <div className="text-lg font-black text-[#0a2540] font-mono">
-              {totalPax} <span className="text-xs font-normal text-slate-500">({totalAdults} ك / {totalChildren} ص)</span>
+              {totalPax} <span className="text-xs font-normal text-slate-500">({totalAdults}{t('adults_short')} / {totalChildren}{t('children_short')})</span>
             </div>
           </div>
         </div>
@@ -331,7 +379,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                   </span>
                   {b.is_edited && (
                     <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
-                      ✏️ معدّل
+                      {isRtl ? '✏️ معدّل' : '✏️ Edited'}
                     </span>
                   )}
                 </div>
@@ -347,10 +395,18 @@ export function DailySituationView({ onOpenUploadModal }) {
                     <Hotel className="w-3.5 h-3.5 text-[#0284c7]" />
                     <span>{b.hotel}</span>
                     <span className="text-slate-300">•</span>
-                    <span className="font-bold">غرفة: {b.room}</span>
+                    <span className="font-bold">{isRtl ? 'غرفة:' : 'Room:'} {b.room}</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-1">
-                    {isRtl ? 'المنفذ:' : 'Partner:'} <span className="font-bold text-slate-700">{executor?.name || (isRtl ? 'مارينا' : 'Marina')}</span>
+                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span>{isRtl ? 'المنفذ:' : 'Partner:'}</span>
+                    {executor ? (
+                      <span className="font-bold text-slate-700">{executor.name}</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                        <AlertTriangle className="w-3 h-3 text-rose-600" />
+                        <span>{t('unassigned_exec_badge')}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="text-left font-mono">
@@ -479,16 +535,23 @@ export function DailySituationView({ onOpenUploadModal }) {
                       </span>
                       {b.is_edited && (
                         <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
-                          ✏️ معدّل
+                          {isRtl ? '✏️ معدّل' : '✏️ Edited'}
                         </span>
                       )}
                     </div>
                   </td>
                   <td className="px-3 text-slate-600 font-bold">
-                    {executor?.name || 'مارينا'}
+                    {executor ? (
+                      <span>{executor.name}</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                        <AlertTriangle className="w-3 h-3 text-rose-600" />
+                        <span>{t('unassigned_exec_badge')}</span>
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 text-center font-mono font-bold">
-                    {b.adult} ك {b.child > 0 ? `+ ${b.child} ص` : ''}
+                    {b.adult} {isRtl ? 'ك' : 'A'} {b.child > 0 ? `+ ${b.child} ${isRtl ? 'ص' : 'C'}` : ''}
                   </td>
                   <td className="px-3 text-center font-mono font-bold text-slate-800">
                     €{b.sell_eur}

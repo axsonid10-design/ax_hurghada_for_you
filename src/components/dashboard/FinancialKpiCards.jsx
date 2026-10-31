@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   ShieldAlert
 } from 'lucide-react'
+import { useAXStore } from '../../store/useAXStore'
 
 export function FinancialKpiCards({
   totalSalesEur,
@@ -29,13 +30,16 @@ export function FinancialKpiCards({
   displayCurrency = 'EUR',
   rates
 }) {
+  const { t, lang } = useAXStore()
+  const isRtl = lang === 'ar'
   const egpRate = rates?.EGP || 53.25
   const isEgp = displayCurrency === 'EGP'
+  const egpSymbol = isRtl ? 'ج.م' : 'EGP'
 
   const formatParts = (eurVal) => {
     if (isEgp) {
       const val = Math.round(eurVal * egpRate)
-      return { val: val.toLocaleString(), sym: 'ج.م' }
+      return { val: val.toLocaleString(), sym: egpSymbol }
     }
     return { val: Math.round(eurVal).toLocaleString(), sym: '€' }
   }
@@ -45,7 +49,7 @@ export function FinancialKpiCards({
       return { val: Math.round(eurVal).toLocaleString(), sym: '€' }
     }
     const val = Math.round(eurVal * egpRate)
-    return { val: val.toLocaleString(), sym: 'ج.م' }
+    return { val: val.toLocaleString(), sym: egpSymbol }
   }
 
   const sales = formatParts(totalSalesEur)
@@ -75,7 +79,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-sky-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-sky-500" />
-              <span>المبيعات</span>
+              <span>{t('sales_title')}</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -95,8 +99,8 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>{totalBookings} حجز</span>
-            <span className="font-mono text-slate-700">{totalPax} فرد</span>
+            <span>{totalBookings} {t('bookings_badge')}</span>
+            <span className="font-mono text-slate-700">{totalPax} {t('pax_count')}</span>
           </div>
         </div>
 
@@ -104,7 +108,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-amber-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500" />
-              <span>التكلفة</span>
+              <span>{t('cost_title')}</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
               <Ship className="w-3.5 h-3.5" />
@@ -124,7 +128,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>النسبة</span>
+            <span>{t('ratio_title')}</span>
             <span className="font-mono font-black text-amber-800">{costRatio}%</span>
           </div>
         </div>
@@ -133,7 +137,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-rose-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-rose-500" />
-              <span>المصروفات</span>
+              <span>{t('expenses_title')}</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
               <Receipt className="w-3.5 h-3.5" />
@@ -153,8 +157,8 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>البنود</span>
-            <span className="font-mono text-slate-700">{expensesCount} بند</span>
+            <span>{t('items_title')}</span>
+            <span className="font-mono text-slate-700">{expensesCount} {t('items_count')}</span>
           </div>
         </div>
 
@@ -162,7 +166,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-emerald-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500" />
-              <span>الأرباح</span>
+              <span>{t('net_profit_title')}</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
               <Coins className="w-3.5 h-3.5" />
@@ -182,7 +186,7 @@ export function FinancialKpiCards({
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-500 whitespace-nowrap">
-            <span>النسبة</span>
+            <span>{t('ratio_title')}</span>
             <span className="font-mono font-black text-emerald-700">{netProfitMargin}%</span>
           </div>
         </div>
@@ -191,7 +195,7 @@ export function FinancialKpiCards({
           <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-800">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-600" />
-              <span>الأفراد</span>
+              <span>{t('pax_title')}</span>
             </span>
             <div className="p-1 sm:p-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
               <Users className="w-3.5 h-3.5" />
@@ -201,20 +205,20 @@ export function FinancialKpiCards({
           <div className="py-1.5 sm:py-2">
             <div className="whitespace-nowrap flex items-baseline gap-1 font-mono font-black text-base sm:text-2xl text-slate-900 tracking-tight">
               <span>{totalPax.toLocaleString()}</span>
-              <span className="text-xs font-sans font-bold text-slate-500">فرد</span>
+              <span className="text-xs font-sans font-bold text-slate-500">{t('pax_count')}</span>
             </div>
             <div className="whitespace-nowrap flex items-baseline gap-1 text-[10px] sm:text-xs font-bold text-slate-500">
-              <span>{totalAdults}ك</span>
+              <span>{totalAdults}{t('adults_short')}</span>
               <span>•</span>
-              <span>{totalChildren}ط</span>
+              <span>{totalChildren}{t('children_short')}</span>
               <span>•</span>
-              <span>{totalInfants}ر</span>
+              <span>{totalInfants}{t('infants_short')}</span>
             </div>
           </div>
 
           <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-600 whitespace-nowrap">
-            <span>الحجوزات</span>
-            <span className="font-mono font-bold text-slate-800">{totalBookings} حجز</span>
+            <span>{t('bookings_badge')}</span>
+            <span className="font-mono font-bold text-slate-800">{totalBookings} {t('bookings_badge')}</span>
           </div>
         </div>
       </div>
@@ -227,16 +231,16 @@ export function FinancialKpiCards({
             </div>
             <div>
               <div className="text-xs font-black text-slate-900">
-                موقف التحصيل والسيولة
+                {t('collection_liquidity_title')}
               </div>
               <div className="text-[11px] font-mono text-slate-500 flex items-center gap-3 mt-0.5">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span>محصل: {collected.sym}{collected.val} ({collectionRate}%)</span>
+                  <span>{t('collected_short')}: {collected.sym}{collected.val} ({collectionRate}%)</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  <span>متبقي: {remaining.sym}{remaining.val} ({remainingRate}%)</span>
+                  <span>{t('remaining_short')}: {remaining.sym}{remaining.val} ({remainingRate}%)</span>
                 </span>
               </div>
             </div>
@@ -245,15 +249,15 @@ export function FinancialKpiCards({
           <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700">
             {totalRestEur > 0 || totalRestEgp > 0 || totalRestUsd > 0 || totalRestGbp > 0 ? (
               <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 text-amber-900">
-                <span>المتبقي:</span>
+                <span>{t('remaining_colon')}</span>
                 {totalRestEur > 0 && <span className="font-mono font-black text-sky-800">€{totalRestEur.toLocaleString()}</span>}
-                {totalRestEgp > 0 && <span className="font-mono font-black text-emerald-800">{totalRestEgp.toLocaleString()} ج.م</span>}
+                {totalRestEgp > 0 && <span className="font-mono font-black text-emerald-800">{totalRestEgp.toLocaleString()} {egpSymbol}</span>}
                 {totalRestUsd > 0 && <span className="font-mono font-black text-blue-800">${totalRestUsd.toLocaleString()}</span>}
                 {totalRestGbp > 0 && <span className="font-mono font-black text-purple-800">£{totalRestGbp.toLocaleString()}</span>}
               </div>
             ) : totalBookings > 0 ? (
               <div className="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200 font-black text-[11px]">
-                مدفوع كلي
+                {t('paid_full')}
               </div>
             ) : null}
           </div>

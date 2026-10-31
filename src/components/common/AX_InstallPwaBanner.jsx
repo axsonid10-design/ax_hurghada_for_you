@@ -5,6 +5,7 @@ import { useAXStore } from '../../store/useAXStore'
 
 export function AX_InstallPwaBanner() {
   const openPwaInstallModal = useAXStore((state) => state.openPwaInstallModal)
+  const t = useAXStore((state) => state.t)
   const [showBanner, setShowBanner] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
 
@@ -96,21 +97,21 @@ export function AX_InstallPwaBanner() {
             <img src="/logo-circle.png" alt="غردقة فور يو" className="w-full h-full object-cover rounded-full" />
           </div>
           <span className="text-xs sm:text-sm font-bold text-slate-100 whitespace-nowrap">
-            تثبيت التطبيق
+            {t('install_app')}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleInstall}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 whitespace-nowrap"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 whitespace-nowrap cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>تثبيت التطبيق</span>
+            <span>{t('install_app')}</span>
           </button>
           <button
             onClick={handleDismiss}
-            aria-label="إغلاق"
-            className="p-1 text-slate-400 hover:text-white rounded-full transition-colors"
+            aria-label={t('close')}
+            className="p-1 text-slate-400 hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

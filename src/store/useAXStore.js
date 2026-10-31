@@ -88,6 +88,7 @@ const DEFAULT_SYSTEM_USERS = [
       trips: true,
       executors: true,
       cash: true,
+      expenses: true,
       reports: true,
       staff: true,
       can_edit_prices: true,
@@ -188,6 +189,15 @@ const getStoredExpenses = () => {
     if (raw) return JSON.parse(raw)
   } catch {}
   return INITIAL_EXPENSES
+}
+
+const getStoredCustodies = () => {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('ax_h4u_custodies')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
 }
 
 const getStoredImportedDates = () => {
@@ -305,9 +315,15 @@ export const useAXStore = create((set, get) => ({
     const next = get().lang === 'ar' ? 'en' : 'ar'
     get().setLang(next)
   },
-  t: (key) => {
+  t: (key, params) => {
     const l = get().lang || 'ar'
-    return translations[l]?.[key] || key
+    let val = translations[l]?.[key] !== undefined ? translations[l][key] : key
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([k, v]) => {
+        val = String(val).replace(new RegExp(`\\{${k}\\}`, 'g'), v)
+      })
+    }
+    return val
   },
   profile: getStoredProfile(),
   isAuthLoading: false,
@@ -360,13 +376,13 @@ export const useAXStore = create((set, get) => ({
       syncStatus: { ...state.syncStatus, ...status }
     })),
 
-  // Data Stores
   tripCategories: getStoredTripCategories(),
   executorCategories: getStoredExecutorCategories(),
   executors: getStoredExecutors(),
   tripDefinitions: getStoredTripDefinitions(),
   bookings: getStoredBookings(),
   expenses: getStoredExpenses(),
+  custodies: getStoredCustodies(),
   importedDates: getStoredImportedDates(),
   wipeAllData: () => {
     const currentProfile = get().profile
@@ -379,6 +395,7 @@ export const useAXStore = create((set, get) => ({
       localStorage.removeItem('ax_h4u_staff_invites')
       localStorage.removeItem('ax_h4u_bookings')
       localStorage.removeItem('ax_h4u_expenses')
+      localStorage.removeItem('ax_h4u_custodies')
       localStorage.removeItem('ax_h4u_imported_dates')
       localStorage.removeItem('ax_h4u_trip_definitions')
       localStorage.removeItem('ax_h4u_executors')
@@ -393,6 +410,7 @@ export const useAXStore = create((set, get) => ({
       executorCategories: DEFAULT_EXECUTOR_CATEGORIES,
       bookings: [],
       expenses: [],
+      custodies: [],
       importedDates: {},
       tripDefinitions: [],
       executors: [],
@@ -478,7 +496,6 @@ export const useAXStore = create((set, get) => ({
     set({ systemUsers: next })
   },
 
-  // Confirmation Modal
   confirmModal: {
     isOpen: false,
     title: '',
@@ -489,7 +506,6 @@ export const useAXStore = create((set, get) => ({
     onConfirm: () => {}
   },
 
-  // Navigation & UI Setters
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebarPin: () => set((state) => ({ sidebarPinned: !state.sidebarPinned })),
   toggleSidebarCollapse: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
@@ -531,7 +547,6 @@ export const useAXStore = create((set, get) => ({
   openMasterModal: () => set({ isMasterModalOpen: true }),
   closeMasterModal: () => set({ isMasterModalOpen: false }),
 
-  // Trip Definitions Actions
   addTripDefinition: (def) => {
     cloudSaveTrip(def)
     set((state) => {
@@ -668,7 +683,6 @@ export const useAXStore = create((set, get) => ({
     })
   },
 
-  // Category Actions
   addTripCategory: (cat) => set((state) => {
     const id = cat.id || 'cat_' + Date.now()
     const label = (cat.label || cat.name || '').trim()
@@ -734,7 +748,6 @@ export const useAXStore = create((set, get) => ({
     return { executorCategories: next }
   }),
 
-  // Executors Actions
   addExecutor: (executor) => {
     cloudSaveExecutor(executor)
     set((state) => {
@@ -808,7 +821,6 @@ export const useAXStore = create((set, get) => ({
     }
   },
 
-  // Operational Expenses Actions
   addExpense: (expense) => {
     const newExpense = {
       ...expense,
@@ -836,7 +848,81 @@ export const useAXStore = create((set, get) => ({
     })
   },
 
-  // Bookings Actions
+  updateExpense: (id, fields) => {
+    set((state) => {
+      const next = state.expenses.map((e) => (e.id === id ? { ...e, ...fields } : e))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_expenses', JSON.stringify(next))
+      }
+      const updated = next.find((e) => e.id === id)
+      if (updated) cloudSaveExpense(updated)
+      return { expenses: next }
+    })
+  },
+
+  addCustodyAdvance: (custody) => {
+    const newCustody = {
+      ...custody,
+      id: custody.id || 'cust_' + Date.now(),
+      date: custody.date || new Date().toISOString().split('T')[0],
+      status: custody.status || 'active',
+      settled: false
+    }
+    set((state) => {
+      const next = [newCustody, ...state.custodies]
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_custodies', JSON.stringify(next))
+      }
+      cloudSaveSettings('custodies', next)
+      return { custodies: next }
+    })
+  },
+
+  updateCustodyAdvance: (id, fields) => {
+    set((state) => {
+      const next = state.custodies.map((c) => (c.id === id ? { ...c, ...fields } : c))
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_custodies', JSON.stringify(next))
+      }
+      cloudSaveSettings('custodies', next)
+      return { custodies: next }
+    })
+  },
+
+  deleteCustodyAdvance: (id) => {
+    set((state) => {
+      const next = state.custodies.filter((c) => c.id !== id)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_custodies', JSON.stringify(next))
+      }
+      cloudSaveSettings('custodies', next)
+      return { custodies: next }
+    })
+  },
+
+  settleCustodyAdvance: (id, settlementDetails) => {
+    set((state) => {
+      const next = state.custodies.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: 'settled',
+              settled: true,
+              settled_at: new Date().toISOString(),
+              settlement_date: settlementDetails?.date || new Date().toISOString().split('T')[0],
+              settlement_notes: settlementDetails?.notes || '',
+              ...settlementDetails
+            }
+          : c
+      )
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ax_h4u_custodies', JSON.stringify(next))
+      }
+      cloudSaveSettings('custodies', next)
+      return { custodies: next }
+    })
+  },
+
   addBooking: (booking) => {
     const { tripDefinitions, executors, bookings } = get()
     const fin = computeBookingFinancials(booking, tripDefinitions, executors)
