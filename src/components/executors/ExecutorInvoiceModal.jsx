@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas'
 import {
   Printer,
   FileDown,
+  FileSpreadsheet,
   Image as ImageIcon,
   Share2,
   X,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
+import { exportExecutorLedgerToExcel } from '../../utils/excelExporter'
 
 export function ExecutorInvoiceModal({ isOpen, onClose, executor, bookings = [], tripDefinitions = [] }) {
   const printRef = useRef(null)
@@ -193,6 +195,32 @@ export function ExecutorInvoiceModal({ isOpen, onClose, executor, bookings = [],
     setTimeout(() => setExportNotice(null), 3000)
   }
 
+  const handleExportExcel = async () => {
+    soundManager.playClick()
+    setIsExporting(true)
+    try {
+      await exportExecutorLedgerToExcel({
+        executor,
+        exBookings,
+        aggregatedRows,
+        totalCostDue,
+        totalPaid,
+        remainingBalance,
+        periodFilter,
+        customFrom,
+        customTo,
+        lang
+      })
+      soundManager.playSuccess()
+      setExportNotice(isRtl ? 'تم تصدير كشف الحساب إلى ملف Excel بنجاح' : 'Statement exported to Excel successfully')
+      setTimeout(() => setExportNotice(null), 3000)
+    } catch (err) {
+      console.error('Excel export error:', err)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const getSummaryText = () => {
     const periodLabel = periodFilter === 'all'
       ? (isRtl ? 'كافة الفترات' : 'All Time')
@@ -320,6 +348,16 @@ export function ExecutorInvoiceModal({ isOpen, onClose, executor, bookings = [],
             >
               <FileDown className="w-3.5 h-3.5" />
               <span>{isRtl ? 'حفظ PDF' : 'Save PDF'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isRtl ? 'تصدير Excel' : 'Export Excel'}</span>
             </button>
 
             <button
@@ -754,6 +792,16 @@ export function ExecutorInvoiceModal({ isOpen, onClose, executor, bookings = [],
           >
             <ImageIcon className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isRtl ? 'حفظ كصورة' : 'Save Image'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-full text-xs font-black shadow-md cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isRtl ? 'إكسيل' : 'Excel'}</span>
           </button>
 
           <button

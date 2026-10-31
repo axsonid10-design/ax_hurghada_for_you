@@ -33,39 +33,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 async function broadcastRelease() {
-  console.log(`[AX_H4U] Broadcasting version release v${version}...`)
-  const title = `🚀 تحديث جديد لمنظومة غردقة (v${version})`
-  const body = 'تم إطلاق تحديث جديد للرحلات وتعديل الحجوزات. اضغط للتحديث فوراً.'
-  const link = `/?_v=${Date.now()}`
-
-  try {
-    await supabase.from('ax_notifications').insert({
-      title,
-      message: body,
-      link,
-      type: 'system',
-      is_read: false,
-      meta: {
-        version,
-        broadcast: true,
-        timestamp: Date.now()
-      }
-    })
-
-    const { data: pushData } = await supabase.functions.invoke('ax-web-push', {
-      body: {
-        title,
-        body,
-        link,
-        tag: `ax-release-${version}`,
-        icon: '/pwa-192x192.png',
-        badge: '/apple-touch-icon.png'
-      }
-    })
-    console.log('[AX_H4U] Web Push broadcast delivered:', pushData || 'ok')
-  } catch (err) {
-    console.warn('[AX_H4U] Broadcast warning:', err.message)
-  }
+  console.log(`[AX_H4U] Version release v${version} local check...`)
+  // Push broadcast disabled until Hurghada is migrated to its own dedicated Supabase project
+  console.log('[AX_H4U] Push broadcast skipped to avoid cross-project contamination with protein-food.')
 }
 
 broadcastRelease()
