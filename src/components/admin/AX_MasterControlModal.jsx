@@ -103,10 +103,7 @@ ${err.stack_trace || 'No stack trace'}
   const handleSendTestPush = async () => {
     soundManager.playClick()
     setPushTestSent(true)
-    await pushManager.sendNotification(
-      '🚨 تجربة إشعار الطوارئ - AXONID',
-      'إشعار تجريبي للتأكد من وصول تنبيهات الأخطاء والتشغيل لهاتفك بنجاح 24/7.'
-    )
+    await pushManager.sendTestNotification(profile?.id, profile?.role)
     setTimeout(() => setPushTestSent(false), 3000)
   }
 

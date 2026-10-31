@@ -26,6 +26,7 @@ import { AX_LoginScreen } from './components/auth/AX_LoginScreen'
 import { useAXStore } from './store/useAXStore'
 import { hasModuleAccess, getFirstAllowedModule } from './utils/permissionsConfig'
 import { soundManager } from './utils/soundEffects'
+import { pushManager } from './utils/pushManager'
 import { useScrollDirection } from './hooks/useScrollDirection'
 import { initRealtimeSync } from './services/realtimeSync'
 
@@ -47,7 +48,11 @@ export function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!('Notification' in window)) return
-    if (Notification.permission === 'granted') return
+
+    if (Notification.permission === 'granted') {
+      pushManager.subscribeUser(profile?.id, profile?.role).catch(() => {})
+      return
+    }
 
     const dismissCount = parseInt(localStorage.getItem('ax_push_dismiss_count') || '0', 10)
     if (dismissCount >= 2) return
@@ -59,9 +64,8 @@ export function App() {
       openPushModal()
     }, 1200)
     return () => clearTimeout(timer)
-  }, [profile?.id, openPushModal])
+  }, [profile?.id, profile?.role, openPushModal])
 
-  // Real-time Cloud Synchronization
   useEffect(() => {
     const cleanup = initRealtimeSync()
     return () => {

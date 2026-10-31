@@ -33,9 +33,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 async function broadcastRelease() {
-  console.log(`[AX_H4U] Version release v${version} local check...`)
-  // Push broadcast disabled until Hurghada is migrated to its own dedicated Supabase project
-  console.log('[AX_H4U] Push broadcast skipped to avoid cross-project contamination with protein-food.')
+  const title = `🚀 تحديث جديد لمنظومة غردقة فور يو (v${version})`
+  const body = 'تم إطلاق تحديث تشغيلي جديد وتحديث الإشعارات. اضغط للتحديث فوراً.'
+  const link = `/?_v=${Date.now()}`
+
+  try {
+    const { data: pushData, error } = await supabase.functions.invoke('ax-web-push', {
+      body: {
+        project_slug: 'hurghada-for-you',
+        title,
+        body,
+        link,
+        tag: `ax-hurghada-release-${version}`,
+        icon: 'https://hurghada.axsonid.com/pwa-192x192.png',
+        badge: 'https://hurghada.axsonid.com/favicon-32x32.png'
+      }
+    })
+    if (error) {
+      console.warn('[AX_H4U] Push broadcast notice:', error.message)
+    } else {
+      console.log('[AX_H4U] Push broadcast status:', JSON.stringify(pushData))
+    }
+  } catch (err) {
+    console.warn('[AX_H4U] Broadcast warning:', err.message)
+  }
 }
 
 broadcastRelease()

@@ -36,7 +36,7 @@ export function AX_Header({ isVisible = true }) {
   const handlePushClick = async () => {
     soundManager.playClick()
     if (pushStatus === 'granted') {
-      await pushManager.sendTestNotification()
+      await pushManager.sendTestNotification(profile?.id, profile?.role)
     } else {
       openPushModal()
     }

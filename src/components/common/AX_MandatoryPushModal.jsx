@@ -7,6 +7,7 @@ import { useAXStore } from '../../store/useAXStore'
 export function AX_MandatoryPushModal() {
   const isStorePushModalOpen = useAXStore((state) => state.isPushModalOpen)
   const closePushModal = useAXStore((state) => state.closePushModal)
+  const profile = useAXStore((state) => state.profile)
   const [isDenied, setIsDenied] = useState(false)
 
   useEffect(() => {
@@ -35,20 +36,22 @@ export function AX_MandatoryPushModal() {
     if (res === 'granted') {
       soundManager.playSuccess()
       closePushModal()
-      pushManager.sendTestNotification()
+      await pushManager.subscribeUser(profile?.id, profile?.role)
+      pushManager.sendTestNotification(profile?.id, profile?.role)
     } else if (res === 'denied') {
       soundManager.playClick()
       setIsDenied(true)
     }
   }
 
-  const handleRecheck = () => {
+  const handleRecheck = async () => {
     soundManager.playClick()
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
         soundManager.playSuccess()
         closePushModal()
-        pushManager.sendTestNotification()
+        await pushManager.subscribeUser(profile?.id, profile?.role)
+        pushManager.sendTestNotification(profile?.id, profile?.role)
       } else if (Notification.permission === 'default') {
         setIsDenied(false)
         handleEnable()
