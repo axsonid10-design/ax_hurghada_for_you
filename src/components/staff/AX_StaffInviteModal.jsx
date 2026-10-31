@@ -14,18 +14,18 @@ import { useAXStore } from '../../store/useAXStore'
 import { cloudSaveSettings } from '../../services/realtimeSync'
 
 export function AX_StaffInviteModal({ isOpen, onClose, onInviteCreated }) {
-  if (!isOpen) return null
-
   const { lang, addStaffInvite } = useAXStore()
   const isRtl = lang === 'ar'
 
   const [role, setRole] = useState('مندوب مبيعات')
   const [permissions, setPermissions] = useState(() => ({
-    ...AVAILABLE_ROLES['مندوب مبيعات'].permissions
+    ...AVAILABLE_ROLES['مندوب مبيعات']?.permissions
   }))
 
   const [generatedLink, setGeneratedLink] = useState('')
   const [isCopied, setIsCopied] = useState(false)
+
+  if (!isOpen) return null
 
   const handleRoleChange = (selectedRole) => {
     soundManager.playClick()

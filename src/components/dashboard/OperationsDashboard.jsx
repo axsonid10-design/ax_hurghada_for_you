@@ -41,15 +41,18 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewExpense }) {
       return bookings.filter((b) => b.date >= customFrom && b.date <= customTo)
     }
 
-    const refDate = new Date(selectedDate)
+    const refTime = selectedDate ? new Date(selectedDate).getTime() : NaN
+    const refDate = !isNaN(refTime) ? new Date(refTime) : new Date()
+    const safeSelectedDate = !isNaN(refTime) ? selectedDate : refDate.toISOString().split('T')[0]
+
     if (filterMode === 'week') {
       const past7Days = new Date(refDate)
       past7Days.setDate(past7Days.getDate() - 7)
       const pastStr = past7Days.toISOString().split('T')[0]
-      return bookings.filter((b) => b.date >= pastStr && b.date <= selectedDate)
+      return bookings.filter((b) => b.date >= pastStr && b.date <= safeSelectedDate)
     }
     if (filterMode === 'month') {
-      const monthPrefix = selectedDate.substring(0, 7)
+      const monthPrefix = safeSelectedDate.substring(0, 7)
       return bookings.filter((b) => (b.date || '').startsWith(monthPrefix))
     }
 
@@ -63,15 +66,18 @@ export function OperationsDashboard({ onOpenUploadModal, onOpenNewExpense }) {
       return expenses.filter((e) => e.date >= customFrom && e.date <= customTo)
     }
 
-    const refDate = new Date(selectedDate)
+    const refTime = selectedDate ? new Date(selectedDate).getTime() : NaN
+    const refDate = !isNaN(refTime) ? new Date(refTime) : new Date()
+    const safeSelectedDate = !isNaN(refTime) ? selectedDate : refDate.toISOString().split('T')[0]
+
     if (filterMode === 'week') {
       const past7Days = new Date(refDate)
       past7Days.setDate(past7Days.getDate() - 7)
       const pastStr = past7Days.toISOString().split('T')[0]
-      return expenses.filter((e) => e.date >= pastStr && e.date <= selectedDate)
+      return expenses.filter((e) => e.date >= pastStr && e.date <= safeSelectedDate)
     }
     if (filterMode === 'month') {
-      const monthPrefix = selectedDate.substring(0, 7)
+      const monthPrefix = safeSelectedDate.substring(0, 7)
       return expenses.filter((e) => (e.date || '').startsWith(monthPrefix))
     }
 

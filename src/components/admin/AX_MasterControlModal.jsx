@@ -22,8 +22,6 @@ export function AX_MasterControlModal({ isOpen, onClose }) {
     profile?.email?.toLowerCase() === 'axsonid@gmail.com' ||
     profile?.email?.toLowerCase() === 'axonid@gmail.com'
 
-  if (!isOpen || !isMaster) return null
-
   const {
     maxUsers = 15,
     setMaxUsers,
@@ -58,10 +56,12 @@ export function AX_MasterControlModal({ isOpen, onClose }) {
   }
 
   useEffect(() => {
-    if (isOpen && activeTab === 'errors') {
+    if (isOpen && isMaster && activeTab === 'errors') {
       fetchErrors()
     }
-  }, [isOpen, activeTab])
+  }, [isOpen, isMaster, activeTab])
+
+  if (!isOpen || !isMaster) return null
 
   const handleCopyError = (err) => {
     soundManager.playClick()

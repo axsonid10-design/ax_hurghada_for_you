@@ -216,10 +216,10 @@ export function TripsCatalogView() {
               soundManager.playClick()
               setIsManageCategoriesOpen(true)
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 text-slate-500" />
-            <span>إدارة الأقسام</span>
+            <span>{lang === 'ar' ? 'إدارة الأقسام' : 'Categories'}</span>
           </button>
 
           <button
@@ -227,7 +227,7 @@ export function TripsCatalogView() {
               soundManager.playClick()
               setIsNewTripModalOpen(true)
             }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-sky-400" />
             <span>{t('add_trip')}</span>
@@ -246,14 +246,16 @@ export function TripsCatalogView() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm sm:text-base font-black text-amber-950">
-                    قسم الرحلات غير المسعرة
+                    {lang === 'ar' ? 'قسم الرحلات غير المسعرة' : 'Unpriced Trips Section'}
                   </h3>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-300">
-                    {unpricedTrips.length} رحلة بحاجة لتسعير
+                    {unpricedTrips.length} {lang === 'ar' ? 'رحلة بحاجة لتسعير' : 'trips need pricing'}
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800 font-bold mt-0.5">
-                  هذه الرحلات مستوردة من الحجوزات والشيت بدون تسعير. قم بتحديد سعر التكلفة والبيع لحساب الأرباح بدقة.
+                  {lang === 'ar'
+                    ? 'هذه الرحلات مستوردة من الحجوزات والشيت بدون تسعير. قم بتحديد سعر التكلفة والبيع لحساب الأرباح بدقة.'
+                    : 'These trips were imported without prices. Please set cost and sell prices to calculate profits.'}
                 </p>
               </div>
             </div>
@@ -263,9 +265,9 @@ export function TripsCatalogView() {
                 soundManager.playClick()
                 setEditingTrip(unpricedTrips[0])
               }}
-              className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 self-start sm:self-auto"
+              className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 self-start sm:self-auto cursor-pointer"
             >
-              <span>تسعير أول رحلة الآن</span>
+              <span>{lang === 'ar' ? 'تسعير أول رحلة الآن' : 'Price First Trip Now'}</span>
               <span className="font-mono text-sky-300">←</span>
             </button>
           </div>
@@ -285,27 +287,27 @@ export function TripsCatalogView() {
                         {trip.display_name}
                       </h4>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 flex-shrink-0">
-                        ⚠️ غير مسعرة
+                        ⚠️ {lang === 'ar' ? 'غير مسعرة' : 'Unpriced'}
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-500 font-bold mt-1">
-                      المنفذ: <span className="text-slate-700 font-black">{executor?.name || 'مارينا'}</span>
+                      {lang === 'ar' ? 'المنفذ:' : 'Partner:'} <span className="text-slate-700 font-black">{executor?.name || (lang === 'ar' ? 'مارينا' : 'Marina')}</span>
                     </div>
                   </div>
 
                   <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between text-xs font-mono">
                     <div>
-                      <span className="text-slate-400 font-sans text-[10px] ml-1">التكلفة:</span>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">{lang === 'ar' ? 'التكلفة:' : 'Cost:'}</span>
                       <span className="font-black text-amber-700">0.00 €</span>
                     </div>
                     <div className="text-slate-300">•</div>
                     <div>
-                      <span className="text-slate-400 font-sans text-[10px] ml-1">البيع:</span>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">{lang === 'ar' ? 'البيع:' : 'Sell:'}</span>
                       <span className="font-black text-slate-800">0.00 €</span>
                     </div>
                     <div className="text-slate-300">•</div>
                     <div>
-                      <span className="text-slate-400 font-sans text-[10px] ml-1">الربح:</span>
+                      <span className="text-slate-400 font-sans text-[10px] ml-1">{lang === 'ar' ? 'الربح:' : 'Profit:'}</span>
                       <span className="font-black text-emerald-600">0.00 €</span>
                     </div>
                   </div>
@@ -316,10 +318,10 @@ export function TripsCatalogView() {
                       soundManager.playClick()
                       setEditingTrip(trip)
                     }}
-                    className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-[#0a2540] rounded-full text-xs font-black shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                    className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-[#0a2540] rounded-full text-xs font-black shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Coins className="w-3.5 h-3.5 text-[#0a2540]" />
-                    <span>تسعير الرحلة الآن</span>
+                    <span>{lang === 'ar' ? 'تسعير الرحلة الآن' : 'Price Trip Now'}</span>
                   </button>
                 </div>
               )

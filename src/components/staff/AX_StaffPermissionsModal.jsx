@@ -9,13 +9,11 @@ import { soundManager } from '../../utils/soundEffects'
 import { useAXStore } from '../../store/useAXStore'
 
 export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
-  if (!isOpen || !user) return null
-
   const { updateSystemUser, lang } = useAXStore()
   const isRtl = lang === 'ar'
 
-  const [permissions, setPermissions] = useState(user.permissions || {})
-  const [role, setRole] = useState(user.role || 'مندوب مبيعات')
+  const [permissions, setPermissions] = useState(user?.permissions || {})
+  const [role, setRole] = useState(user?.role || 'مندوب مبيعات')
   const [savedSuccess, setSavedSuccess] = useState(false)
 
   useEffect(() => {
@@ -25,6 +23,8 @@ export function AX_StaffPermissionsModal({ isOpen, onClose, user }) {
       setSavedSuccess(false)
     }
   }, [user])
+
+  if (!isOpen || !user) return null
 
   const applyRole = (selectedRole) => {
     soundManager.playClick()

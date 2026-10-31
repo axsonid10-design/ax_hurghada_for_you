@@ -31,9 +31,11 @@ export function DailySituationView({ onOpenUploadModal }) {
     executors,
     tripDefinitions = [],
     setActiveTab,
-    t
+    t,
+    lang
   } = useAXStore()
 
+  const isRtl = lang === 'ar'
   const [filterTripType, setFilterTripType] = useState('ALL')
   const [filterExecutor, setFilterExecutor] = useState('ALL')
   const [searchQuery, setSearchQuery] = useState('')
@@ -152,10 +154,10 @@ export function DailySituationView({ onOpenUploadModal }) {
                 setSelectedDate(today)
                 setCurrentPage(1)
               }}
-              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-[#0a2540] rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0"
-              title="الانتقال لليوم"
+              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-[#0a2540] rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 cursor-pointer"
+              title={isRtl ? 'الانتقال لليوم' : 'Jump to today'}
             >
-              اليوم
+              {isRtl ? 'اليوم' : 'Today'}
             </button>
           </div>
 
@@ -215,19 +217,23 @@ export function DailySituationView({ onOpenUploadModal }) {
             </div>
             <div>
               <span className="font-black text-xs sm:text-sm block">
-                تنبيه تشغيلي: يوجد ({unpricedDailyTrips.length}) حجوزات لرحلات لم يتم تسعيرها بعد في دليل الرحلات!
+                {isRtl
+                  ? `تنبيه تشغيلي: يوجد (${unpricedDailyTrips.length}) حجوزات لرحلات لم يتم تسعيرها بعد في دليل الرحلات!`
+                  : `Operational Notice: (${unpricedDailyTrips.length}) bookings have unpriced trips in the catalog!`}
               </span>
               <span className="text-[11px] text-amber-800 block mt-0.5">
-                تكاليف وأرباح هذه الرحلات غير محتسبة بدقة حتى يتم تحديد سعر التكلفة والبيع.
+                {isRtl
+                  ? 'تكاليف وأرباح هذه الرحلات غير محتسبة بدقة حتى يتم تحديد سعر التكلفة والبيع.'
+                  : 'Costs and profits for these trips are not calculated until prices are set.'}
               </span>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setActiveTab('trips')}
-            className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            <span>تسعير الرحلات في الدليل</span>
+            <span>{isRtl ? 'تسعير الرحلات في الدليل' : 'Set Prices in Catalog'}</span>
             <span className="text-sky-300">←</span>
           </button>
         </div>
@@ -291,10 +297,10 @@ export function DailySituationView({ onOpenUploadModal }) {
             <FileSpreadsheet className="w-7 h-7" />
           </div>
           <h3 className="text-base font-black text-slate-800">
-            لا توجد حجوزات مسجلة لهذا التاريخ ({selectedDate})
+            {isRtl ? `لا توجد حجوزات مسجلة لهذا التاريخ (${selectedDate})` : `No bookings registered for this date (${selectedDate})`}
           </h3>
           <p className="text-xs text-slate-500 font-bold max-w-sm mx-auto">
-            استخدم الزر العائم بأسفل الشاشة لرفع شيت الإكسيل وإدراج الرحلات اليومية.
+            {isRtl ? 'استخدم الزر العائم بأسفل الشاشة لرفع شيت الإكسيل وإدراج الرحلات اليومية.' : 'Use the floating action button below to upload Excel sheet.'}
           </p>
         </div>
       ) : (
@@ -344,13 +350,13 @@ export function DailySituationView({ onOpenUploadModal }) {
                     <span className="font-bold">غرفة: {b.room}</span>
                   </div>
                   <div className="text-[11px] text-slate-400 mt-1">
-                    المنفذ: <span className="font-bold text-slate-700">{executor?.name || 'مارينا'}</span>
+                    {isRtl ? 'المنفذ:' : 'Partner:'} <span className="font-bold text-slate-700">{executor?.name || (isRtl ? 'مارينا' : 'Marina')}</span>
                   </div>
                 </div>
                 <div className="text-left font-mono">
-                  <div className="text-xs text-slate-400 font-sans">الأفراد</div>
+                  <div className="text-xs text-slate-400 font-sans">{isRtl ? 'الأفراد' : 'PAX'}</div>
                   <div className="text-sm font-bold text-slate-800">
-                    {b.adult} بالغ {b.child > 0 ? `+ ${b.child} طفل` : ''}
+                    {b.adult} {isRtl ? 'بالغ' : 'adult'} {b.child > 0 ? `+ ${b.child} ${isRtl ? 'طفل' : 'child'}` : ''}
                   </div>
                 </div>
               </div>
@@ -358,28 +364,28 @@ export function DailySituationView({ onOpenUploadModal }) {
               {/* Financial bar */}
               <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 flex items-center justify-between text-xs font-mono">
                 <div>
-                  <span className="text-slate-400 font-sans ml-1">البيع:</span>
+                  <span className="text-slate-400 font-sans ml-1">{isRtl ? 'البيع:' : 'Sell:'}</span>
                   <span className="font-bold text-slate-800">€{b.sell_eur}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-sans ml-1">التكلفة:</span>
+                  <span className="text-slate-400 font-sans ml-1">{isRtl ? 'التكلفة:' : 'Cost:'}</span>
                   <span className="font-bold text-amber-700">€{b.cost_eur}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-sans ml-1">الربح:</span>
+                  <span className="text-slate-400 font-sans ml-1">{isRtl ? 'الربح:' : 'Profit:'}</span>
                   <span className="font-black text-emerald-600">€{b.profit_eur}</span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-1 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
                 <div className="text-xs">
-                  <span className="text-slate-400 ml-1">المتبقي:</span>
+                  <span className="text-slate-400 ml-1">{isRtl ? 'المتبقي:' : 'Rest:'}</span>
                   <span className="font-black font-mono text-rose-600 text-sm">
                     €{b.rest_eur}
                   </span>
                   {b.rest_egp > 0 && (
                     <span className="text-[10px] text-slate-500 mr-1">
-                      + {b.rest_egp} ج.م
+                      + {b.rest_egp} {isRtl ? 'ج.م' : 'EGP'}
                     </span>
                   )}
                 </div>
@@ -392,10 +398,10 @@ export function DailySituationView({ onOpenUploadModal }) {
                       soundManager.playClick()
                       setEditingBooking(b)
                     }}
-                    className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-sky-200 shadow-xs"
+                    className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 border border-sky-200 shadow-xs cursor-pointer"
                   >
                     <Edit3 className="w-3 h-3 text-sky-600" />
-                    <span>تعديل</span>
+                    <span>{isRtl ? 'تعديل' : 'Edit'}</span>
                   </button>
                   {badge.text !== t('status_paid') && (
                     <button
@@ -423,7 +429,7 @@ export function DailySituationView({ onOpenUploadModal }) {
           <thead>
             <tr className="bg-[#0f172a] text-white text-xs font-bold h-11">
               <th className="px-3 font-mono text-start">{t('th_sr')}</th>
-              <th className="px-3 text-start">التاريخ</th>
+              <th className="px-3 text-start">{t('th_date')}</th>
               <th className="px-3 text-start">{t('th_guest')}</th>
               <th className="px-3 text-start">{t('th_hotel_room')}</th>
               <th className="px-3 text-start">{t('th_trip')}</th>
@@ -432,7 +438,7 @@ export function DailySituationView({ onOpenUploadModal }) {
               <th className="px-3 text-center font-mono">{t('th_sell')}</th>
               <th className="px-3 text-center font-mono">{t('th_cost')}</th>
               <th className="px-3 text-center font-mono">{t('th_profit')}</th>
-              <th className="px-3 text-center font-mono">المتبقي</th>
+              <th className="px-3 text-center font-mono">{isRtl ? 'المتبقي' : 'Rest (€)'}</th>
               <th className="px-3 text-center">{t('th_payment_status')}</th>
               <th className="px-3 text-center">{t('th_actions')}</th>
             </tr>
@@ -450,7 +456,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                     setEditingBooking(b)
                   }}
                   className="h-12 hover:bg-sky-50/70 transition-colors whitespace-nowrap cursor-pointer"
-                  title="اضغط لتعديل بيانات الحجز"
+                  title={isRtl ? 'اضغط لتعديل بيانات الحجز' : 'Click to edit booking'}
                 >
                   <td className="px-3 font-mono font-bold text-[#0284c7]">
                     #{b.sr}
@@ -515,11 +521,11 @@ export function DailySituationView({ onOpenUploadModal }) {
                           soundManager.playClick()
                           setEditingBooking(b)
                         }}
-                        className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-xs"
-                        title="تعديل بيانات الحجز والأفراد"
+                        className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-full text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
+                        title={isRtl ? 'تعديل بيانات الحجز والأفراد' : 'Edit booking & pax'}
                       >
                         <Edit3 className="w-3 h-3 text-sky-600" />
-                        <span>تعديل</span>
+                        <span>{isRtl ? 'تعديل' : 'Edit'}</span>
                       </button>
                       {badge.text !== t('status_paid') ? (
                         <button

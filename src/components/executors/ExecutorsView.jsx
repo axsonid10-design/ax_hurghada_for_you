@@ -28,7 +28,8 @@ import { ManageCategoriesModal } from '../common/ManageCategoriesModal'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 
 export function ExecutorsView() {
-  const { t, executors, bookings, tripDefinitions, executorCategories, recordExecutorPayment } = useAXStore()
+  const { t, lang, executors, bookings, tripDefinitions, executorCategories, recordExecutorPayment } = useAXStore()
+  const isRtl = lang === 'ar'
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -44,7 +45,7 @@ export function ExecutorsView() {
   })
 
   const categories = [
-    { id: 'all', label: 'جميع الأقسام' },
+    { id: 'all', label: isRtl ? 'جميع الأقسام' : 'All Activities' },
     ...executorCategories.map((c) => ({ id: c, label: c }))
   ]
 
@@ -97,7 +98,7 @@ export function ExecutorsView() {
             {t('executors_title')}
           </h2>
           <div className="text-[11px] text-slate-400 font-bold mt-0.5">
-            متابعة حسابات المراكب وموردي السفاري والغوص واستخراج فواتير التصفية
+            {isRtl ? 'متابعة حسابات المراكب وموردي السفاري والغوص واستخراج فواتير التصفية' : 'Manage boat & safari partners accounts and generate settlement invoices'}
           </div>
         </div>
 
@@ -118,10 +119,10 @@ export function ExecutorsView() {
               soundManager.playClick()
               setIsManageCategoriesOpen(true)
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 text-slate-500" />
-            <span>إدارة الأنشطة</span>
+            <span>{isRtl ? 'إدارة الأنشطة' : 'Activities'}</span>
           </button>
 
           <button
@@ -130,7 +131,7 @@ export function ExecutorsView() {
               setEditingExecutor(null)
               setIsAddOpen(true)
             }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-md transition-all active:scale-95 flex-shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-sky-400" />
             <span>{t('new_executor')}</span>
@@ -250,18 +251,18 @@ export function ExecutorsView() {
 
                 {/* Executor Agreed Cost Rate Badge */}
                 <div className="flex items-center justify-between bg-sky-50/70 border border-sky-100 rounded-2xl px-3 py-1.5 text-xs mt-3">
-                  <span className="font-bold text-sky-800">تكلفة التوريد للمنفذ:</span>
+                  <span className="font-bold text-sky-800">{isRtl ? 'تكلفة التوريد للمنفذ:' : 'Agreed Cost Rate:'}</span>
                   <span className="font-black font-mono text-sky-950">
                     {Number(ex.cost_price) > 0 ? (
                       <>
                         {ex.currency === 'EGP' ? 'EGP ' : ex.currency === 'USD' ? '$' : '€'}
                         {ex.cost_price}{' '}
                         <span className="text-[10px] text-sky-600 font-sans">
-                          ({ex.pricing_type === 'trip' ? 'بالرحلة' : 'بالفرد'})
+                          ({ex.pricing_type === 'trip' ? (isRtl ? 'بالرحلة' : 'per trip') : (isRtl ? 'بالفرد' : 'per pax')})
                         </span>
                       </>
                     ) : (
-                      <span className="text-slate-400 font-sans text-[11px]">حسب تسعيرة الرحلة</span>
+                      <span className="text-slate-400 font-sans text-[11px]">{isRtl ? 'حسب تسعيرة الرحلة' : 'Per Trip Catalog'}</span>
                     )}
                   </span>
                 </div>
@@ -305,7 +306,7 @@ export function ExecutorsView() {
                 {/* Settlement Progress Bar */}
                 <div className="pt-3 space-y-1">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                    <span>نسبة السداد للمنفذ</span>
+                    <span>{isRtl ? 'نسبة السداد للمنفذ' : 'Settlement Ratio'}</span>
                     <span className="font-mono font-black">{settlementPercent}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -328,17 +329,19 @@ export function ExecutorsView() {
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => {
                       soundManager.playClick()
                       setInvoiceModal({ isOpen: true, executor: ex })
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-xs font-black transition-all active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-xs font-black transition-all active:scale-95 cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5 text-sky-600" />
-                    <span>كشف حساب وفاتورة</span>
+                    <span>{isRtl ? 'كشف حساب وفاتورة' : 'Statement & Invoice'}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => {
                       soundManager.playClick()
                       setPaymentModal({
@@ -349,7 +352,7 @@ export function ExecutorsView() {
                         notes: ''
                       })
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black shadow-sm transition-all active:scale-95 flex-shrink-0 cursor-pointer"
                   >
                     <CreditCard className="w-3.5 h-3.5 text-sky-400" />
                     <span>{t('record_payment')}</span>
@@ -381,14 +384,14 @@ export function ExecutorsView() {
 
             <form onSubmit={handlePay} className="space-y-3.5 text-xs font-bold">
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1">
-                <div className="text-slate-500 font-bold">المنفذ المستفيد:</div>
+                <div className="text-slate-500 font-bold">{isRtl ? 'المنفذ المستفيد:' : 'Beneficiary Partner:'}</div>
                 <div className="text-sm font-black text-slate-800">{paymentModal.executor?.name}</div>
                 <div className="text-[11px] text-slate-400">{paymentModal.executor?.category}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-slate-700 mb-1">المبلغ</label>
+                  <label className="block text-slate-700 mb-1">{isRtl ? 'المبلغ' : 'Amount'}</label>
                   <input
                     type="number"
                     step="0.5"
@@ -401,13 +404,13 @@ export function ExecutorsView() {
                 </div>
                 <div>
                   <AX_SearchableSelect
-                    label="العملة"
+                    label={isRtl ? 'العملة' : 'Currency'}
                     value={paymentModal.currency}
                     onChange={(val) => setPaymentModal({ ...paymentModal, currency: val })}
                     options={[
-                      { value: 'EUR', label: 'يورو (€)' },
-                      { value: 'EGP', label: 'جنيه مصري (L.E)' },
-                      { value: 'USD', label: 'دولار ($)' }
+                      { value: 'EUR', label: isRtl ? 'يورو (€)' : 'Euro (€)' },
+                      { value: 'EGP', label: isRtl ? 'جنيه مصري (L.E)' : 'EGP (L.E)' },
+                      { value: 'USD', label: isRtl ? 'دولار ($)' : 'USD ($)' }
                     ]}
                     searchable={false}
                   />
@@ -415,10 +418,10 @@ export function ExecutorsView() {
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1">ملاحظات / طريقة السداد</label>
+                <label className="block text-slate-700 mb-1">{isRtl ? 'ملاحظات / طريقة السداد' : 'Notes / Method'}</label>
                 <input
                   type="text"
-                  placeholder="مثال: تحويل بنكي، كاش بالمارينا..."
+                  placeholder={isRtl ? 'مثال: تحويل بنكي، كاش بالمارينا...' : 'e.g. Bank transfer, cash at marina...'}
                   value={paymentModal.notes}
                   onChange={(e) => setPaymentModal({ ...paymentModal, notes: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
@@ -428,14 +431,14 @@ export function ExecutorsView() {
               <div className="pt-2 flex items-center gap-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full font-black text-xs shadow-md transition-all active:scale-95"
+                  className="flex-1 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer"
                 >
-                  تأكيد وقيد السداد
+                  {isRtl ? 'تأكيد وقيد السداد' : 'Confirm & Save Payment'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPaymentModal({ isOpen: false, executor: null, amount: '', currency: 'EUR', notes: '' })}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold text-xs"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold text-xs cursor-pointer"
                 >
                   {t('cancel')}
                 </button>

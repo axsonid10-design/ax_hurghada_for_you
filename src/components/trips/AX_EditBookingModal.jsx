@@ -26,29 +26,27 @@ import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
 export function AX_EditBookingModal({ isOpen, booking, onClose }) {
   const { tripDefinitions, executors, bookings, updateBooking } = useAXStore()
 
-  if (!isOpen || !booking) return null
-
-  const initialName = booking.guest_name || booking.name || ''
-  const initialTrip = booking.trip_type || booking.trip || ''
+  const initialName = booking?.guest_name || booking?.name || ''
+  const initialTrip = booking?.trip_type || booking?.trip || ''
 
   const [formData, setFormData] = useState({
     name: initialName,
-    hotel: booking.hotel || '',
-    room: booking.room || '',
-    date: booking.date || '',
+    hotel: booking?.hotel || '',
+    room: booking?.room || '',
+    date: booking?.date || '',
     trip: initialTrip,
-    executor_id: booking.executor_id || '',
-    seller: booking.seller || '',
-    adult: Number(booking.adult) || 0,
-    child: Number(booking.child) || 0,
-    infant: Number(booking.infant) || 0,
-    extra_cost_eur: Number(booking.extra_cost_eur) || 0,
-    collected_eur: Number(booking.collected_eur) || 0,
-    rest_eur: Number(booking.rest_eur) || 0,
-    rest_egp: Number(booking.rest_egp) || 0,
-    rest_usd: Number(booking.rest_usd) || 0,
-    rest_gbp: Number(booking.rest_gbp) || 0,
-    notes: booking.notes || ''
+    executor_id: booking?.executor_id || '',
+    seller: booking?.seller || '',
+    adult: Number(booking?.adult) || 0,
+    child: Number(booking?.child) || 0,
+    infant: Number(booking?.infant) || 0,
+    extra_cost_eur: Number(booking?.extra_cost_eur) || 0,
+    collected_eur: Number(booking?.collected_eur) || 0,
+    rest_eur: Number(booking?.rest_eur) || 0,
+    rest_egp: Number(booking?.rest_egp) || 0,
+    rest_usd: Number(booking?.rest_usd) || 0,
+    rest_gbp: Number(booking?.rest_gbp) || 0,
+    notes: booking?.notes || ''
   })
 
   const tripOptions = useMemo(() => {
@@ -85,6 +83,7 @@ export function AX_EditBookingModal({ isOpen, booking, onClose }) {
   }, [bookings, formData.hotel])
 
   const liveBaseFin = useMemo(() => {
+    if (!booking) return { cost_eur: 0, sell_eur: 0 }
     return computeBookingFinancials(
       {
         ...booking,
@@ -99,12 +98,14 @@ export function AX_EditBookingModal({ isOpen, booking, onClose }) {
 
   const extraCost = Number(formData.extra_cost_eur) || 0
   const computedSell = Number(liveBaseFin.sell_eur || 0)
-  const finalSell = computedSell > 0 ? computedSell : (Number(booking.sell_eur) || 0)
+  const finalSell = computedSell > 0 ? computedSell : (Number(booking?.sell_eur) || 0)
   const computedCost = Number(liveBaseFin.cost_eur || 0)
-  const baseCost = computedCost > 0 ? computedCost : (Number(booking.cost_eur) || 0)
+  const baseCost = computedCost > 0 ? computedCost : (Number(booking?.cost_eur) || 0)
   const finalCost = baseCost + extraCost
   const finalProfit = finalSell - finalCost
   const totalPax = (Number(formData.adult) || 0) + (Number(formData.child) || 0) + (Number(formData.infant) || 0)
+
+  if (!isOpen || !booking) return null
 
   const handleSubmit = (e) => {
     e.preventDefault()

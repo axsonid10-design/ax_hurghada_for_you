@@ -118,7 +118,7 @@ export function ExcelUploadModal({ isOpen, onClose }) {
 
     try {
       const buffer = await selectedFile.arrayBuffer()
-      const result = await parseExcelDailySituation(buffer)
+      const result = await parseExcelDailySituation(buffer, selectedFile.name)
       setParsedData(result)
 
       const existingDayBookings = (bookings || []).filter((b) => b.date === result.date)

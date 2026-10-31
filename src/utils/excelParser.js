@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 
-export async function parseExcelDailySituation(fileBuffer) {
+export async function parseExcelDailySituation(fileBuffer, filename = '') {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(fileBuffer)
 
@@ -13,6 +13,28 @@ export async function parseExcelDailySituation(fileBuffer) {
   const tripTypesSet = new Set()
   let batchDate = null
 
+  // 1. Try extracting canonical date from filename (e.g. 10-28-2026, 2026-10-28, 28-10-2026)
+  if (filename) {
+    const fnMatchIso = filename.match(/(202\d)[-_](\d{1,2})[-_](\d{1,2})/)
+    if (fnMatchIso) {
+      batchDate = `${fnMatchIso[1]}-${fnMatchIso[2].padStart(2, '0')}-${fnMatchIso[3].padStart(2, '0')}`
+    } else {
+      const fnMatchUs = filename.match(/(\d{1,2})[-_](\d{1,2})[-_](202\d)/)
+      if (fnMatchUs) {
+        let p1 = parseInt(fnMatchUs[1], 10)
+        let p2 = parseInt(fnMatchUs[2], 10)
+        let year = fnMatchUs[3]
+        let month = p1
+        let day = p2
+        if (p1 > 12 && p2 <= 12) {
+          day = p1
+          month = p2
+        }
+        batchDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
+    }
+  }
+
   for (let i = 1; i <= worksheet.rowCount; i++) {
     const row = worksheet.getRow(i).values
     if (!row) continue
@@ -24,18 +46,37 @@ export async function parseExcelDailySituation(fileBuffer) {
 
       let normalizedDate = ''
       if (rawDate) {
-        const parts = rawDate.split('/')
+        const parts = rawDate.split(/[\/\-\.]/)
         if (parts.length === 3) {
-          const month = parts[0].padStart(2, '0')
-          const day = parts[1].padStart(2, '0')
-          const year = parts[2]
-          normalizedDate = `${year}-${month}-${day}`
+          let p1 = parseInt(parts[0], 10)
+          let p2 = parseInt(parts[1], 10)
+          let rawYear = parts[2].trim()
+          let year = rawYear.length === 2 ? `20${rawYear}` : rawYear
+
+          // Anti-future / anti-typo clamp: year should match batch year or 2026
+          const numYear = parseInt(year, 10)
+          if (isNaN(numYear) || numYear > 2030 || numYear < 2020) {
+            year = batchDate ? batchDate.split('-')[0] : '2026'
+          }
+
+          let month = p1
+          let day = p2
+          if (p1 > 12 && p2 <= 12) {
+            day = p1
+            month = p2
+          }
+
+          normalizedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           if (!batchDate) batchDate = normalizedDate
-        } else {
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
           normalizedDate = rawDate
           if (!batchDate) batchDate = normalizedDate
+        } else {
+          normalizedDate = batchDate || new Date().toISOString().split('T')[0]
         }
       }
+
+      const effectiveDate = normalizedDate || batchDate || new Date().toISOString().split('T')[0]
 
       const seller = String(row[3] || '').trim()
       const channel = String(row[4] || '').trim()
@@ -58,7 +99,7 @@ export async function parseExcelDailySituation(fileBuffer) {
 
       bookings.push({
         sr,
-        date: normalizedDate || batchDate || new Date().toISOString().split('T')[0],
+        date: effectiveDate,
         seller,
         channel,
         trip_type: tripType,

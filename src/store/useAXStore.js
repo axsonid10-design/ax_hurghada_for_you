@@ -259,7 +259,18 @@ const getStoredBookings = () => {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem('ax_h4u_bookings')
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.map((b) => {
+          let d = b.date
+          if (typeof d === 'string' && d.startsWith('2033-')) {
+            d = d.replace('2033-', '2026-')
+          }
+          return { ...b, date: d }
+        })
+      }
+    }
   } catch {}
   return []
 }
@@ -277,7 +288,15 @@ const getStoredImportedDates = () => {
   if (typeof window === 'undefined') return {}
   try {
     const raw = localStorage.getItem('ax_h4u_imported_dates')
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      const healed = {}
+      Object.keys(parsed).forEach((k) => {
+        const cleanK = k.startsWith('2033-') ? k.replace('2033-', '2026-') : k
+        healed[cleanK] = parsed[k]
+      })
+      return healed
+    }
   } catch {}
   return {}
 }

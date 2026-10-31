@@ -60,6 +60,7 @@ export async function fetchCloudData() {
     if (bookingsRes.data && Array.isArray(bookingsRes.data)) {
       updates.bookings = bookingsRes.data.map((b) => ({
         ...b,
+        date: (b.date && b.date.startsWith('2033-')) ? b.date.replace('2033-', '2026-') : b.date,
         is_edited: Boolean(b.time && b.time.includes('EDITED')),
         rest_eur: Number(b.rest_eur) || 0,
         rest_egp: Number(b.rest_egp) || 0,
