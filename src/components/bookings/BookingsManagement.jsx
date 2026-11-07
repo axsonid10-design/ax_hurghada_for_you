@@ -201,64 +201,6 @@ export function BookingsManagement({ onOpenUploadModal }) {
           </button>
         </div>
       )}
-      {unassignedBookings.length > 0 && (
-        <div className="bg-rose-50 border border-rose-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2.5 text-rose-950 font-bold">
-            <div className="w-8 h-8 rounded-xl bg-rose-200 text-rose-800 flex items-center justify-center flex-shrink-0 animate-pulse">
-              <AlertTriangle className="w-4 h-4 text-rose-700" />
-            </div>
-            <div>
-              <span className="font-black text-xs sm:text-sm block">
-                {t('unassigned_bookings_alert', { count: unassignedBookings.length })}
-              </span>
-              <span className="text-[11px] text-rose-800 block mt-0.5">
-                {t('unassigned_bookings_desc')}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClick()
-              setStatusFilter('unassigned')
-              setCurrentPage(1)
-            }}
-            className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <span>{t('view_unassigned')} ({unassignedBookings.length})</span>
-            <span className="text-rose-200">←</span>
-          </button>
-        </div>
-      )}
-
-      {unpricedTrips.length > 0 && (
-        <div className="bg-amber-50 border border-amber-300 rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2.5 text-amber-950 font-bold">
-            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 animate-pulse">
-              <AlertTriangle className="w-4 h-4 text-amber-700" />
-            </div>
-            <div>
-              <span className="font-black text-xs sm:text-sm block">
-                {t('unpriced_bookings_alert', { count: unpricedTrips.length })}
-              </span>
-              <span className="text-[11px] text-amber-800 block mt-0.5">
-                {t('unpriced_bookings_desc')}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              soundManager.playClick()
-              setActiveTab('trips')
-            }}
-            className="px-4 py-2 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full text-xs font-black transition-all active:scale-95 flex-shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <span>{t('price_trips_now')}</span>
-            <span className="text-sky-300">←</span>
-          </button>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-3xl border border-slate-200/90 shadow-soft">
         <div className="flex items-center gap-1.5 flex-wrap">
