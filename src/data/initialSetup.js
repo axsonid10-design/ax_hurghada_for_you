@@ -69,8 +69,8 @@ export function computeBookingFinancials(booking, tripDefs = [], executors = [])
     return sName === cleanTripType || dName === cleanTripType
   })
 
-  const assignedExecutorId = booking.executor_id || tripDef?.executor_id
-  const executor = executors.find((ex) => ex.id === assignedExecutorId)
+  const assignedExecutorId = booking.executor_id || null
+  const executor = assignedExecutorId ? executors.find((ex) => ex.id === assignedExecutorId) : null
 
   if (cleanTripType.includes('cash pickup') || cleanTripType.includes('تحصيل')) {
     const cashAmount = booking.rest_eur || booking.sell_eur || 0
@@ -93,7 +93,7 @@ export function computeBookingFinancials(booking, tripDefs = [], executors = [])
       sell_eur: sellPrice,
       profit_eur: Math.max(0, sellPrice - exCost),
       collected_eur: 0,
-      executor_id: assignedExecutorId || null,
+      executor_id: assignedExecutorId,
       pricing_type: executor?.pricing_type || 'pax',
       currency: 'EUR'
     }
@@ -170,7 +170,7 @@ export function computeBookingFinancials(booking, tripDefs = [], executors = [])
     sell_eur: totalSell,
     profit_eur: profitEur,
     collected_eur: collectedEur,
-    executor_id: assignedExecutorId || tripDef.executor_id || null,
+    executor_id: assignedExecutorId,
     pricing_type: tripDef.pricing_type,
     currency: tripDef.currency || 'EUR'
   }

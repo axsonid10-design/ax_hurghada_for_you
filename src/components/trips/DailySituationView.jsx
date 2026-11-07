@@ -63,16 +63,17 @@ export function DailySituationView({ onOpenUploadModal }) {
   }
 
   const handleInlineAssignExecutor = (booking, newExecutorId) => {
-    if (!newExecutorId || newExecutorId === booking.executor_id) return
+    const targetId = newExecutorId || null
+    if (targetId === (booking.executor_id || null)) return
     soundManager.playClick()
     const fin = computeBookingFinancials(
-      { ...booking, executor_id: newExecutorId },
+      { ...booking, executor_id: targetId },
       tripDefinitions,
       executors
     )
     const effectiveSell = booking.sell_eur || fin.sell_eur || 0
     updateBooking(booking.sr, {
-      executor_id: newExecutorId,
+      executor_id: targetId,
       cost_eur: fin.cost_eur,
       sell_eur: effectiveSell,
       profit_eur: effectiveSell - fin.cost_eur
@@ -227,7 +228,8 @@ export function DailySituationView({ onOpenUploadModal }) {
               type="button"
               onClick={() => {
                 soundManager.playClick()
-                const today = new Date().toISOString().split('T')[0]
+                const d = new Date()
+                const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
                 setSelectedDate(today)
                 setCurrentPage(1)
               }}
@@ -413,6 +415,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                     className="w-full appearance-none ps-9 pe-8 py-2.5 bg-slate-50 border-2 border-slate-300 hover:border-[#0284c7] focus:border-[#0284c7] rounded-full text-xs font-black text-slate-800 focus:outline-none transition-all cursor-pointer"
                   >
                     <option value="">-- {t('select_executor_prompt')} --</option>
+                    <option value="UNASSIGN">⚠️ {isRtl ? 'إلغاء الإسناد (جعله بدون منفذ)' : 'Unassign (No Partner)'}</option>
                     {executors.map((ex) => (
                       <option key={ex.id} value={ex.id}>
                         {ex.name} ({ex.category || 'عام'})
@@ -438,7 +441,11 @@ export function DailySituationView({ onOpenUploadModal }) {
                   }`}
                 >
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>{t('batch_assign_btn').replace('{count}', selectedBatchSrs.size)}</span>
+                  <span>
+                    {batchExecutorId === 'UNASSIGN'
+                      ? (isRtl ? `إلغاء إسناد (${selectedBatchSrs.size}) رحلات` : `Unassign (${selectedBatchSrs.size}) Trips`)
+                      : t('batch_assign_btn').replace('{count}', selectedBatchSrs.size)}
+                  </span>
                 </button>
               </div>
 
@@ -611,7 +618,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                             : 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300 animate-pulse'
                         }`}
                       >
-                        <option value="" disabled={Boolean(b.executor_id)}>
+                        <option value="">
                           ⚠️ {t('unassigned_exec_badge')}
                         </option>
                         {executors.map((ex) => {
@@ -779,7 +786,7 @@ export function DailySituationView({ onOpenUploadModal }) {
                             : 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300 animate-pulse focus:border-rose-500'
                         }`}
                       >
-                        <option value="" disabled={Boolean(b.executor_id)}>
+                        <option value="">
                           ⚠️ {t('unassigned_exec_badge')}
                         </option>
                         {executors.map((ex) => {

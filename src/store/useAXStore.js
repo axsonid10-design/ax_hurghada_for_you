@@ -294,7 +294,11 @@ const getStoredInvites = () => {
 
 const getTodayIsoDate = () => {
   try {
-    return new Date().toISOString().split('T')[0]
+    const d = new Date()
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   } catch {
     return '2026-10-28'
   }
@@ -983,15 +987,16 @@ export const useAXStore = create((set, get) => ({
   },
 
   batchAssignBookingsExecutor: (srs = [], executorId) => {
-    if (!srs || !srs.length || !executorId) return
+    if (!srs || !srs.length) return
     const { bookings, tripDefinitions, executors } = get()
     const targetSet = new Set(srs)
     const nowIso = new Date().toISOString()
+    const targetExecId = (executorId === 'UNASSIGN' || !executorId) ? null : executorId
     const next = bookings.map((b) => {
       if (targetSet.has(b.sr)) {
         const merged = {
           ...b,
-          executor_id: executorId,
+          executor_id: targetExecId,
           is_edited: true,
           time: `EDITED:${nowIso}`
         }
@@ -999,6 +1004,7 @@ export const useAXStore = create((set, get) => ({
         const updated = {
           ...merged,
           ...fin,
+          executor_id: targetExecId,
           sell_eur: b.sell_eur || fin.sell_eur,
           cost_eur: fin.cost_eur,
           profit_eur: (b.sell_eur || fin.sell_eur) - fin.cost_eur
