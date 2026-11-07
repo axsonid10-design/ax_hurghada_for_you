@@ -52,7 +52,6 @@ export function TripsCatalogView() {
   const [isQuickAddExecutorOpen, setIsQuickAddExecutorOpen] = useState(false)
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false)
 
-  // New Trip Form State
   const [newTripData, setNewTripData] = useState({
     display_name: '',
     sheet_name: '',
@@ -69,7 +68,6 @@ export function TripsCatalogView() {
     executor_id: executors[0]?.id || 'exec_marina'
   })
 
-  // Normalize each trip category using inferTripCategory as fallback
   const enrichedTrips = useMemo(() => {
     return tripDefinitions.map((t) => ({
       ...t,
@@ -554,6 +552,12 @@ export function TripsCatalogView() {
                       )}
                     </div>
                   )}
+                  {trip.executor_costs && Object.values(trip.executor_costs).some((c) => Number(c?.adult_cost) > 0) && (
+                    <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-[10px] font-bold">
+                      <Truck className="w-3.5 h-3.5 text-[#0284c7]" />
+                      <span>{t('custom_pricing_count').replace('{count}', Object.values(trip.executor_costs).filter((c) => Number(c?.adult_cost) > 0).length)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -582,8 +586,8 @@ export function TripsCatalogView() {
       {/* Edit Trip Modal */}
       {editingTrip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a2540]/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative animate-scaleUp max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 flex-shrink-0">
               <h3 className="text-sm font-black text-[#0a2540]">
                 {t('edit_price')}: {editingTrip.display_name}
               </h3>
@@ -595,7 +599,7 @@ export function TripsCatalogView() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="space-y-3.5 text-xs font-bold">
+            <form onSubmit={handleSaveEdit} className="space-y-3.5 text-xs font-bold overflow-y-auto pe-1 flex-1">
               <div>
                 <label className="block text-slate-700 mb-1">الاسم المعروض للرحلة</label>
                 <input
@@ -777,7 +781,116 @@ export function TripsCatalogView() {
                 </div>
               )}
 
-              <div className="pt-2 flex items-center gap-2">
+              {executors.length > 0 && (
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Truck className="w-4 h-4 text-[#0284c7]" />
+                      <span className="font-black text-xs text-[#0a2540]">
+                        {t('executor_costs_matrix')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      {Object.keys(editingTrip.executor_costs || {}).length > 0
+                        ? t('custom_pricing_count').replace('{count}', Object.keys(editingTrip.executor_costs || {}).filter((k) => Number(editingTrip.executor_costs[k]?.adult_cost) > 0).length)
+                        : ''}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {t('executor_costs_matrix_desc')}
+                  </p>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pe-1">
+                    {executors.map((ex) => {
+                      const custom = editingTrip.executor_costs?.[ex.id] || {}
+                      const isCustom = Number(custom.adult_cost) > 0
+                      return (
+                        <div
+                          key={ex.id}
+                          className={`p-2.5 rounded-xl border transition-all ${
+                            isCustom
+                              ? 'bg-sky-50/70 border-sky-300'
+                              : 'bg-white border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-xs text-slate-800">{ex.name}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                                {ex.category || 'عام'}
+                              </span>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                              isCustom ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              {isCustom ? `${t('custom_cost_badge')}: €${custom.adult_cost}` : `${t('default_cost_badge')}: €${editingTrip.adult_cost || 0}`}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                {t('adult_cost_col')}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                placeholder={`€${editingTrip.adult_cost || 0}`}
+                                value={custom.adult_cost !== undefined ? custom.adult_cost : ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                                  setEditingTrip({
+                                    ...editingTrip,
+                                    executor_costs: {
+                                      ...(editingTrip.executor_costs || {}),
+                                      [ex.id]: {
+                                        ...(editingTrip.executor_costs?.[ex.id] || {}),
+                                        adult_cost: val
+                                      }
+                                    }
+                                  })
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded-full px-3 py-1 text-center font-mono text-xs focus:ring-1 focus:ring-[#0284c7] outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                {t('child_cost_col')}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                placeholder={
+                                  editingTrip.child_pricing_mode === 'percent'
+                                    ? `€${((Number(custom.adult_cost || editingTrip.adult_cost) || 0) * ((Number(editingTrip.child_cost_percent) || 0) / 100)).toFixed(1)}`
+                                    : `€${editingTrip.child_cost_fixed || 0}`
+                                }
+                                value={custom.child_cost !== undefined ? custom.child_cost : ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                                  setEditingTrip({
+                                    ...editingTrip,
+                                    executor_costs: {
+                                      ...(editingTrip.executor_costs || {}),
+                                      [ex.id]: {
+                                        ...(editingTrip.executor_costs?.[ex.id] || {}),
+                                        child_cost: val
+                                      }
+                                    }
+                                  })
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded-full px-3 py-1 text-center font-mono text-xs focus:ring-1 focus:ring-[#0284c7] outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center gap-2 flex-shrink-0">
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full font-black text-xs shadow-md transition-all active:scale-95"
@@ -800,8 +913,8 @@ export function TripsCatalogView() {
       {/* New Trip Modal */}
       {isNewTripModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a2540]/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative animate-scaleUp max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 flex-shrink-0">
               <h3 className="text-sm font-black text-[#0a2540] flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-sky-500" />
                 <span>{t('add_trip')}</span>
@@ -814,7 +927,7 @@ export function TripsCatalogView() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateNewTrip} className="space-y-3.5 text-xs font-bold">
+            <form onSubmit={handleCreateNewTrip} className="space-y-3.5 text-xs font-bold overflow-y-auto pe-1 flex-1">
               <div>
                 <label className="block text-slate-700 mb-1">اسم الرحلة</label>
                 <input
@@ -897,7 +1010,116 @@ export function TripsCatalogView() {
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
+              {executors.length > 0 && (
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Truck className="w-4 h-4 text-[#0284c7]" />
+                      <span className="font-black text-xs text-[#0a2540]">
+                        {t('executor_costs_matrix')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      {Object.keys(newTripData.executor_costs || {}).length > 0
+                        ? t('custom_pricing_count').replace('{count}', Object.keys(newTripData.executor_costs || {}).filter((k) => Number(newTripData.executor_costs[k]?.adult_cost) > 0).length)
+                        : ''}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {t('executor_costs_matrix_desc')}
+                  </p>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pe-1">
+                    {executors.map((ex) => {
+                      const custom = newTripData.executor_costs?.[ex.id] || {}
+                      const isCustom = Number(custom.adult_cost) > 0
+                      return (
+                        <div
+                          key={ex.id}
+                          className={`p-2.5 rounded-xl border transition-all ${
+                            isCustom
+                              ? 'bg-sky-50/70 border-sky-300'
+                              : 'bg-white border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-xs text-slate-800">{ex.name}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                                {ex.category || 'عام'}
+                              </span>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                              isCustom ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              {isCustom ? `${t('custom_cost_badge')}: €${custom.adult_cost}` : `${t('default_cost_badge')}: €${newTripData.adult_cost || 0}`}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                {t('adult_cost_col')}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                placeholder={`€${newTripData.adult_cost || 0}`}
+                                value={custom.adult_cost !== undefined ? custom.adult_cost : ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                                  setNewTripData({
+                                    ...newTripData,
+                                    executor_costs: {
+                                      ...(newTripData.executor_costs || {}),
+                                      [ex.id]: {
+                                        ...(newTripData.executor_costs?.[ex.id] || {}),
+                                        adult_cost: val
+                                      }
+                                    }
+                                  })
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded-full px-3 py-1 text-center font-mono text-xs focus:ring-1 focus:ring-[#0284c7] outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                                {t('child_cost_col')}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                placeholder={
+                                  newTripData.child_pricing_mode === 'percent'
+                                    ? `€${((Number(custom.adult_cost || newTripData.adult_cost) || 0) * ((Number(newTripData.child_cost_percent) || 0) / 100)).toFixed(1)}`
+                                    : `€${newTripData.child_cost_fixed || 0}`
+                                }
+                                value={custom.child_cost !== undefined ? custom.child_cost : ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                                  setNewTripData({
+                                    ...newTripData,
+                                    executor_costs: {
+                                      ...(newTripData.executor_costs || {}),
+                                      [ex.id]: {
+                                        ...(newTripData.executor_costs?.[ex.id] || {}),
+                                        child_cost: val
+                                      }
+                                    }
+                                  })
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded-full px-3 py-1 text-center font-mono text-xs focus:ring-1 focus:ring-[#0284c7] outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center gap-2 flex-shrink-0">
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-[#0a2540] hover:bg-[#133e66] text-white rounded-full font-black text-xs shadow-md transition-all active:scale-95"

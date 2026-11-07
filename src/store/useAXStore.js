@@ -21,6 +21,7 @@ import {
   DEFAULT_TRIP_CATEGORIES,
   DEFAULT_EXECUTOR_CATEGORIES,
   computeBookingFinancials,
+  getExecutorTripCost,
   buildInitialBookings
 } from '../data/initialSetup'
 
@@ -590,7 +591,8 @@ export const useAXStore = create((set, get) => ({
     let bookingsChanged = false
     const updatedBookings = bookings.map((b) => {
       const bTrip = (b.trip_type || b.trip || '').toLowerCase().trim().replace(/\s+/g, ' ')
-      if (bTrip === targetSheet) {
+      const isUnpriced = (!b.cost_eur || Number(b.cost_eur) === 0) && (!b.sell_eur || Number(b.sell_eur) === 0)
+      if (bTrip === targetSheet && isUnpriced) {
         bookingsChanged = true
         const fin = computeBookingFinancials(b, newDefs, executors)
         const recalculated = { ...b, ...fin }
@@ -974,6 +976,38 @@ export const useAXStore = create((set, get) => ({
     if (updatedBooking) {
       cloudSaveBooking(updatedBooking)
     }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
+    }
+    set({ bookings: next })
+  },
+
+  batchAssignBookingsExecutor: (srs = [], executorId) => {
+    if (!srs || !srs.length || !executorId) return
+    const { bookings, tripDefinitions, executors } = get()
+    const targetSet = new Set(srs)
+    const nowIso = new Date().toISOString()
+    const next = bookings.map((b) => {
+      if (targetSet.has(b.sr)) {
+        const merged = {
+          ...b,
+          executor_id: executorId,
+          is_edited: true,
+          time: `EDITED:${nowIso}`
+        }
+        const fin = computeBookingFinancials(merged, tripDefinitions, executors)
+        const updated = {
+          ...merged,
+          ...fin,
+          sell_eur: b.sell_eur || fin.sell_eur,
+          cost_eur: fin.cost_eur,
+          profit_eur: (b.sell_eur || fin.sell_eur) - fin.cost_eur
+        }
+        cloudSaveBooking(updated)
+        return updated
+      }
+      return b
+    })
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('ax_h4u_bookings', JSON.stringify(next))
     }

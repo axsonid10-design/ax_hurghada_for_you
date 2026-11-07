@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { useAXStore } from '../../store/useAXStore'
 import { soundManager } from '../../utils/soundEffects'
-import { computeBookingFinancials } from '../../data/initialSetup'
+import { computeBookingFinancials, getExecutorTripCost } from '../../data/initialSetup'
 import { AX_SearchableSelect } from '../common/AX_SearchableSelect'
 import { AX_CompanyDatePicker } from '../common/AX_CompanyDatePicker'
 
@@ -61,14 +61,24 @@ export function AX_EditBookingModal({ isOpen, booking, onClose }) {
   }, [tripDefinitions, formData.trip])
 
   const executorOptions = useMemo(() => {
+    const clean = (formData.trip || '').toLowerCase().trim().replace(/\s+/g, ' ')
+    const matchedDef = tripDefinitions.find((td) => {
+      const s = (td.sheet_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      const d = (td.display_name || '').toLowerCase().trim().replace(/\s+/g, ' ')
+      return s === clean || d === clean
+    })
     return [
       { value: '', label: 'بدون منفذ (غير محدد)' },
-      ...executors.map((ex) => ({
-        value: ex.id,
-        label: `${ex.name} (${ex.category || 'عام'})`
-      }))
+      ...executors.map((ex) => {
+        const rate = getExecutorTripCost(matchedDef, ex.id, executors)
+        const costStr = rate.adult_cost > 0 ? ` — تكلفة: €${rate.adult_cost}` : ''
+        return {
+          value: ex.id,
+          label: `${ex.name} (${ex.category || 'عام'})${costStr}`
+        }
+      })
     ]
-  }, [executors])
+  }, [executors, formData.trip, tripDefinitions])
 
   const hotelOptions = useMemo(() => {
     const hotelSet = new Set()
